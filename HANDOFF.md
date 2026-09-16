@@ -1,0 +1,42 @@
+# HANDOFF
+
+clipboard-tts for Kip’s Mac (Ark). Product lock is [SPEC.md](SPEC.md). This is not Moshi.
+
+## Acceptance checklist
+
+- [ ] `ClipboardTTS.xcodeproj` opens in Xcode on Ark (scheme **ClipboardTTS**, destination My Mac).
+- [ ] App builds for Apple Silicon (`xcodebuild -project ClipboardTTS.xcodeproj -scheme ClipboardTTS -configuration Release -arch arm64`).
+- [ ] Run produces a menu-bar accessory (`LSUIElement`): no Dock icon, speaker status item present.
+- [ ] Settings shows Engine, Endpoint, API key, Model, Voice, Speed with defaults:
+  - Engine `openai`
+  - Endpoint `http://127.0.0.1:8787/v1`
+  - API key empty
+  - Model `grok-tts`
+  - Voice `carina`
+  - Speed `1.1`, slider clamped 0.7–1.5
+- [ ] Settings survive quit/relaunch (UserDefaults + Keychain for the API key).
+- [ ] With the proxy at `127.0.0.1:8787`, Option+Escape reads the clipboard, `POST`s `{endpoint}/audio/speech`, and plays mp3 audio.
+- [ ] Request body includes `model`, `voice`, `input`, `speed`, `response_format=mp3`. No `language` field (so the proxy zh/en heuristic applies). Never `ja` or `auto`.
+- [ ] Authorization Bearer is sent only when an API key is set.
+- [ ] Floating panel during playback: previous paragraph, pause, stop, next paragraph.
+- [ ] English and Chinese clipboard text both speak. Empty clipboard shows a brief error instead of hanging.
+- [ ] No real API keys in the repo. No Moshi UI/code. No Life OS scope.
+
+## How to verify (Ark)
+
+```bash
+curl -sS http://127.0.0.1:8787/v1/models
+open ClipboardTTS.xcodeproj   # Run, or: make run
+```
+
+Copy text → `⌥⎋` → hear audio → use the floating controls. Details in [README.md](README.md).
+
+## Known gaps
+
+- This Linux agent could not run `xcodebuild` or play audio. First green build has to happen on Ark.
+- Signing is ad-hoc. Not notarized. Sandbox is off on purpose for a local loopback utility.
+- Engine is stored for Moshi-style settings parity. The only network path is OpenAI-compatible `POST /audio/speech`; engine is not sent in the JSON body.
+- Hotkey is locked to Option+Escape (not user-configurable).
+- Carbon hotkeys usually work without Accessibility. If `⌥⎋` is swallowed, grant Accessibility as in the README.
+- Paragraph split: blank lines first, otherwise single newlines. A single blob of text is one paragraph, so prev/next is a no-op.
+- No login item, no auto-update, no voice catalog fetch from `GET /v1/models`.
