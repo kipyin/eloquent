@@ -1,4 +1,4 @@
-name: ClipboardTTS
+name: Eloquent
 options:
   bundleIdPrefix: com.kipyin
   deploymentTarget:
@@ -10,21 +10,21 @@ settings:
     MACOSX_DEPLOYMENT_TARGET: "14.0"
     SDKROOT: macosx
 targets:
-  ClipboardTTS:
+  Eloquent:
     type: application
     platform: macOS
     sources:
-      - path: ClipboardTTS
+      - path: Eloquent
         excludes:
           - Info.plist
           - "*.entitlements"
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: com.kipyin.clipboard-tts
-        PRODUCT_NAME: ClipboardTTS
-        INFOPLIST_FILE: ClipboardTTS/Info.plist
+        PRODUCT_BUNDLE_IDENTIFIER: com.kipyin.eloquent
+        PRODUCT_NAME: Eloquent
+        INFOPLIST_FILE: Eloquent/Info.plist
         GENERATE_INFOPLIST_FILE: NO
-        CODE_SIGN_ENTITLEMENTS: ClipboardTTS/ClipboardTTS.entitlements
+        CODE_SIGN_ENTITLEMENTS: Eloquent/Eloquent.entitlements
         CODE_SIGN_IDENTITY: "-"
         CODE_SIGN_STYLE: Automatic
         ARCHS: arm64

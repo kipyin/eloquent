@@ -8,8 +8,8 @@ final class GlobalHotKey {
     private let handler: () -> Void
 
     private static var active: GlobalHotKey?
-    private static let log = Logger(subsystem: "com.kipyin.clipboard-tts", category: "hotkey")
-    private static let signature: OSType = 0x43545453 // 'CTTS'
+    private static let log = Logger(subsystem: "com.kipyin.eloquent", category: "hotkey")
+    private static let signature: OSType = 0x454C4F51 // 'ELOQ'
     private static let hotKeyIDValue: UInt32 = 1
     private static let escapeKeyCode: UInt32 = 0x35
     private static let optionModifier: UInt32 = 0x0800
@@ -75,7 +75,7 @@ final class GlobalHotKey {
         )
         let handlerStatus = InstallEventHandler(
             GetEventDispatcherTarget(),
-            clipboardTTSHotKeyHandler,
+            eloquentHotKeyHandler,
             1,
             &eventType,
             nil,
@@ -105,7 +105,7 @@ final class GlobalHotKey {
     }
 }
 
-private func clipboardTTSHotKeyHandler(
+private func eloquentHotKeyHandler(
     _ nextHandler: EventHandlerCallRef?,
     _ event: EventRef?,
     _ userData: UnsafeMutableRawPointer?

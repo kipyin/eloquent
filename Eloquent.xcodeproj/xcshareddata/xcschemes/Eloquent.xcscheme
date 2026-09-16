@@ -15,9 +15,9 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "A01C00000000000000000002"
-               BuildableName = "ClipboardTTS.app"
-               BlueprintName = "ClipboardTTS"
-               ReferencedContainer = "container:ClipboardTTS.xcodeproj">
+               BuildableName = "Eloquent.app"
+               BlueprintName = "Eloquent"
+               ReferencedContainer = "container:Eloquent.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
       </BuildActionEntries>
@@ -44,9 +44,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A01C00000000000000000002"
-            BuildableName = "ClipboardTTS.app"
-            BlueprintName = "ClipboardTTS"
-            ReferencedContainer = "container:ClipboardTTS.xcodeproj">
+            BuildableName = "Eloquent.app"
+            BlueprintName = "Eloquent"
+            ReferencedContainer = "container:Eloquent.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </LaunchAction>
@@ -61,9 +61,9 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "A01C00000000000000000002"
-            BuildableName = "ClipboardTTS.app"
-            BlueprintName = "ClipboardTTS"
-            ReferencedContainer = "container:ClipboardTTS.xcodeproj">
+            BuildableName = "Eloquent.app"
+            BlueprintName = "Eloquent"
+            ReferencedContainer = "container:Eloquent.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
    </ProfileAction>

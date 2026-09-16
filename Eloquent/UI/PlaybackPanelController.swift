@@ -54,7 +54,7 @@ final class PlaybackPanelController: NSObject, NSWindowDelegate {
             defer: false
         )
         panel.contentViewController = hosting
-        panel.title = "Clipboard TTS"
+        panel.title = "Eloquent"
         panel.titleVisibility = .hidden
         panel.titlebarAppearsTransparent = true
         panel.isFloatingPanel = true

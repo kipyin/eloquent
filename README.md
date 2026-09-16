@@ -1,6 +1,6 @@
-# clipboard-tts
+# Eloquent
 
-Native macOS menu-bar app. Display name: **Clipboard TTS**.
+Native macOS menu-bar TTS. Product name: **Eloquent**. Repo: [github.com/kipyin/eloquent](https://github.com/kipyin/eloquent). On Ark: `~/Code/eloquent`.
 
 Option+Escape (`⌥⎋`) reads the current clipboard, sends it to an OpenAI-compatible TTS endpoint, and plays the returned audio. The speaker icon stays in the menu bar at all times. A floating panel (previous / pause / stop / next) appears only while speaking and hides when idle or stopped. This is not Moshi and is not a Moshi fork.
 
@@ -11,23 +11,24 @@ Product lock: [SPEC.md](SPEC.md). Acceptance: [HANDOFF.md](HANDOFF.md).
 - Apple Silicon Mac
 - macOS 14+
 - Xcode 15.4+ (Xcode 16 is fine)
+- Local checkout: `~/Code/eloquent`
 - Local OpenAI-compatible TTS proxy at `http://127.0.0.1:8787/v1` (on Ark: `~/Code/xai-openai-tts-proxy`)
 
 ## Open in Xcode
 
 ```bash
-open ClipboardTTS.xcodeproj
+open Eloquent.xcodeproj
 ```
 
-Select the **ClipboardTTS** scheme, destination **My Mac**, then Run (`⌘R`).
+Select the **Eloquent** scheme, destination **My Mac**, then Run (`⌘R`).
 
 The app is an `LSUIElement` accessory: it does not appear in the Dock. The speaker icon is **always on** in the menu bar for the life of the app. The floating control panel appears only while speaking (loading / playing / paused) and is hidden when idle or after Stop.
 
 ## Build from the command line
 
 ```bash
-xcodebuild -project ClipboardTTS.xcodeproj -scheme ClipboardTTS -configuration Release -arch arm64 -derivedDataPath build build
-open build/Build/Products/Release/ClipboardTTS.app
+xcodebuild -project Eloquent.xcodeproj -scheme Eloquent -configuration Release -arch arm64 -derivedDataPath build build
+open build/Build/Products/Release/Eloquent.app
 ```
 
 Or `make run` (Debug) / `CONFIG=Release make run`.
@@ -49,7 +50,7 @@ The project is ad-hoc signed (`CODE_SIGN_IDENTITY = "-"`) so it runs locally wit
 | Paragraph split | Blank lines when present, otherwise every newline |
 | Open at Login | Off (optional; not registered until the user enables it) |
 
-Engine / Endpoint / Model / Voice / Speed / Paragraph split persist in UserDefaults. The API key persists in Keychain (`com.kipyin.clipboard-tts`). Open at Login is a macOS Login Item via `SMAppService.mainApp` (not UserDefaults). Do not paste a real xAI key into this repo.
+Engine / Endpoint / Model / Voice / Speed / Paragraph split persist in UserDefaults. The API key persists in Keychain (`com.kipyin.eloquent`). Open at Login is a macOS Login Item via `SMAppService.mainApp` (not UserDefaults). Do not paste a real xAI key into this repo.
 
 **Paragraph split** controls how prev/next walks the clipboard:
 
@@ -67,7 +68,7 @@ The global hotkey uses Carbon `RegisterEventHotKey` for Option+Escape. That usua
 If `⌥⎋` does nothing:
 
 1. System Settings → Privacy & Security → Accessibility
-2. Enable **Clipboard TTS** (or Xcode / `ClipboardTTS.app` if you launched from Xcode)
+2. Enable **Eloquent** (or Xcode / `Eloquent.app` if you launched from Xcode)
 3. Quit and reopen the app, then try again
 
 You should not need Input Monitoring for this hotkey.
@@ -75,7 +76,7 @@ You should not need Input Monitoring for this hotkey.
 ## Verify on Ark with the loopback proxy
 
 1. Confirm the proxy is up: `curl -sS http://127.0.0.1:8787/v1/models` should mention `grok-tts`.
-2. Launch Clipboard TTS. Confirm the **always-on** menu-bar speaker icon (no Dock icon). The floating panel must **not** be visible yet.
+2. Launch Eloquent. Confirm the **always-on** menu-bar speaker icon (no Dock icon). The floating panel must **not** be visible yet.
 3. Open **Settings…**. Confirm the defaults in the table above. Leave API key empty. Confirm **Open at Login** is off.
 4. Copy a short English sentence. Press **Option+Escape**. Audio should play. The floating panel should appear with previous / pause / stop / next.
 5. Press **Stop** (or let the last paragraph finish). The panel must hide. The menu-bar icon must remain.
@@ -88,8 +89,8 @@ You should not need Input Monitoring for this hotkey.
 ## Layout
 
 ```
-ClipboardTTS.xcodeproj      Xcode project + shared scheme
-ClipboardTTS/               app sources, Info.plist, entitlements
+Eloquent.xcodeproj      Xcode project + shared scheme
+Eloquent/               app sources, Info.plist, entitlements
 project.yml                 optional XcodeGen spec
 Makefile                    xcodebuild helpers
 SPEC.md                     product lock

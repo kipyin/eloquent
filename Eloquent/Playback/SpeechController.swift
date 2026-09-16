@@ -20,7 +20,7 @@ final class SpeechController: ObservableObject {
     private var speakTask: Task<Void, Never>?
     private var generation = UUID()
     private var transientErrorTask: Task<Void, Never>?
-    private let log = Logger(subsystem: "com.kipyin.clipboard-tts", category: "speech")
+    private let log = Logger(subsystem: "com.kipyin.eloquent", category: "speech")
 
     var canGoPrevious: Bool {
         switch state {
@@ -78,7 +78,7 @@ final class SpeechController: ObservableObject {
 
     var progressLabel: String {
         guard !paragraphs.isEmpty else {
-            return "Clipboard TTS"
+            return "Eloquent"
         }
         return "Paragraph \(index + 1) of \(paragraphs.count)"
     }

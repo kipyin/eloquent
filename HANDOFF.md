@@ -1,11 +1,11 @@
 # HANDOFF
 
-clipboard-tts for Kip’s Mac (Ark). Product lock is [SPEC.md](SPEC.md). This is not Moshi.
+Eloquent for Kip’s Mac (Ark). Repo `kipyin/eloquent`, checkout `~/Code/eloquent`. Product lock is [SPEC.md](SPEC.md). This is not Moshi.
 
 ## Acceptance checklist
 
-- [ ] `ClipboardTTS.xcodeproj` opens in Xcode on Ark (scheme **ClipboardTTS**, destination My Mac).
-- [ ] App builds for Apple Silicon (`xcodebuild -project ClipboardTTS.xcodeproj -scheme ClipboardTTS -configuration Release -arch arm64`).
+- [ ] `Eloquent.xcodeproj` opens in Xcode on Ark (scheme **Eloquent**, destination My Mac).
+- [ ] App builds for Apple Silicon (`xcodebuild -project Eloquent.xcodeproj -scheme Eloquent -configuration Release -arch arm64`).
 - [ ] Run produces a menu-bar accessory (`LSUIElement`): no Dock icon, **always-on** speaker status item (still there when idle).
 - [ ] Floating panel is hidden at launch and when idle/stopped. It appears only while speaking (loading / playing / paused) with previous / pause / stop / next.
 - [ ] Settings shows Engine, Endpoint, API key, Model, Voice, Speed, Paragraph split with defaults:
@@ -34,7 +34,7 @@ clipboard-tts for Kip’s Mac (Ark). Product lock is [SPEC.md](SPEC.md). This is
 
 ```bash
 curl -sS http://127.0.0.1:8787/v1/models
-open ClipboardTTS.xcodeproj   # Run, or: make run
+open Eloquent.xcodeproj   # Run, or: make run
 ```
 
 Copy text → `⌥⎋` → hear audio → use the floating controls. Details in [README.md](README.md).

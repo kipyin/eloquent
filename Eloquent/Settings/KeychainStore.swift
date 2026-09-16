@@ -2,7 +2,7 @@ import Foundation
 import Security
 
 enum KeychainStore {
-    private static let service = "com.kipyin.clipboard-tts"
+    private static let service = "com.kipyin.eloquent"
     private static let account = "api-key"
 
     static func loadAPIKey() -> String {

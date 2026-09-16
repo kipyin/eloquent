@@ -1,5 +1,5 @@
-SCHEME := ClipboardTTS
-PROJECT := ClipboardTTS.xcodeproj
+SCHEME := Eloquent
+PROJECT := Eloquent.xcodeproj
 CONFIG ?= Debug
 DERIVED := build
 
@@ -9,7 +9,7 @@ build:
 	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIG) -arch arm64 -derivedDataPath $(DERIVED) build
 
 run: build
-	open "$(DERIVED)/Build/Products/$(CONFIG)/ClipboardTTS.app"
+	open "$(DERIVED)/Build/Products/$(CONFIG)/Eloquent.app"
 
 open:
 	open $(PROJECT)

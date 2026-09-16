@@ -10,7 +10,7 @@ final class SettingsWindowController {
             let controller = NSHostingController(rootView: SettingsView())
             let window = NSWindow(contentViewController: controller)
             window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
-            window.title = "Clipboard TTS Settings"
+            window.title = "Eloquent Settings"
             window.setContentSize(NSSize(width: 560, height: 680))
             window.center()
             window.isReleasedWhenClosed = false
@@ -81,7 +81,7 @@ struct SettingsView: View {
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 if loginItem.needsApproval {
-                    Text("macOS needs approval. System Settings → General → Login Items & Extensions, then enable Clipboard TTS.")
+                    Text("macOS needs approval. System Settings → General → Login Items & Extensions, then enable Eloquent.")
                         .font(.caption)
                         .foregroundStyle(.orange)
                 }

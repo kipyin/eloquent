@@ -17,7 +17,7 @@ final class StatusItemController: NSObject {
         super.init()
         statusItem.isVisible = true
         statusItem.behavior = NSStatusItem.Behavior()
-        statusItem.button?.toolTip = "Clipboard TTS"
+        statusItem.button?.toolTip = "Eloquent"
         configureButton()
         rebuildMenu()
 
@@ -47,7 +47,7 @@ final class StatusItemController: NSObject {
         case .idle:
             symbolName = "speaker.wave.2.fill"
         }
-        button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Clipboard TTS")
+        button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Eloquent")
         button.image?.isTemplate = true
     }
 
@@ -86,7 +86,7 @@ final class StatusItemController: NSObject {
         menu.addItem(.separator())
 
         let quitItem = NSMenuItem(
-            title: "Quit Clipboard TTS",
+            title: "Quit Eloquent",
             action: #selector(quitMenuItem),
             keyEquivalent: "q"
         )

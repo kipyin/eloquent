@@ -1,6 +1,8 @@
-# clipboard-tts — native macOS menu-bar TTS
+# Eloquent — native macOS menu-bar TTS
 
 Finish-owned product. Separate from Moshi. Ship for Kip’s Mac (Ark).
+
+Repo: [github.com/kipyin/eloquent](https://github.com/kipyin/eloquent). Local checkout on Ark: `~/Code/eloquent`.
 
 ## Product (locked)
 
