@@ -6,7 +6,7 @@ Repo: [github.com/kipyin/eloquent](https://github.com/kipyin/eloquent). Local ch
 
 ## Product (locked)
 
-1. **Global hotkey** `⌥⎋` (Option+Escape): read current clipboard text → send to TTS → play audio.
+1. **Global hotkey** `⌥⎋` (Option+Escape): read current clipboard text → send to TTS → play audio. **Prompt the user to grant Accessibility** so the hotkey works in every app.
 2. **Always-on menu-bar icon.** The status item stays in the menu bar for the life of the app (LSUIElement, no Dock icon). It is not a playback-only extra.
 3. **Floating control panel only while speaking:** previous paragraph, pause, stop, next paragraph. Show during loading / playing / paused. **Hide when idle or stopped.** Do not leave the panel up as a standing window.
 4. **Settings** (Moshi-style OpenAI TTS fields, plus paragraph split):
@@ -40,7 +40,7 @@ Proxy repo (reference only, do not modify): local path `~/Code/xai-openai-tts-pr
 
 - Swift + SwiftUI (or AppKit where needed for menu bar / global hotkey / floating panel)
 - LSUIElement / always-on menu-bar accessory; floating panel only while speaking
-- Global hotkey via Carbon/HotKey or `KeyboardShortcuts` / equivalent; document Accessibility permission if required
+- Global hotkey via Carbon plus event monitors; **prompt to grant Accessibility** for ⌥⎋
 - Split clipboard text into paragraphs for prev/next using the selected Paragraph split mode
 - Persist settings in UserDefaults (API key in Keychain preferred)
 - README: build (`xcodebuild` or Xcode), run, grant Accessibility if prompted, verify Opt+Esc with proxy up
@@ -58,4 +58,5 @@ Proxy repo (reference only, do not modify): local path `~/Code/xai-openai-tts-pr
 - Settings UI has Engine / Endpoint / API key / Model / Voice / Speed / Paragraph split / Open at Login (off by default)
 - Opt+Esc path implemented (clipboard → speech → play)
 - Always-on menu-bar icon; floating panel with prev / pause / stop / next only while speaking (hidden when idle/stopped)
+- First-launch Accessibility prompt for ⌥⎋; README documents the grant steps
 - README + HANDOFF present

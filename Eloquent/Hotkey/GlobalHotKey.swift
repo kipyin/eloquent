@@ -5,6 +5,9 @@ import os
 final class GlobalHotKey {
     private var hotKeyRef: EventHotKeyRef?
     private var handlerRef: EventHandlerRef?
+    private var globalMonitor: Any?
+    private var localMonitor: Any?
+    private var lastFire: TimeInterval = 0
     private let handler: () -> Void
 
     private static var active: GlobalHotKey?
@@ -26,6 +29,7 @@ final class GlobalHotKey {
         self.handler = handler
         Self.active = self
         install(keyCode: keyCode, carbonModifiers: carbonModifiers)
+        installEventMonitors()
     }
 
     deinit {
@@ -34,6 +38,12 @@ final class GlobalHotKey {
         }
         if let handlerRef {
             RemoveEventHandler(handlerRef)
+        }
+        if let globalMonitor {
+            NSEvent.removeMonitor(globalMonitor)
+        }
+        if let localMonitor {
+            NSEvent.removeMonitor(localMonitor)
         }
         if Self.active === self {
             Self.active = nil
@@ -63,9 +73,43 @@ final class GlobalHotKey {
         }
 
         DispatchQueue.main.async {
-            Self.active?.handler()
+            Self.active?.fire()
         }
         return noErr
+    }
+
+    fileprivate static func isOptionEscape(_ event: NSEvent) -> Bool {
+        let significant = event.modifierFlags.intersection([.command, .shift, .control, .option])
+        return event.keyCode == 53 && significant == .option
+    }
+
+    private func fire() {
+        let now = ProcessInfo.processInfo.systemUptime
+        if now - lastFire < 0.2 {
+            return
+        }
+        lastFire = now
+        handler()
+    }
+
+    private func installEventMonitors() {
+        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { event in
+            guard Self.isOptionEscape(event) else {
+                return
+            }
+            DispatchQueue.main.async {
+                Self.active?.fire()
+            }
+        }
+        localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            guard Self.isOptionEscape(event) else {
+                return event
+            }
+            DispatchQueue.main.async {
+                Self.active?.fire()
+            }
+            return nil
+        }
     }
 
     private func install(keyCode: UInt32, carbonModifiers: UInt32) {

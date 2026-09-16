@@ -13,6 +13,7 @@
 		A01C00000000000000000303 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000103 /* SettingsView.swift */; };
 		A01C00000000000000000316 /* LoginItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000116 /* LoginItemController.swift */; };
 		A01C00000000000000000304 /* GlobalHotKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000104 /* GlobalHotKey.swift */; };
+		A01C00000000000000000317 /* AccessibilityPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000117 /* AccessibilityPermission.swift */; };
 		A01C00000000000000000305 /* ClipboardReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000105 /* ClipboardReader.swift */; };
 		A01C00000000000000000306 /* ParagraphSplitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000106 /* ParagraphSplitter.swift */; };
 		A01C00000000000000000307 /* TTSClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000107 /* TTSClient.swift */; };
@@ -31,6 +32,7 @@
 		A01C00000000000000000103 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
 		A01C00000000000000000116 /* LoginItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemController.swift; sourceTree = "<group>"; };
 		A01C00000000000000000104 /* GlobalHotKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotKey.swift; sourceTree = "<group>"; };
+		A01C00000000000000000117 /* AccessibilityPermission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityPermission.swift; sourceTree = "<group>"; };
 		A01C00000000000000000105 /* ClipboardReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardReader.swift; sourceTree = "<group>"; };
 		A01C00000000000000000106 /* ParagraphSplitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParagraphSplitter.swift; sourceTree = "<group>"; };
 		A01C00000000000000000107 /* TTSClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTSClient.swift; sourceTree = "<group>"; };
@@ -95,6 +97,7 @@
 			isa = PBXGroup;
 			children = (
 				A01C00000000000000000104 /* GlobalHotKey.swift */,
+				A01C00000000000000000117 /* AccessibilityPermission.swift */,
 			);
 			path = Hotkey;
 			sourceTree = "<group>";
@@ -211,6 +214,7 @@
 				A01C00000000000000000303 /* SettingsView.swift in Sources */,
 				A01C00000000000000000316 /* LoginItemController.swift in Sources */,
 				A01C00000000000000000304 /* GlobalHotKey.swift in Sources */,
+				A01C00000000000000000317 /* AccessibilityPermission.swift in Sources */,
 				A01C00000000000000000305 /* ClipboardReader.swift in Sources */,
 				A01C00000000000000000306 /* ParagraphSplitter.swift in Sources */,
 				A01C00000000000000000307 /* TTSClient.swift in Sources */,

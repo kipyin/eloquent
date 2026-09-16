@@ -11,7 +11,7 @@ final class SettingsWindowController {
             let window = NSWindow(contentViewController: controller)
             window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
             window.title = "Eloquent Settings"
-            window.setContentSize(NSSize(width: 560, height: 680))
+            window.setContentSize(NSSize(width: 560, height: 740))
             window.center()
             window.isReleasedWhenClosed = false
             self.window = window
@@ -20,12 +20,14 @@ final class SettingsWindowController {
         NSApp.activate(ignoringOtherApps: true)
         window?.makeKeyAndOrderFront(nil)
         LoginItemController.shared.refresh()
+        AccessibilityPermission.shared.refresh()
     }
 }
 
 struct SettingsView: View {
     @ObservedObject private var settings = AppSettings.shared
     @ObservedObject private var loginItem = LoginItemController.shared
+    @ObservedObject private var accessibility = AccessibilityPermission.shared
 
     var body: some View {
         Form {
@@ -69,7 +71,22 @@ struct SettingsView: View {
                 Text(settings.paragraphSplit.helpText)
                     .font(.caption)
                     .foregroundStyle(.secondary)
+            }
+
+            Section("Hotkey") {
                 LabeledContent("Speak clipboard", value: "⌥⎋  Option+Escape")
+                LabeledContent("Accessibility") {
+                    Text(accessibility.isTrusted ? "Granted" : "Not granted")
+                        .foregroundStyle(accessibility.isTrusted ? .secondary : .orange)
+                }
+                if !accessibility.isTrusted {
+                    Text("Grant Accessibility so Option+Escape works in every app. After enabling Eloquent, quit from the menu bar and reopen.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Button("Grant Accessibility…") {
+                        accessibility.prompt()
+                    }
+                }
                 Text("Language is omitted on purpose so the local proxy’s zh/en heuristic applies. ja and auto are never sent.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
@@ -104,6 +121,7 @@ struct SettingsView: View {
         .padding(.bottom, 8)
         .onAppear {
             loginItem.refresh()
+            accessibility.refresh()
         }
     }
 

@@ -28,6 +28,13 @@ final class StatusItemController: NSObject {
                 self?.rebuildMenu()
             }
             .store(in: &cancellables)
+
+        AccessibilityPermission.shared.$isTrusted
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.rebuildMenu()
+            }
+            .store(in: &cancellables)
     }
 
     private func configureButton() {
@@ -72,6 +79,17 @@ final class StatusItemController: NSObject {
         )
         statusItem.isEnabled = false
         menu.addItem(statusItem)
+
+        if !AccessibilityPermission.shared.isTrusted {
+            menu.addItem(.separator())
+            let grantItem = NSMenuItem(
+                title: "Grant Accessibility…",
+                action: #selector(grantAccessibilityMenuItem),
+                keyEquivalent: ""
+            )
+            grantItem.target = self
+            menu.addItem(grantItem)
+        }
 
         menu.addItem(.separator())
 
@@ -119,6 +137,11 @@ final class StatusItemController: NSObject {
     @objc
     func settingsMenuItem() {
         onSettings()
+    }
+
+    @objc
+    func grantAccessibilityMenuItem() {
+        AccessibilityPermission.shared.prompt()
     }
 
     @objc

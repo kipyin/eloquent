@@ -61,22 +61,27 @@ Engine / Endpoint / Model / Voice / Speed / Paragraph split persist in UserDefau
 
 The JSON body is `{ model, voice, input, speed, response_format: "mp3" }` posted to `{endpoint}/audio/speech`. `language` is omitted so the proxy’s zh/en heuristic runs. `ja` and `auto` are never sent. If an API key is set, it is sent as `Authorization: Bearer …`.
 
-## Accessibility
+## Accessibility (required for global ⌥⎋)
 
-The global hotkey uses Carbon `RegisterEventHotKey` for Option+Escape. That usually works **without** Accessibility or Input Monitoring.
+Eloquent prompts on **first launch** to grant Accessibility so Option+Escape works in every app. You can also grant later from the menu bar (**Grant Accessibility…**) or **Settings → Hotkey**.
 
-If `⌥⎋` does nothing:
+1. When the alert appears, click **Grant Accessibility**.
+2. System Settings → **Privacy & Security → Accessibility**.
+3. Enable **Eloquent**. If you launched from Xcode, enable **Xcode** (or the `Eloquent.app` product you ran).
+4. **Quit Eloquent** from the menu bar and reopen it. macOS only applies Accessibility to a process after relaunch.
 
-1. System Settings → Privacy & Security → Accessibility
-2. Enable **Eloquent** (or Xcode / `Eloquent.app` if you launched from Xcode)
-3. Quit and reopen the app, then try again
+The same path without the prompt:
 
-You should not need Input Monitoring for this hotkey.
+- System Settings → Privacy & Security → Accessibility → enable Eloquent → quit and reopen.
+
+Input Monitoring is not required.
+
+If `⌥⎋` still does nothing after a relaunch, confirm Eloquent (not only Xcode) is enabled, then try **Speak Clipboard** from the menu bar to separate hotkey issues from TTS.
 
 ## Verify on Ark with the loopback proxy
 
 1. Confirm the proxy is up: `curl -sS http://127.0.0.1:8787/v1/models` should mention `grok-tts`.
-2. Launch Eloquent. Confirm the **always-on** menu-bar speaker icon (no Dock icon). The floating panel must **not** be visible yet.
+2. Launch Eloquent. Confirm the **always-on** menu-bar speaker icon (no Dock icon). The floating panel must **not** be visible yet. Grant Accessibility when prompted (or via **Grant Accessibility…**), then quit and reopen.
 3. Open **Settings…**. Confirm the defaults in the table above. Leave API key empty. Confirm **Open at Login** is off.
 4. Copy a short English sentence. Press **Option+Escape**. Audio should play. The floating panel should appear with previous / pause / stop / next.
 5. Press **Stop** (or let the last paragraph finish). The panel must hide. The menu-bar icon must remain.

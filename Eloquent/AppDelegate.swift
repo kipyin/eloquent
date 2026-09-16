@@ -25,6 +25,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         hotKey = GlobalHotKey.optionEscape { [weak self] in
             self?.speech.speakClipboard()
         }
+
+        DispatchQueue.main.async {
+            AccessibilityPermission.shared.promptIfNeeded()
+        }
+    }
+
+    func applicationDidBecomeActive(_ notification: Notification) {
+        AccessibilityPermission.shared.refresh()
     }
 
     func applicationWillTerminate(_ notification: Notification) {

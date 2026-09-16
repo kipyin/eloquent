@@ -7,6 +7,7 @@ Eloquent for Kip’s Mac (Ark). Repo `kipyin/eloquent`, checkout `~/Code/eloquen
 - [ ] `Eloquent.xcodeproj` opens in Xcode on Ark (scheme **Eloquent**, destination My Mac).
 - [ ] App builds for Apple Silicon (`xcodebuild -project Eloquent.xcodeproj -scheme Eloquent -configuration Release -arch arm64`).
 - [ ] Run produces a menu-bar accessory (`LSUIElement`): no Dock icon, **always-on** speaker status item (still there when idle).
+- [ ] First launch prompts to grant Accessibility for global ⌥⎋ (also Settings → Hotkey and menu **Grant Accessibility…**). After enabling Eloquent in System Settings → Privacy & Security → Accessibility, quit and reopen.
 - [ ] Floating panel is hidden at launch and when idle/stopped. It appears only while speaking (loading / playing / paused) with previous / pause / stop / next.
 - [ ] Settings shows Engine, Endpoint, API key, Model, Voice, Speed, Paragraph split with defaults:
   - Engine `openai`
@@ -45,7 +46,7 @@ Copy text → `⌥⎋` → hear audio → use the floating controls. Details in 
 - Signing is ad-hoc. Not notarized. Sandbox is off on purpose for a local loopback utility.
 - Engine is stored for Moshi-style settings parity. The only network path is OpenAI-compatible `POST /audio/speech`; engine is not sent in the JSON body.
 - Hotkey is locked to Option+Escape (not user-configurable).
-- Carbon hotkeys usually work without Accessibility. If `⌥⎋` is swallowed, grant Accessibility as in the README.
+- After granting Accessibility, macOS requires a relaunch before `AXIsProcessTrusted()` returns true.
 - Sentence split is punctuation-based (`. ! ? 。 ！ ？`). Abbreviations such as `Dr.` may over-split. Unpunctuated text stays one unit.
 - Open at Login from a Xcode debug run registers that debug build. Prefer the Release `.app` for a real login item.
 - No auto-update, no voice catalog fetch from `GET /v1/models`.
