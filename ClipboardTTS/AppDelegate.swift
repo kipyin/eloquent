@@ -12,6 +12,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.accessory)
 
         playbackPanel = PlaybackPanelController(speech: speech)
+        // Always-on menu-bar extra for the life of the process. Never removed.
         statusItem = StatusItemController(
             speech: speech,
             onSpeak: { [weak self] in

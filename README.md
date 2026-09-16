@@ -2,7 +2,7 @@
 
 Native macOS menu-bar app. Display name: **Clipboard TTS**.
 
-Option+Escape (`⌥⎋`) reads the current clipboard, sends it to an OpenAI-compatible TTS endpoint, and plays the returned audio. A floating panel exposes previous paragraph, pause, stop, and next paragraph. This is not Moshi and is not a Moshi fork.
+Option+Escape (`⌥⎋`) reads the current clipboard, sends it to an OpenAI-compatible TTS endpoint, and plays the returned audio. The speaker icon stays in the menu bar at all times. A floating panel (previous / pause / stop / next) appears only while speaking and hides when idle or stopped. This is not Moshi and is not a Moshi fork.
 
 Product lock: [SPEC.md](SPEC.md). Acceptance: [HANDOFF.md](HANDOFF.md).
 
@@ -21,7 +21,7 @@ open ClipboardTTS.xcodeproj
 
 Select the **ClipboardTTS** scheme, destination **My Mac**, then Run (`⌘R`).
 
-The app is an `LSUIElement` accessory: it does not appear in the Dock. Look for the speaker icon in the menu bar.
+The app is an `LSUIElement` accessory: it does not appear in the Dock. The speaker icon is **always on** in the menu bar for the life of the app. The floating control panel appears only while speaking (loading / playing / paused) and is hidden when idle or after Stop.
 
 ## Build from the command line
 
@@ -74,14 +74,14 @@ You should not need Input Monitoring for this hotkey.
 ## Verify on Ark with the loopback proxy
 
 1. Confirm the proxy is up: `curl -sS http://127.0.0.1:8787/v1/models` should mention `grok-tts`.
-2. Launch Clipboard TTS. Confirm the menu-bar speaker icon.
+2. Launch Clipboard TTS. Confirm the **always-on** menu-bar speaker icon (no Dock icon). The floating panel must **not** be visible yet.
 3. Open **Settings…**. Confirm the defaults in the table above. Leave API key empty.
-4. Copy a short English sentence. Press **Option+Escape**. Audio should play. The floating panel should show previous / pause / stop / next.
-5. Copy a Chinese paragraph (or mixed zh/en). Press Option+Escape again. Language must still work without sending `ja` or `auto`.
-6. In Settings, switch **Paragraph split** across all four modes. Copy matching sample text (blank lines, one-line-per-paragraph, and multi-sentence prose) and confirm prev/next follows the selected mode.
-7. Copy a Chinese paragraph (or mixed zh/en). Press Option+Escape again. Language must still work without sending `ja` or `auto`.
-8. **Pause** should freeze audio; **Stop** should dismiss the panel.
-9. Empty the clipboard and press Option+Escape. The panel should show a short “Clipboard is empty.” error and then hide.
+4. Copy a short English sentence. Press **Option+Escape**. Audio should play. The floating panel should appear with previous / pause / stop / next.
+5. Press **Stop** (or let the last paragraph finish). The panel must hide. The menu-bar icon must remain.
+6. Copy a Chinese paragraph (or mixed zh/en). Press Option+Escape again. Language must still work without sending `ja` or `auto`.
+7. In Settings, switch **Paragraph split** across all four modes. Copy matching sample text (blank lines, one-line-per-paragraph, and multi-sentence prose) and confirm prev/next follows the selected mode.
+8. **Pause** should freeze audio and keep the panel up; **Stop** should dismiss the panel.
+9. Empty the clipboard and press Option+Escape. The menu bar can show “Clipboard is empty.” The floating panel must stay hidden.
 
 ## Layout
 

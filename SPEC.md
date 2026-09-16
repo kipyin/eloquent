@@ -5,8 +5,9 @@ Finish-owned product. Separate from Moshi. Ship for Kip’s Mac (Ark).
 ## Product (locked)
 
 1. **Global hotkey** `⌥⎋` (Option+Escape): read current clipboard text → send to TTS → play audio.
-2. **Floating control panel** while speaking: previous paragraph, pause, stop, next paragraph.
-3. **Settings** (Moshi-style OpenAI TTS fields, plus paragraph split):
+2. **Always-on menu-bar icon.** The status item stays in the menu bar for the life of the app (LSUIElement, no Dock icon). It is not a playback-only extra.
+3. **Floating control panel only while speaking:** previous paragraph, pause, stop, next paragraph. Show during loading / playing / paused. **Hide when idle or stopped.** Do not leave the panel up as a standing window.
+4. **Settings** (Moshi-style OpenAI TTS fields, plus paragraph split):
     - Engine (default `openai`)
     - Endpoint / base URL (default `http://127.0.0.1:8787/v1`)
     - API key (default empty or `unused` — the local proxy holds the real upstream key; do **not** bake any real key into the repo)
@@ -18,8 +19,8 @@ Finish-owned product. Separate from Moshi. Ship for Kip’s Mac (Ark).
       2. Every newline is a paragraph
       3. Blank lines when present, otherwise every newline (**default**)
       4. Split on sentences
-4. **Language**: do not force Japanese. Prefer omitting `language` so the proxy’s zh/en-only heuristic runs; if sending language, only `zh` or `en`.
-5. Menu-bar / local service app — **not** iOS, not a Moshi fork.
+5. **Language**: do not force Japanese. Prefer omitting `language` so the proxy’s zh/en-only heuristic runs; if sending language, only `zh` or `en`.
+6. Menu-bar / local service app — **not** iOS, not a Moshi fork.
 
 ## TTS API (local proxy already running on Ark)
 
@@ -35,7 +36,7 @@ Proxy repo (reference only, do not modify): local path `~/Code/xai-openai-tts-pr
 ## Implementation expectations
 
 - Swift + SwiftUI (or AppKit where needed for menu bar / global hotkey / floating panel)
-- LSUIElement / menu-bar accessory app
+- LSUIElement / always-on menu-bar accessory; floating panel only while speaking
 - Global hotkey via Carbon/HotKey or `KeyboardShortcuts` / equivalent; document Accessibility permission if required
 - Split clipboard text into paragraphs for prev/next using the selected Paragraph split mode
 - Persist settings in UserDefaults (API key in Keychain preferred)
@@ -53,5 +54,5 @@ Proxy repo (reference only, do not modify): local path `~/Code/xai-openai-tts-pr
 - App builds
 - Settings UI has Engine / Endpoint / API key / Model / Voice / Speed / Paragraph split with defaults above
 - Opt+Esc path implemented (clipboard → speech → play)
-- Floating panel with prev / pause / stop / next
+- Always-on menu-bar icon; floating panel with prev / pause / stop / next only while speaking (hidden when idle/stopped)
 - README + HANDOFF present

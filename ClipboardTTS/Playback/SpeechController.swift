@@ -58,6 +58,17 @@ final class SpeechController: ObservableObject {
         }
     }
 
+    var showsFloatingPanel: Bool {
+        switch state {
+        case .loading, .playing, .paused:
+            return true
+        case .idle:
+            return false
+        case .failed:
+            return !paragraphs.isEmpty
+        }
+    }
+
     var isPaused: Bool {
         if case .paused = state {
             return true

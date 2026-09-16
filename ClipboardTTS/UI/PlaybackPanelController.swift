@@ -13,8 +13,8 @@ final class PlaybackPanelController: NSObject, NSWindowDelegate {
         super.init()
         speech.$state
             .receive(on: RunLoop.main)
-            .sink { [weak self] state in
-                self?.sync(to: state)
+            .sink { [weak self] _ in
+                self?.syncVisibility()
             }
             .store(in: &cancellables)
     }
@@ -24,12 +24,11 @@ final class PlaybackPanelController: NSObject, NSWindowDelegate {
         return false
     }
 
-    private func sync(to state: SpeechController.State) {
-        switch state {
-        case .idle:
-            hide()
-        case .loading, .playing, .paused, .failed:
+    private func syncVisibility() {
+        if speech.showsFloatingPanel {
             show()
+        } else {
+            hide()
         }
     }
 

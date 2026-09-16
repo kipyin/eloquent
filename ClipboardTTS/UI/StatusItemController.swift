@@ -15,6 +15,8 @@ final class StatusItemController: NSObject {
         self.onSettings = onSettings
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         super.init()
+        statusItem.isVisible = true
+        statusItem.behavior = NSStatusItem.Behavior()
         statusItem.button?.toolTip = "Clipboard TTS"
         configureButton()
         rebuildMenu()

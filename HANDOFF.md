@@ -6,7 +6,8 @@ clipboard-tts for Kip’s Mac (Ark). Product lock is [SPEC.md](SPEC.md). This is
 
 - [ ] `ClipboardTTS.xcodeproj` opens in Xcode on Ark (scheme **ClipboardTTS**, destination My Mac).
 - [ ] App builds for Apple Silicon (`xcodebuild -project ClipboardTTS.xcodeproj -scheme ClipboardTTS -configuration Release -arch arm64`).
-- [ ] Run produces a menu-bar accessory (`LSUIElement`): no Dock icon, speaker status item present.
+- [ ] Run produces a menu-bar accessory (`LSUIElement`): no Dock icon, **always-on** speaker status item (still there when idle).
+- [ ] Floating panel is hidden at launch and when idle/stopped. It appears only while speaking (loading / playing / paused) with previous / pause / stop / next.
 - [ ] Settings shows Engine, Endpoint, API key, Model, Voice, Speed, Paragraph split with defaults:
   - Engine `openai`
   - Endpoint `http://127.0.0.1:8787/v1`
@@ -24,8 +25,8 @@ clipboard-tts for Kip’s Mac (Ark). Product lock is [SPEC.md](SPEC.md). This is
 - [ ] With the proxy at `127.0.0.1:8787`, Option+Escape reads the clipboard, `POST`s `{endpoint}/audio/speech`, and plays mp3 audio.
 - [ ] Request body includes `model`, `voice`, `input`, `speed`, `response_format=mp3`. No `language` field (so the proxy zh/en heuristic applies). Never `ja` or `auto`.
 - [ ] Authorization Bearer is sent only when an API key is set.
-- [ ] Floating panel during playback: previous paragraph, pause, stop, next paragraph.
-- [ ] English and Chinese clipboard text both speak. Empty clipboard shows a brief error instead of hanging.
+- [ ] Floating panel during playback: previous paragraph, pause, stop, next paragraph. Stop (or end of last paragraph) hides the panel; the menu-bar icon stays.
+- [ ] English and Chinese clipboard text both speak. Empty clipboard does not pop the floating panel.
 - [ ] No real API keys in the repo. No Moshi UI/code. No Life OS scope.
 
 ## How to verify (Ark)
