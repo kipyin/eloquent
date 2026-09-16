@@ -13,11 +13,17 @@ final class StatusItemController: NSObject {
         self.speech = speech
         self.onSpeak = onSpeak
         self.onSettings = onSettings
-        self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
+        // Fixed square length + title fallback so the item stays visible when the
+        // menu bar is crowded or the SF Symbol fails to resolve.
+        self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         super.init()
+        statusItem.autosaveName = "EloquentStatusItem"
         statusItem.isVisible = true
-        statusItem.behavior = NSStatusItem.Behavior()
-        statusItem.button?.toolTip = "Eloquent"
+        if let button = statusItem.button {
+            button.toolTip = "Eloquent"
+            button.title = "Elo"
+            button.imagePosition = .imageLeading
+        }
         configureButton()
         rebuildMenu()
 
@@ -54,8 +60,15 @@ final class StatusItemController: NSObject {
         case .idle:
             symbolName = "speaker.wave.2.fill"
         }
-        button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Eloquent")
-        button.image?.isTemplate = true
+        if let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Eloquent") {
+            image.isTemplate = true
+            button.image = image
+            button.title = "Elo"
+            button.imagePosition = .imageLeading
+        } else {
+            button.image = nil
+            button.title = "Elo"
+        }
     }
 
     private func rebuildMenu() {
