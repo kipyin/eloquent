@@ -6,13 +6,18 @@ Finish-owned product. Separate from Moshi. Ship for Kip’s Mac (Ark).
 
 1. **Global hotkey** `⌥⎋` (Option+Escape): read current clipboard text → send to TTS → play audio.
 2. **Floating control panel** while speaking: previous paragraph, pause, stop, next paragraph.
-3. **Settings** (Moshi-style OpenAI TTS fields):
+3. **Settings** (Moshi-style OpenAI TTS fields, plus paragraph split):
     - Engine (default `openai`)
     - Endpoint / base URL (default `http://127.0.0.1:8787/v1`)
     - API key (default empty or `unused` — the local proxy holds the real upstream key; do **not** bake any real key into the repo)
     - Model (default `grok-tts`)
     - Voice (default `carina`)
     - Speed (default `1.1`, clamp 0.7–1.5 to match proxy)
+    - **Paragraph split** (prev/next uses this). Four modes:
+      1. Blank lines only (double newline)
+      2. Every newline is a paragraph
+      3. Blank lines when present, otherwise every newline (**default**)
+      4. Split on sentences
 4. **Language**: do not force Japanese. Prefer omitting `language` so the proxy’s zh/en-only heuristic runs; if sending language, only `zh` or `en`.
 5. Menu-bar / local service app — **not** iOS, not a Moshi fork.
 
@@ -32,7 +37,7 @@ Proxy repo (reference only, do not modify): local path `~/Code/xai-openai-tts-pr
 - Swift + SwiftUI (or AppKit where needed for menu bar / global hotkey / floating panel)
 - LSUIElement / menu-bar accessory app
 - Global hotkey via Carbon/HotKey or `KeyboardShortcuts` / equivalent; document Accessibility permission if required
-- Split clipboard text into paragraphs for prev/next
+- Split clipboard text into paragraphs for prev/next using the selected Paragraph split mode
 - Persist settings in UserDefaults (API key in Keychain preferred)
 - README: build (`xcodebuild` or Xcode), run, grant Accessibility if prompted, verify Opt+Esc with proxy up
 - HANDOFF.md: acceptance checklist + known gaps
@@ -46,7 +51,7 @@ Proxy repo (reference only, do not modify): local path `~/Code/xai-openai-tts-pr
 ## Done when
 
 - App builds
-- Settings UI has Engine / Endpoint / API key / Model / Voice / Speed with defaults above
+- Settings UI has Engine / Endpoint / API key / Model / Voice / Speed / Paragraph split with defaults above
 - Opt+Esc path implemented (clipboard → speech → play)
 - Floating panel with prev / pause / stop / next
 - README + HANDOFF present

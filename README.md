@@ -46,8 +46,16 @@ The project is ad-hoc signed (`CODE_SIGN_IDENTITY = "-"`) so it runs locally wit
 | Model | `grok-tts` |
 | Voice | `carina` |
 | Speed | `1.1` (clamped 0.7–1.5) |
+| Paragraph split | Blank lines when present, otherwise every newline |
 
-Engine / Endpoint / Model / Voice / Speed persist in UserDefaults. The API key persists in Keychain (`com.kipyin.clipboard-tts`). Do not paste a real xAI key into this repo.
+Engine / Endpoint / Model / Voice / Speed / Paragraph split persist in UserDefaults. The API key persists in Keychain (`com.kipyin.clipboard-tts`). Do not paste a real xAI key into this repo.
+
+**Paragraph split** controls how prev/next walks the clipboard:
+
+1. **Blank lines only** — split on double newlines; single line breaks stay in one paragraph.
+2. **Every newline** — each newline is a paragraph.
+3. **Blank lines, else every newline** — default. Use blank lines when they exist; otherwise split on every newline.
+4. **Sentences** — split on `. ! ? 。 ！ ？` (and fullwidth/ellipsis variants). Prev/next is per sentence.
 
 The JSON body is `{ model, voice, input, speed, response_format: "mp3" }` posted to `{endpoint}/audio/speech`. `language` is omitted so the proxy’s zh/en heuristic runs. `ja` and `auto` are never sent. If an API key is set, it is sent as `Authorization: Bearer …`.
 
@@ -70,8 +78,10 @@ You should not need Input Monitoring for this hotkey.
 3. Open **Settings…**. Confirm the defaults in the table above. Leave API key empty.
 4. Copy a short English sentence. Press **Option+Escape**. Audio should play. The floating panel should show previous / pause / stop / next.
 5. Copy a Chinese paragraph (or mixed zh/en). Press Option+Escape again. Language must still work without sending `ja` or `auto`.
-6. Copy text with blank-line (or newline) separated paragraphs. Use **next** / **previous**. **Pause** should freeze audio; **Stop** should dismiss the panel.
-7. Empty the clipboard and press Option+Escape. The panel should show a short “Clipboard is empty.” error and then hide.
+6. In Settings, switch **Paragraph split** across all four modes. Copy matching sample text (blank lines, one-line-per-paragraph, and multi-sentence prose) and confirm prev/next follows the selected mode.
+7. Copy a Chinese paragraph (or mixed zh/en). Press Option+Escape again. Language must still work without sending `ja` or `auto`.
+8. **Pause** should freeze audio; **Stop** should dismiss the panel.
+9. Empty the clipboard and press Option+Escape. The panel should show a short “Clipboard is empty.” error and then hide.
 
 ## Layout
 

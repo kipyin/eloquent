@@ -92,7 +92,7 @@ final class SpeechController: ObservableObject {
             return
         }
 
-        let parts = ParagraphSplitter.split(text)
+        let parts = ParagraphSplitter.split(text, mode: AppSettings.shared.paragraphSplit)
         guard !parts.isEmpty else {
             presentTransientError("Clipboard is empty.")
             return

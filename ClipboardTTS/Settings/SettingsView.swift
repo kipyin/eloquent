@@ -11,7 +11,7 @@ final class SettingsWindowController {
             let window = NSWindow(contentViewController: controller)
             window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
             window.title = "Clipboard TTS Settings"
-            window.setContentSize(NSSize(width: 560, height: 500))
+            window.setContentSize(NSSize(width: 560, height: 620))
             window.center()
             window.isReleasedWhenClosed = false
             self.window = window
@@ -58,6 +58,15 @@ struct SettingsView: View {
             }
 
             Section("Playback") {
+                Picker("Paragraph split", selection: $settings.paragraphSplit) {
+                    ForEach(ParagraphSplitMode.allCases) { mode in
+                        Text(mode.menuTitle).tag(mode)
+                    }
+                }
+                .pickerStyle(.radioGroup)
+                Text(settings.paragraphSplit.helpText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
                 LabeledContent("Speak clipboard", value: "⌥⎋  Option+Escape")
                 Text("Language is omitted on purpose so the local proxy’s zh/en heuristic applies. ja and auto are never sent.")
                     .font(.caption)
@@ -71,7 +80,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(minWidth: 520, minHeight: 460)
+        .frame(minWidth: 520, minHeight: 560)
         .padding(.bottom, 8)
     }
 

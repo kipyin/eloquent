@@ -10,6 +10,8 @@ enum TTSDefaults {
     static let minimumSpeed = 0.7
     static let maximumSpeed = 1.5
 
+    static let paragraphSplit = ParagraphSplitMode.default
+
     static func clampSpeed(_ value: Double) -> Double {
         let clamped = min(max(value, minimumSpeed), maximumSpeed)
         return (clamped * 10).rounded() / 10
@@ -23,6 +25,7 @@ struct SettingsSnapshot: Sendable, Equatable {
     var model: String
     var voice: String
     var speed: Double
+    var paragraphSplit: ParagraphSplitMode
 }
 
 @MainActor
@@ -37,6 +40,7 @@ final class AppSettings: ObservableObject {
         static let model = "model"
         static let voice = "voice"
         static let speed = "speed"
+        static let paragraphSplit = "paragraphSplit"
     }
 
     @Published var engine: String {
@@ -70,6 +74,10 @@ final class AppSettings: ObservableObject {
         }
     }
 
+    @Published var paragraphSplit: ParagraphSplitMode {
+        didSet { UserDefaults.standard.set(paragraphSplit.rawValue, forKey: Keys.paragraphSplit) }
+    }
+
     private init() {
         let defaults = UserDefaults.standard
         engine = Self.nonEmpty(defaults.string(forKey: Keys.engine), fallback: Defaults.engine)
@@ -81,6 +89,12 @@ final class AppSettings: ObservableObject {
         } else {
             speed = Defaults.speed
         }
+        if let raw = defaults.string(forKey: Keys.paragraphSplit),
+           let stored = ParagraphSplitMode(rawValue: raw) {
+            paragraphSplit = stored
+        } else {
+            paragraphSplit = Defaults.paragraphSplit
+        }
         apiKey = KeychainStore.loadAPIKey()
     }
 
@@ -91,7 +105,8 @@ final class AppSettings: ObservableObject {
             apiKey: apiKey.trimmingCharacters(in: .whitespacesAndNewlines),
             model: model.trimmingCharacters(in: .whitespacesAndNewlines),
             voice: voice.trimmingCharacters(in: .whitespacesAndNewlines),
-            speed: TTSDefaults.clampSpeed(speed)
+            speed: TTSDefaults.clampSpeed(speed),
+            paragraphSplit: paragraphSplit
         )
     }
 
@@ -102,6 +117,7 @@ final class AppSettings: ObservableObject {
         model = Defaults.model
         voice = Defaults.voice
         speed = Defaults.speed
+        paragraphSplit = Defaults.paragraphSplit
     }
 
     static func clampSpeed(_ value: Double) -> Double {

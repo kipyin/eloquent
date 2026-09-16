@@ -7,13 +7,19 @@ clipboard-tts for Kip’s Mac (Ark). Product lock is [SPEC.md](SPEC.md). This is
 - [ ] `ClipboardTTS.xcodeproj` opens in Xcode on Ark (scheme **ClipboardTTS**, destination My Mac).
 - [ ] App builds for Apple Silicon (`xcodebuild -project ClipboardTTS.xcodeproj -scheme ClipboardTTS -configuration Release -arch arm64`).
 - [ ] Run produces a menu-bar accessory (`LSUIElement`): no Dock icon, speaker status item present.
-- [ ] Settings shows Engine, Endpoint, API key, Model, Voice, Speed with defaults:
+- [ ] Settings shows Engine, Endpoint, API key, Model, Voice, Speed, Paragraph split with defaults:
   - Engine `openai`
   - Endpoint `http://127.0.0.1:8787/v1`
   - API key empty
   - Model `grok-tts`
   - Voice `carina`
   - Speed `1.1`, slider clamped 0.7–1.5
+  - Paragraph split: **Blank lines, else every newline**
+- [ ] Paragraph split has all four modes; prev/next follows the selected mode:
+  1. Blank lines only
+  2. Every newline
+  3. Blank lines when present, otherwise every newline (default)
+  4. Sentences
 - [ ] Settings survive quit/relaunch (UserDefaults + Keychain for the API key).
 - [ ] With the proxy at `127.0.0.1:8787`, Option+Escape reads the clipboard, `POST`s `{endpoint}/audio/speech`, and plays mp3 audio.
 - [ ] Request body includes `model`, `voice`, `input`, `speed`, `response_format=mp3`. No `language` field (so the proxy zh/en heuristic applies). Never `ja` or `auto`.
@@ -38,5 +44,5 @@ Copy text → `⌥⎋` → hear audio → use the floating controls. Details in 
 - Engine is stored for Moshi-style settings parity. The only network path is OpenAI-compatible `POST /audio/speech`; engine is not sent in the JSON body.
 - Hotkey is locked to Option+Escape (not user-configurable).
 - Carbon hotkeys usually work without Accessibility. If `⌥⎋` is swallowed, grant Accessibility as in the README.
-- Paragraph split: blank lines first, otherwise single newlines. A single blob of text is one paragraph, so prev/next is a no-op.
+- Sentence split is punctuation-based (`. ! ? 。 ！ ？`). Abbreviations such as `Dr.` may over-split. Unpunctuated text stays one unit.
 - No login item, no auto-update, no voice catalog fetch from `GET /v1/models`.
