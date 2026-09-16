@@ -11,6 +11,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private static let log = Logger(subsystem: "com.kipyin.eloquent", category: "app")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        ApplicationMenu.install()
         NSApp.setActivationPolicy(.accessory)
 
         speech = SpeechController()

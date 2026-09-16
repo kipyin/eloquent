@@ -6,22 +6,43 @@ final class SettingsWindowController {
     private var window: NSWindow?
 
     func show() {
-        if window == nil {
-            let controller = NSHostingController(rootView: SettingsView())
-            let window = NSWindow(contentViewController: controller)
-            window.styleMask = [.titled, .closable, .miniaturizable, .resizable]
-            window.title = "Eloquent Settings"
-            window.setContentSize(NSSize(width: 560, height: 740))
-            window.center()
-            window.isReleasedWhenClosed = false
-            self.window = window
-        }
-
-        NSApp.activate(ignoringOtherApps: true)
-        window?.makeKeyAndOrderFront(nil)
+        let window = window ?? makeWindow()
+        self.window = window
+        presentAsKey(window)
         LoginItemController.shared.refresh()
         AccessibilityPermission.shared.refresh()
     }
+
+    private func makeWindow() -> NSWindow {
+        let controller = NSHostingController(rootView: SettingsView())
+        let window = SettingsWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 560, height: 740),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable],
+            backing: .buffered,
+            defer: false
+        )
+        window.contentViewController = controller
+        window.title = "Eloquent Settings"
+        window.setContentSize(NSSize(width: 560, height: 740))
+        window.center()
+        window.isReleasedWhenClosed = false
+        window.collectionBehavior = [.moveToActiveSpace]
+        return window
+    }
+
+    private func presentAsKey(_ window: NSWindow) {
+        NSApp.activate(ignoringOtherApps: true)
+        window.makeKeyAndOrderFront(nil)
+        DispatchQueue.main.async {
+            NSApp.activate(ignoringOtherApps: true)
+            window.makeKeyAndOrderFront(nil)
+        }
+    }
+}
+
+private final class SettingsWindow: NSWindow {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { true }
 }
 
 struct SettingsView: View {
