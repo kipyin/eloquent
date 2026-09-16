@@ -40,9 +40,16 @@ open Eloquent.xcodeproj   # Run, or: make run
 
 Copy text → `⌥⎋` → hear audio → use the floating controls. Details in [README.md](README.md).
 
+## Verified on Ark (2026-09-16)
+
+- Release build with Xcode 27; menu-bar **Elo** item visible
+- Option+Escape speaks clipboard with audio via `http://127.0.0.1:8787/v1`
+- Launch fix: explicit `main.swift` (see Known gaps)
+
 ## Known gaps
 
-- This Linux agent could not run `xcodebuild` or play audio. First green build has to happen on Ark.
+- First green `xcodebuild` and live audio verify were done on Ark (not in CI).
+- On macOS 27 / Xcode 27, `@main` AppDelegate did not receive `applicationDidFinishLaunching`; keep explicit `main.swift` that sets `NSApplication.shared.delegate` before `NSApplicationMain`.
 - Signing is ad-hoc. Not notarized. Sandbox is off on purpose for a local loopback utility.
 - Engine is stored for Moshi-style settings parity. The only network path is OpenAI-compatible `POST /audio/speech`; engine is not sent in the JSON body.
 - Hotkey is locked to Option+Escape (not user-configurable).

@@ -1,5 +1,4 @@
 import AppKit
-import ApplicationServices
 import os
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
@@ -12,7 +11,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private static let log = Logger(subsystem: "com.kipyin.eloquent", category: "app")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        Self.writeLaunchBreadcrumb("didFinishLaunching begin")
         NSApp.setActivationPolicy(.accessory)
 
         speech = SpeechController()
@@ -31,9 +29,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.speech.speakClipboard()
         }
 
-        Self.writeLaunchBreadcrumb(
-            "statusItem created=\(statusItem != nil) trusted=\(AXIsProcessTrusted())"
-        )
         Self.log.info("Eloquent launched; status item ready")
 
         DispatchQueue.main.async {
@@ -48,24 +43,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         speech?.stop()
         hotKey = nil
-        Self.writeLaunchBreadcrumb("willTerminate")
     }
 
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
         true
     }
 
-    private static func writeLaunchBreadcrumb(_ message: String) {
-        let line = "\(ISO8601DateFormatter().string(from: Date())) \(message)\n"
-        let url = URL(fileURLWithPath: "/tmp/eloquent-launch.log")
-        guard let data = line.data(using: .utf8) else { return }
-        if FileManager.default.fileExists(atPath: url.path),
-           let handle = try? FileHandle(forWritingTo: url) {
-            defer { try? handle.close() }
-            _ = try? handle.seekToEnd()
-            try? handle.write(contentsOf: data)
-        } else {
-            try? data.write(to: url)
-        }
-    }
 }
