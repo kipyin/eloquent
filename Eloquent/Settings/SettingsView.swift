@@ -34,11 +34,11 @@ struct SettingsView: View {
             Section("OpenAI TTS") {
                 TextField("Engine", text: $settings.engine)
                     .textFieldStyle(.roundedBorder)
-                TextField("Endpoint", text: $settings.endpoint)
+                TextField("Endpoint", text: $settings.endpoint, prompt: Text("https://api.openai.com/v1"))
                     .textFieldStyle(.roundedBorder)
                 SecureField("API key", text: $settings.apiKey)
                     .textFieldStyle(.roundedBorder)
-                Text("Leave empty when using the local proxy. The proxy holds the upstream key. Never paste a real xAI key into the repo.")
+                Text("Configure Endpoint and API key for your OpenAI-compatible provider. Endpoint is the `/v1` base URL. Speak fails until Endpoint is set. Never commit API keys.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 TextField("Model", text: $settings.model)
@@ -56,7 +56,7 @@ struct SettingsView: View {
                         .monospacedDigit()
                         .frame(width: 44, alignment: .trailing)
                 }
-                Text("Clamped to 0.7–1.5 to match the proxy.")
+                Text("Clamped to 0.7–1.5.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
@@ -87,7 +87,7 @@ struct SettingsView: View {
                         accessibility.prompt()
                     }
                 }
-                Text("Language is omitted on purpose so the local proxy’s zh/en heuristic applies. ja and auto are never sent.")
+                Text("The client never sends a language field. Providers may apply their own heuristics. ja and auto are never sent.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

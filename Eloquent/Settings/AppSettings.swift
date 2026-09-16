@@ -3,9 +3,9 @@ import Foundation
 
 enum TTSDefaults {
     static let engine = "openai"
-    static let endpoint = "http://127.0.0.1:8787/v1"
-    static let model = "grok-tts"
-    static let voice = "carina"
+    static let endpoint = ""
+    static let model = "tts-1"
+    static let voice = "alloy"
     static let speed = 1.1
     static let minimumSpeed = 0.7
     static let maximumSpeed = 1.5

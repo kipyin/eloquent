@@ -8,8 +8,12 @@ enum TTSClient {
         guard !trimmed.isEmpty else {
             throw TTSError.emptyInput
         }
-        guard let url = speechURL(from: settings.endpoint) else {
-            throw TTSError.invalidEndpoint(settings.endpoint)
+        let endpoint = settings.endpoint.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !endpoint.isEmpty else {
+            throw TTSError.missingEndpoint
+        }
+        guard let url = speechURL(from: endpoint) else {
+            throw TTSError.invalidEndpoint(endpoint)
         }
 
         var request = URLRequest(url: url)
@@ -21,9 +25,9 @@ enum TTSClient {
             request.setValue("Bearer \(settings.apiKey)", forHTTPHeaderField: "Authorization")
         }
 
-        // Engine is stored for Moshi-style settings parity and is not sent in the body.
-        // Language is omitted so the local proxy can apply its zh/en heuristic.
-        // Never send ja or auto. If a language field is added later, it may only be zh or en.
+        // Engine is stored for settings parity and is not sent in the body.
+        // Language is omitted. Providers may apply their own heuristics.
+        // Never send ja or auto.
         let body = SpeechRequestBody(
             model: settings.model.isEmpty ? TTSDefaults.model : settings.model,
             voice: settings.voice.isEmpty ? TTSDefaults.voice : settings.voice,
@@ -91,6 +95,7 @@ private struct SpeechRequestBody: Encodable {
 
 enum TTSError: LocalizedError, Equatable {
     case emptyInput
+    case missingEndpoint
     case invalidEndpoint(String)
     case invalidResponse
     case emptyAudio
@@ -101,6 +106,8 @@ enum TTSError: LocalizedError, Equatable {
         switch self {
         case .emptyInput:
             return "Nothing to speak."
+        case .missingEndpoint:
+            return "Set Endpoint in Settings. Eloquent needs an OpenAI-compatible /v1 base URL."
         case .invalidEndpoint(let endpoint):
             return "Invalid endpoint: \(endpoint)"
         case .invalidResponse:

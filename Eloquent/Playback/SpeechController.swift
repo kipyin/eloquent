@@ -109,6 +109,16 @@ final class SpeechController: ObservableObject {
             return
         }
 
+        let endpoint = AppSettings.shared.snapshot().endpoint
+        if endpoint.isEmpty {
+            presentTransientError(TTSError.missingEndpoint.localizedDescription)
+            return
+        }
+        if TTSClient.speechURL(from: endpoint) == nil {
+            presentTransientError(TTSError.invalidEndpoint(endpoint).localizedDescription)
+            return
+        }
+
         beginSession(paragraphs: parts, startingAt: 0)
     }
 

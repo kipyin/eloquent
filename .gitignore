@@ -1,15 +1,26 @@
+# macOS
 .DS_Store
-build/
-DerivedData/
+.AppleDouble
+.LSOverride
+._*
+
+# Xcode user data
 xcuserdata/
+**/xcuserdata/
 *.xcuserstate
-.swiftpm/
-.build/
+*.xccheckout
+*.xcscmblueprint
 *.moved-aside
 *.hmap
 *.ipa
 *.dSYM.zip
 *.dSYM
+timeline.xctimeline
+playground.xcworkspace
+
+# Build
+build/
+DerivedData/
 profile
 *.pbxuser
 !default.pbxuser
@@ -19,3 +30,7 @@ profile
 !default.mode2v3
 *.perspectivev3
 !default.perspectivev3
+
+# SwiftPM
+.swiftpm/
+.build/
