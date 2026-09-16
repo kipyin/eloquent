@@ -77,7 +77,7 @@ struct SettingsView: View {
                 LabeledContent("Speak clipboard", value: "⌥⎋  Option+Escape")
                 LabeledContent("Accessibility") {
                     Text(accessibility.isTrusted ? "Granted" : "Not granted")
-                        .foregroundStyle(accessibility.isTrusted ? .secondary : .orange)
+                        .foregroundStyle(accessibility.isTrusted ? Color.secondary : Color.orange)
                 }
                 if !accessibility.isTrusted {
                     Text("Grant Accessibility so Option+Escape works in every app. After enabling Eloquent, quit from the menu bar and reopen.")

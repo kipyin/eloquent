@@ -1,6 +1,7 @@
 import AppKit
 
 @main
+@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let speech = SpeechController()
     private let settingsWindow = SettingsWindowController()
