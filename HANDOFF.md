@@ -16,6 +16,8 @@ clipboard-tts for Kip’s Mac (Ark). Product lock is [SPEC.md](SPEC.md). This is
   - Voice `carina`
   - Speed `1.1`, slider clamped 0.7–1.5
   - Paragraph split: **Blank lines, else every newline**
+  - Open at Login: **off**
+- [ ] Open at Login toggle uses `SMAppService`. Enabling registers a Login Item; disabling unregisters. First launch does not register.
 - [ ] Paragraph split has all four modes; prev/next follows the selected mode:
   1. Blank lines only
   2. Every newline
@@ -25,7 +27,6 @@ clipboard-tts for Kip’s Mac (Ark). Product lock is [SPEC.md](SPEC.md). This is
 - [ ] With the proxy at `127.0.0.1:8787`, Option+Escape reads the clipboard, `POST`s `{endpoint}/audio/speech`, and plays mp3 audio.
 - [ ] Request body includes `model`, `voice`, `input`, `speed`, `response_format=mp3`. No `language` field (so the proxy zh/en heuristic applies). Never `ja` or `auto`.
 - [ ] Authorization Bearer is sent only when an API key is set.
-- [ ] Floating panel during playback: previous paragraph, pause, stop, next paragraph. Stop (or end of last paragraph) hides the panel; the menu-bar icon stays.
 - [ ] English and Chinese clipboard text both speak. Empty clipboard does not pop the floating panel.
 - [ ] No real API keys in the repo. No Moshi UI/code. No Life OS scope.
 
@@ -46,4 +47,5 @@ Copy text → `⌥⎋` → hear audio → use the floating controls. Details in 
 - Hotkey is locked to Option+Escape (not user-configurable).
 - Carbon hotkeys usually work without Accessibility. If `⌥⎋` is swallowed, grant Accessibility as in the README.
 - Sentence split is punctuation-based (`. ! ? 。 ！ ？`). Abbreviations such as `Dr.` may over-split. Unpunctuated text stays one unit.
-- No login item, no auto-update, no voice catalog fetch from `GET /v1/models`.
+- Open at Login from a Xcode debug run registers that debug build. Prefer the Release `.app` for a real login item.
+- No auto-update, no voice catalog fetch from `GET /v1/models`.

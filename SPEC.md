@@ -19,6 +19,7 @@ Finish-owned product. Separate from Moshi. Ship for Kip’s Mac (Ark).
       2. Every newline is a paragraph
       3. Blank lines when present, otherwise every newline (**default**)
       4. Split on sentences
+    - **Open at Login** — optional Login Item (`SMAppService`). **OFF by default.** Do not register on first launch.
 5. **Language**: do not force Japanese. Prefer omitting `language` so the proxy’s zh/en-only heuristic runs; if sending language, only `zh` or `en`.
 6. Menu-bar / local service app — **not** iOS, not a Moshi fork.
 
@@ -52,7 +53,7 @@ Proxy repo (reference only, do not modify): local path `~/Code/xai-openai-tts-pr
 ## Done when
 
 - App builds
-- Settings UI has Engine / Endpoint / API key / Model / Voice / Speed / Paragraph split with defaults above
+- Settings UI has Engine / Endpoint / API key / Model / Voice / Speed / Paragraph split / Open at Login (off by default)
 - Opt+Esc path implemented (clipboard → speech → play)
 - Always-on menu-bar icon; floating panel with prev / pause / stop / next only while speaking (hidden when idle/stopped)
 - README + HANDOFF present

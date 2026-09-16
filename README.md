@@ -47,8 +47,9 @@ The project is ad-hoc signed (`CODE_SIGN_IDENTITY = "-"`) so it runs locally wit
 | Voice | `carina` |
 | Speed | `1.1` (clamped 0.7–1.5) |
 | Paragraph split | Blank lines when present, otherwise every newline |
+| Open at Login | Off (optional; not registered until the user enables it) |
 
-Engine / Endpoint / Model / Voice / Speed / Paragraph split persist in UserDefaults. The API key persists in Keychain (`com.kipyin.clipboard-tts`). Do not paste a real xAI key into this repo.
+Engine / Endpoint / Model / Voice / Speed / Paragraph split persist in UserDefaults. The API key persists in Keychain (`com.kipyin.clipboard-tts`). Open at Login is a macOS Login Item via `SMAppService.mainApp` (not UserDefaults). Do not paste a real xAI key into this repo.
 
 **Paragraph split** controls how prev/next walks the clipboard:
 
@@ -75,13 +76,14 @@ You should not need Input Monitoring for this hotkey.
 
 1. Confirm the proxy is up: `curl -sS http://127.0.0.1:8787/v1/models` should mention `grok-tts`.
 2. Launch Clipboard TTS. Confirm the **always-on** menu-bar speaker icon (no Dock icon). The floating panel must **not** be visible yet.
-3. Open **Settings…**. Confirm the defaults in the table above. Leave API key empty.
+3. Open **Settings…**. Confirm the defaults in the table above. Leave API key empty. Confirm **Open at Login** is off.
 4. Copy a short English sentence. Press **Option+Escape**. Audio should play. The floating panel should appear with previous / pause / stop / next.
 5. Press **Stop** (or let the last paragraph finish). The panel must hide. The menu-bar icon must remain.
 6. Copy a Chinese paragraph (or mixed zh/en). Press Option+Escape again. Language must still work without sending `ja` or `auto`.
 7. In Settings, switch **Paragraph split** across all four modes. Copy matching sample text (blank lines, one-line-per-paragraph, and multi-sentence prose) and confirm prev/next follows the selected mode.
 8. **Pause** should freeze audio and keep the panel up; **Stop** should dismiss the panel.
 9. Empty the clipboard and press Option+Escape. The menu bar can show “Clipboard is empty.” The floating panel must stay hidden.
+10. Optional: enable **Open at Login**, log out/in, and confirm the menu-bar extra comes back. If macOS asks, allow it under System Settings → General → Login Items & Extensions. Leave it off if you do not want it.
 
 ## Layout
 
