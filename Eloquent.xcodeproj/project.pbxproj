@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		A01C00000000000000000300 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000100 /* AppDelegate.swift */; };
+		A01C0000000000000000030F /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C0000000000000000010F /* main.swift */; };
 		A01C00000000000000000301 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000101 /* AppSettings.swift */; };
 		A01C00000000000000000302 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000102 /* KeychainStore.swift */; };
 		A01C00000000000000000303 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000103 /* SettingsView.swift */; };
@@ -27,6 +28,7 @@
 
 /* Begin PBXFileReference section */
 		A01C00000000000000000100 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		A01C0000000000000000010F /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		A01C00000000000000000101 /* AppSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettings.swift; sourceTree = "<group>"; };
 		A01C00000000000000000102 /* KeychainStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = KeychainStore.swift; sourceTree = "<group>"; };
 		A01C00000000000000000103 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
@@ -70,6 +72,7 @@
 			isa = PBXGroup;
 			children = (
 				A01C00000000000000000100 /* AppDelegate.swift */,
+				A01C0000000000000000010F /* main.swift */,
 				A01C00000000000000000113 /* Info.plist */,
 				A01C00000000000000000114 /* Eloquent.entitlements */,
 				A01C00000000000000000115 /* Assets.xcassets */,
@@ -209,6 +212,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				A01C00000000000000000300 /* AppDelegate.swift in Sources */,
+				A01C0000000000000000030F /* main.swift in Sources */,
 				A01C00000000000000000301 /* AppSettings.swift in Sources */,
 				A01C00000000000000000302 /* KeychainStore.swift in Sources */,
 				A01C00000000000000000303 /* SettingsView.swift in Sources */,
