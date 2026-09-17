@@ -29,7 +29,12 @@ struct SettingsSnapshot: Sendable, Equatable {
 }
 
 @MainActor
-final class AppSettings: ObservableObject {
+protocol SettingsProviding: AnyObject {
+    func snapshot() -> SettingsSnapshot
+}
+
+@MainActor
+final class AppSettings: ObservableObject, SettingsProviding {
     static let shared = AppSettings()
 
     typealias Defaults = TTSDefaults
@@ -43,24 +48,27 @@ final class AppSettings: ObservableObject {
         static let paragraphSplit = "paragraphSplit"
     }
 
+    private let defaults: UserDefaults
+    private let secrets: any APIKeyStoring
+
     @Published var engine: String {
-        didSet { UserDefaults.standard.set(engine, forKey: Keys.engine) }
+        didSet { defaults.set(engine, forKey: Keys.engine) }
     }
 
     @Published var endpoint: String {
-        didSet { UserDefaults.standard.set(endpoint, forKey: Keys.endpoint) }
+        didSet { defaults.set(endpoint, forKey: Keys.endpoint) }
     }
 
     @Published var apiKey: String {
-        didSet { KeychainStore.saveAPIKey(apiKey) }
+        didSet { secrets.saveAPIKey(apiKey) }
     }
 
     @Published var model: String {
-        didSet { UserDefaults.standard.set(model, forKey: Keys.model) }
+        didSet { defaults.set(model, forKey: Keys.model) }
     }
 
     @Published var voice: String {
-        didSet { UserDefaults.standard.set(voice, forKey: Keys.voice) }
+        didSet { defaults.set(voice, forKey: Keys.voice) }
     }
 
     @Published var speed: Double {
@@ -70,16 +78,17 @@ final class AppSettings: ObservableObject {
                 speed = clamped
                 return
             }
-            UserDefaults.standard.set(clamped, forKey: Keys.speed)
+            defaults.set(clamped, forKey: Keys.speed)
         }
     }
 
     @Published var paragraphSplit: ParagraphSplitMode {
-        didSet { UserDefaults.standard.set(paragraphSplit.rawValue, forKey: Keys.paragraphSplit) }
+        didSet { defaults.set(paragraphSplit.rawValue, forKey: Keys.paragraphSplit) }
     }
 
-    private init() {
-        let defaults = UserDefaults.standard
+    init(defaults: UserDefaults = .standard, secrets: any APIKeyStoring = KeychainStore()) {
+        self.defaults = defaults
+        self.secrets = secrets
         engine = Self.nonEmpty(defaults.string(forKey: Keys.engine), fallback: Defaults.engine)
         endpoint = Self.nonEmpty(defaults.string(forKey: Keys.endpoint), fallback: Defaults.endpoint)
         model = Self.nonEmpty(defaults.string(forKey: Keys.model), fallback: Defaults.model)
@@ -95,7 +104,7 @@ final class AppSettings: ObservableObject {
         } else {
             paragraphSplit = Defaults.paragraphSplit
         }
-        apiKey = KeychainStore.loadAPIKey()
+        apiKey = secrets.loadAPIKey()
     }
 
     func snapshot() -> SettingsSnapshot {

@@ -1,9 +1,25 @@
 import Foundation
 
-enum TTSClient {
+protocol HTTPPerforming: Sendable {
+    func data(for request: URLRequest) async throws -> (Data, URLResponse)
+}
+
+extension URLSession: HTTPPerforming {}
+
+protocol TTSSynthesizing: Sendable {
+    func synthesize(text: String, settings: SettingsSnapshot) async throws -> Data
+}
+
+struct TTSClient: TTSSynthesizing {
     private static let timeout: TimeInterval = 180
 
-    static func synthesize(text: String, settings: SettingsSnapshot) async throws -> Data {
+    var transport: any HTTPPerforming
+
+    init(transport: any HTTPPerforming = URLSession.shared) {
+        self.transport = transport
+    }
+
+    func synthesize(text: String, settings: SettingsSnapshot) async throws -> Data {
         let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else {
             throw TTSError.emptyInput
@@ -12,13 +28,13 @@ enum TTSClient {
         guard !endpoint.isEmpty else {
             throw TTSError.missingEndpoint
         }
-        guard let url = speechURL(from: endpoint) else {
+        guard let url = Self.speechURL(from: endpoint) else {
             throw TTSError.invalidEndpoint(endpoint)
         }
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        request.timeoutInterval = timeout
+        request.timeoutInterval = Self.timeout
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue("audio/mpeg", forHTTPHeaderField: "Accept")
         if !settings.apiKey.isEmpty {
@@ -37,7 +53,7 @@ enum TTSClient {
         )
         request.httpBody = try JSONEncoder().encode(body)
 
-        let (data, response) = try await URLSession.shared.data(for: request)
+        let (data, response) = try await transport.data(for: request)
         guard let http = response as? HTTPURLResponse else {
             throw TTSError.invalidResponse
         }
@@ -53,7 +69,7 @@ enum TTSClient {
         return data
     }
 
-    static func speechURL(from endpoint: String) -> URL? {
+    private static func speechURL(from endpoint: String) -> URL? {
         var base = endpoint.trimmingCharacters(in: .whitespacesAndNewlines)
         while base.hasSuffix("/") {
             base.removeLast()
@@ -64,14 +80,14 @@ enum TTSClient {
         return URL(string: base + "/audio/speech")
     }
 
-    private static func looksLikeJSON(_ data: Data) -> Bool {
+    private func looksLikeJSON(_ data: Data) -> Bool {
         guard let first = data.first else {
             return false
         }
         return first == UInt8(ascii: "{") || first == UInt8(ascii: "[")
     }
 
-    private static func errorMessage(from data: Data) -> String {
+    private func errorMessage(from data: Data) -> String {
         if let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
             if let error = object["error"] as? [String: Any], let message = error["message"] as? String, !message.isEmpty {
                 return message
@@ -99,7 +115,6 @@ enum TTSError: LocalizedError, Equatable {
     case invalidEndpoint(String)
     case invalidResponse
     case emptyAudio
-    case playbackFailed
     case http(Int, String)
 
     var errorDescription: String? {
@@ -114,8 +129,6 @@ enum TTSError: LocalizedError, Equatable {
             return "The TTS server returned an invalid response."
         case .emptyAudio:
             return "The TTS server returned no audio."
-        case .playbackFailed:
-            return "Audio playback failed."
         case .http(let code, let message):
             return "TTS HTTP \(code): \(message)"
         }

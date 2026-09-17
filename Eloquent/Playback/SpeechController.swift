@@ -16,11 +16,26 @@ final class SpeechController: ObservableObject {
     @Published private(set) var paragraphs: [String] = []
     @Published private(set) var index: Int = 0
 
-    private let player = AudioPlayback()
+    private let synthesizer: any TTSSynthesizing
+    private let player: any AudioPlaying
+    private let clipboard: any ClipboardReading
+    private let settingsProvider: any SettingsProviding
     private var speakTask: Task<Void, Never>?
     private var generation = UUID()
     private var transientErrorTask: Task<Void, Never>?
     private let log = Logger(subsystem: "com.kipyin.eloquent", category: "speech")
+
+    init(
+        synthesizer: any TTSSynthesizing = TTSClient(),
+        player: any AudioPlaying = AudioPlayback(),
+        clipboard: any ClipboardReading = ClipboardReader(),
+        settings: any SettingsProviding = AppSettings.shared
+    ) {
+        self.synthesizer = synthesizer
+        self.player = player
+        self.clipboard = clipboard
+        self.settingsProvider = settings
+    }
 
     var canGoPrevious: Bool {
         switch state {
@@ -98,24 +113,20 @@ final class SpeechController: ObservableObject {
     }
 
     func speakClipboard() {
-        guard let text = ClipboardReader.string() else {
+        guard let text = clipboard.string() else {
             presentTransientError("Clipboard is empty.")
             return
         }
 
-        let parts = ParagraphSplitter.split(text, mode: AppSettings.shared.paragraphSplit)
+        let settings = settingsProvider.snapshot()
+        let parts = ParagraphSplitter.split(text, mode: settings.paragraphSplit)
         guard !parts.isEmpty else {
             presentTransientError("Clipboard is empty.")
             return
         }
 
-        let endpoint = AppSettings.shared.snapshot().endpoint
-        if endpoint.isEmpty {
+        if settings.endpoint.isEmpty {
             presentTransientError(TTSError.missingEndpoint.localizedDescription)
-            return
-        }
-        if TTSClient.speechURL(from: endpoint) == nil {
-            presentTransientError(TTSError.invalidEndpoint(endpoint).localizedDescription)
             return
         }
 
@@ -175,7 +186,8 @@ final class SpeechController: ObservableObject {
         generation = token
         state = .loading
         let text = paragraphs[index]
-        let settings = AppSettings.shared.snapshot()
+        let settings = settingsProvider.snapshot()
+        let synthesizer = self.synthesizer
         log.info("Synthesizing paragraph \(self.index + 1, privacy: .public)/\(self.paragraphs.count, privacy: .public)")
 
         speakTask = Task { [weak self] in
@@ -183,7 +195,7 @@ final class SpeechController: ObservableObject {
                 return
             }
             do {
-                let data = try await TTSClient.synthesize(text: text, settings: settings)
+                let data = try await synthesizer.synthesize(text: text, settings: settings)
                 guard !Task.isCancelled else {
                     return
                 }

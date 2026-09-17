@@ -3,7 +3,7 @@ PROJECT := Eloquent.xcodeproj
 CONFIG ?= Debug
 DERIVED := build
 
-.PHONY: build run open clean
+.PHONY: build run open clean test
 
 build:
 	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIG) -arch arm64 -derivedDataPath $(DERIVED) build
@@ -13,6 +13,9 @@ run: build
 
 open:
 	open $(PROJECT)
+
+test:
+	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIG) -arch arm64 -derivedDataPath $(DERIVED) test
 
 clean:
 	rm -rf $(DERIVED)
