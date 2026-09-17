@@ -19,6 +19,7 @@
 		A01C00000000000000000305 /* ClipboardReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000105 /* ClipboardReader.swift */; };
 		A01C00000000000000000306 /* ParagraphSplitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000106 /* ParagraphSplitter.swift */; };
 		A01C00000000000000000307 /* TTSClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000107 /* TTSClient.swift */; };
+		A01C00000000000000000319 /* SelectionReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000119 /* SelectionReader.swift */; };
 		A01C00000000000000000308 /* AudioPlayback.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000108 /* AudioPlayback.swift */; };
 		A01C00000000000000000309 /* SpeechController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000109 /* SpeechController.swift */; };
 		A01C00000000000000000310 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000110 /* StatusItemController.swift */; };
@@ -55,6 +56,7 @@
 		A01C00000000000000000105 /* ClipboardReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardReader.swift; sourceTree = "<group>"; };
 		A01C00000000000000000106 /* ParagraphSplitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParagraphSplitter.swift; sourceTree = "<group>"; };
 		A01C00000000000000000107 /* TTSClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTSClient.swift; sourceTree = "<group>"; };
+		A01C00000000000000000119 /* SelectionReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionReader.swift; sourceTree = "<group>"; };
 		A01C00000000000000000108 /* AudioPlayback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayback.swift; sourceTree = "<group>"; };
 		A01C00000000000000000109 /* SpeechController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechController.swift; sourceTree = "<group>"; };
 		A01C00000000000000000110 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
@@ -143,6 +145,7 @@
 				A01C00000000000000000105 /* ClipboardReader.swift */,
 				A01C00000000000000000106 /* ParagraphSplitter.swift */,
 				A01C00000000000000000107 /* TTSClient.swift */,
+				A01C00000000000000000119 /* SelectionReader.swift */,
 			);
 			path = TTS;
 			sourceTree = "<group>";
@@ -298,6 +301,7 @@
 				A01C00000000000000000305 /* ClipboardReader.swift in Sources */,
 				A01C00000000000000000306 /* ParagraphSplitter.swift in Sources */,
 				A01C00000000000000000307 /* TTSClient.swift in Sources */,
+				A01C00000000000000000319 /* SelectionReader.swift in Sources */,
 				A01C00000000000000000308 /* AudioPlayback.swift in Sources */,
 				A01C00000000000000000309 /* SpeechController.swift in Sources */,
 				A01C00000000000000000310 /* StatusItemController.swift in Sources */,

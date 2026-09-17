@@ -18,6 +18,7 @@ final class SpeechController: ObservableObject {
 
     private let synthesizer: any TTSSynthesizing
     private let player: any AudioPlaying
+    private let selection: any SelectionReading
     private let clipboard: any ClipboardReading
     private let settingsProvider: any SettingsProviding
     private var speakTask: Task<Void, Never>?
@@ -28,11 +29,13 @@ final class SpeechController: ObservableObject {
     init(
         synthesizer: any TTSSynthesizing = TTSClient(),
         player: any AudioPlaying = AudioPlayback(),
+        selection: any SelectionReading = SelectionReader(),
         clipboard: any ClipboardReading = ClipboardReader(),
         settings: any SettingsProviding = AppSettings.shared
     ) {
         self.synthesizer = synthesizer
         self.player = player
+        self.selection = selection
         self.clipboard = clipboard
         self.settingsProvider = settings
     }
@@ -112,16 +115,16 @@ final class SpeechController: ObservableObject {
         return String(collapsed[..<end]) + "…"
     }
 
-    func speakClipboard() {
-        guard let text = clipboard.string() else {
-            presentTransientError("Clipboard is empty.")
+    func speak() {
+        guard let text = selection.selectedText() ?? clipboard.string() else {
+            presentTransientError("No text selected and clipboard is empty.")
             return
         }
 
         let settings = settingsProvider.snapshot()
         let parts = ParagraphSplitter.split(text, mode: settings.paragraphSplit)
         guard !parts.isEmpty else {
-            presentTransientError("Clipboard is empty.")
+            presentTransientError("No text selected and clipboard is empty.")
             return
         }
 

@@ -41,7 +41,7 @@ final class AccessibilityPermission: ObservableObject {
         let alert = NSAlert()
         alert.messageText = "Allow Eloquent to use Option+Escape"
         alert.informativeText = """
-        Eloquent speaks the clipboard from any app when you press Option+Escape (⌥⎋). macOS requires Accessibility permission for that global hotkey.
+        Eloquent speaks the current selection — or the clipboard when nothing is selected — from any app when you press Option+Escape (⌥⎋). macOS requires Accessibility permission for that global hotkey and for reading the selection.
 
         1. Click Grant Accessibility.
         2. In System Settings → Privacy & Security → Accessibility, enable Eloquent (or Xcode if you launched from Xcode).
