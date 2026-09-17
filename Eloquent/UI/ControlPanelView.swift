@@ -2,6 +2,12 @@ import SwiftUI
 
 struct ControlPanelView: View {
     @ObservedObject var speech: SpeechController
+    @ObservedObject var settings: AppSettings
+
+    init(speech: SpeechController, settings: AppSettings = .shared) {
+        self.speech = speech
+        self.settings = settings
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -39,6 +45,22 @@ struct ControlPanelView: View {
                 )
             }
             .frame(maxWidth: .infinity)
+
+            HStack {
+                Text("Speed")
+                Slider(
+                    value: $settings.speed,
+                    in: AppSettings.Defaults.minimumSpeed...AppSettings.Defaults.maximumSpeed,
+                    step: 0.1
+                ) { editing in
+                    if !editing {
+                        speech.applySpeedChange()
+                    }
+                }
+                Text(speedLabel)
+                    .monospacedDigit()
+                    .frame(width: 44, alignment: .trailing)
+            }
 
             preview
         }
@@ -84,6 +106,10 @@ struct ControlPanelView: View {
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    private var speedLabel: String {
+        String(format: "%.1f×", settings.speed)
     }
 
     private func controlButton(

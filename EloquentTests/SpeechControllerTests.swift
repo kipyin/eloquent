@@ -133,6 +133,86 @@ final class SpeechControllerTests: XCTestCase {
         XCTAssertFalse(speech.showsFloatingPanel)
     }
 
+    func testNextParagraphSpeedChangeDoesNotInterruptCurrentParagraph() async {
+        let synthesizer = FakeSynthesizer()
+        let player = FakePlayer()
+        let settings = StubSettings(
+            makeSnapshot(speed: 1.1, paragraphSplit: .blankLinesOnly, speedApply: .nextParagraph)
+        )
+        let speech = makeSpeech(
+            synthesizer: synthesizer,
+            player: player,
+            clipboard: StubClipboard(text: "One\n\nTwo"),
+            settings: settings
+        )
+
+        speech.speakClipboard()
+        await waitUntil { speech.state == .playing }
+        settings.value.speed = 1.4
+        speech.applySpeedChange()
+
+        XCTAssertEqual(speech.state, .playing)
+        XCTAssertEqual(speech.index, 0)
+        XCTAssertEqual(synthesizer.texts, ["One"])
+        XCTAssertEqual(synthesizer.speeds, [1.1])
+        XCTAssertEqual(player.stopCount, 1)
+
+        player.finishSuccessfully()
+        await waitUntil { speech.index == 1 && speech.state == .playing }
+
+        XCTAssertEqual(synthesizer.texts, ["One", "Two"])
+        XCTAssertEqual(synthesizer.speeds, [1.1, 1.4])
+    }
+
+    func testRespeakSpeedChangeSynthesizesTheCurrentParagraphAgain() async {
+        let synthesizer = FakeSynthesizer()
+        let player = FakePlayer()
+        let settings = StubSettings(
+            makeSnapshot(speed: 1.1, paragraphSplit: .blankLinesOnly, speedApply: .respeakCurrent)
+        )
+        let speech = makeSpeech(
+            synthesizer: synthesizer,
+            player: player,
+            clipboard: StubClipboard(text: "One\n\nTwo"),
+            settings: settings
+        )
+
+        speech.speakClipboard()
+        await waitUntil { speech.state == .playing }
+        settings.value.speed = 1.4
+        speech.applySpeedChange()
+        await waitUntil { synthesizer.texts == ["One", "One"] && speech.state == .playing }
+
+        XCTAssertEqual(speech.index, 0)
+        XCTAssertEqual(synthesizer.texts, ["One", "One"])
+        XCTAssertEqual(synthesizer.speeds, [1.1, 1.4])
+        XCTAssertEqual(player.stopCount, 2)
+        XCTAssertTrue(speech.showsFloatingPanel)
+    }
+
+    func testRespeakDoesNotRestartWhenSpeedIsUnchanged() async {
+        let synthesizer = FakeSynthesizer()
+        let player = FakePlayer()
+        let settings = StubSettings(
+            makeSnapshot(speed: 1.1, paragraphSplit: .blankLinesOnly, speedApply: .respeakCurrent)
+        )
+        let speech = makeSpeech(
+            synthesizer: synthesizer,
+            player: player,
+            clipboard: StubClipboard(text: "One"),
+            settings: settings
+        )
+
+        speech.speakClipboard()
+        await waitUntil { speech.state == .playing }
+        speech.applySpeedChange()
+
+        XCTAssertEqual(speech.state, .playing)
+        XCTAssertEqual(synthesizer.texts, ["One"])
+        XCTAssertEqual(synthesizer.speeds, [1.1])
+        XCTAssertEqual(player.stopCount, 1)
+    }
+
     func testSynthesisFailureKeepsFloatingPanelForTheSession() async {
         let synthesizer = FakeSynthesizer()
         synthesizer.result = .failure(TTSError.http(500, "boom"))
