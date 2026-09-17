@@ -55,17 +55,22 @@ struct SettingsView: View {
             Section("OpenAI TTS") {
                 TextField("Engine", text: $settings.engine)
                     .textFieldStyle(.roundedBorder)
+                    .multilineTextAlignment(.leading)
                 TextField("Endpoint", text: $settings.endpoint, prompt: Text("https://api.openai.com/v1"))
                     .textFieldStyle(.roundedBorder)
+                    .multilineTextAlignment(.leading)
                 SecureField("API key", text: $settings.apiKey)
                     .textFieldStyle(.roundedBorder)
+                    .multilineTextAlignment(.leading)
                 Text("Configure Endpoint and API key for your OpenAI-compatible provider. Endpoint is the `/v1` base URL. Speak fails until Endpoint is set. Never commit API keys.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 TextField("Model", text: $settings.model)
                     .textFieldStyle(.roundedBorder)
+                    .multilineTextAlignment(.leading)
                 TextField("Voice", text: $settings.voice)
                     .textFieldStyle(.roundedBorder)
+                    .multilineTextAlignment(.leading)
                 HStack {
                     Text("Speed")
                     Slider(
