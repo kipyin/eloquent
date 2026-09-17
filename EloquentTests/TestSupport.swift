@@ -2,7 +2,6 @@ import Foundation
 @testable import Eloquent
 
 func makeSnapshot(
-    engine: String = "openai",
     endpoint: String = "https://api.example.com/v1",
     apiKey: String = "",
     model: String = "tts-1",
@@ -11,7 +10,6 @@ func makeSnapshot(
     paragraphSplit: ParagraphSplitMode = .blankLinesThenNewlines
 ) -> SettingsSnapshot {
     SettingsSnapshot(
-        engine: engine,
         endpoint: endpoint,
         apiKey: apiKey,
         model: model,

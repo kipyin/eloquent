@@ -2,7 +2,6 @@ import Combine
 import Foundation
 
 enum TTSDefaults {
-    static let engine = "openai"
     static let endpoint = ""
     static let model = "tts-1"
     static let voice = "alloy"
@@ -19,7 +18,6 @@ enum TTSDefaults {
 }
 
 struct SettingsSnapshot: Sendable, Equatable {
-    var engine: String
     var endpoint: String
     var apiKey: String
     var model: String
@@ -40,7 +38,6 @@ final class AppSettings: ObservableObject, SettingsProviding {
     typealias Defaults = TTSDefaults
 
     private enum Keys {
-        static let engine = "engine"
         static let endpoint = "endpoint"
         static let model = "model"
         static let voice = "voice"
@@ -50,10 +47,6 @@ final class AppSettings: ObservableObject, SettingsProviding {
 
     private let defaults: UserDefaults
     private let secrets: any APIKeyStoring
-
-    @Published var engine: String {
-        didSet { defaults.set(engine, forKey: Keys.engine) }
-    }
 
     @Published var endpoint: String {
         didSet { defaults.set(endpoint, forKey: Keys.endpoint) }
@@ -89,7 +82,6 @@ final class AppSettings: ObservableObject, SettingsProviding {
     init(defaults: UserDefaults = .standard, secrets: any APIKeyStoring = KeychainStore()) {
         self.defaults = defaults
         self.secrets = secrets
-        engine = Self.nonEmpty(defaults.string(forKey: Keys.engine), fallback: Defaults.engine)
         endpoint = Self.nonEmpty(defaults.string(forKey: Keys.endpoint), fallback: Defaults.endpoint)
         model = Self.nonEmpty(defaults.string(forKey: Keys.model), fallback: Defaults.model)
         voice = Self.nonEmpty(defaults.string(forKey: Keys.voice), fallback: Defaults.voice)
@@ -109,7 +101,6 @@ final class AppSettings: ObservableObject, SettingsProviding {
 
     func snapshot() -> SettingsSnapshot {
         SettingsSnapshot(
-            engine: engine.trimmingCharacters(in: .whitespacesAndNewlines),
             endpoint: endpoint.trimmingCharacters(in: .whitespacesAndNewlines),
             apiKey: apiKey.trimmingCharacters(in: .whitespacesAndNewlines),
             model: model.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -120,7 +111,6 @@ final class AppSettings: ObservableObject, SettingsProviding {
     }
 
     func resetToDefaults() {
-        engine = Defaults.engine
         endpoint = Defaults.endpoint
         apiKey = ""
         model = Defaults.model

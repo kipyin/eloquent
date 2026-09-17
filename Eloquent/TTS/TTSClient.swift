@@ -13,7 +13,7 @@ protocol TTSSynthesizing: Sendable {
 struct TTSClient: TTSSynthesizing {
     private static let timeout: TimeInterval = 180
 
-    var transport: any HTTPPerforming
+    private let transport: any HTTPPerforming
 
     init(transport: any HTTPPerforming = URLSession.shared) {
         self.transport = transport
@@ -41,14 +41,11 @@ struct TTSClient: TTSSynthesizing {
             request.setValue("Bearer \(settings.apiKey)", forHTTPHeaderField: "Authorization")
         }
 
-        // Engine is stored for settings parity and is not sent in the body.
-        // Language is omitted. Providers may apply their own heuristics.
-        // Never send ja or auto.
         let body = SpeechRequestBody(
             model: settings.model.isEmpty ? TTSDefaults.model : settings.model,
             voice: settings.voice.isEmpty ? TTSDefaults.voice : settings.voice,
             input: trimmed,
-            speed: TTSDefaults.clampSpeed(settings.speed),
+            speed: settings.speed,
             response_format: "mp3"
         )
         request.httpBody = try JSONEncoder().encode(body)

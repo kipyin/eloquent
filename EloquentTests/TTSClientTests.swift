@@ -62,11 +62,10 @@ final class TTSClientTests: XCTestCase {
         let transport = FakeHTTPTransport()
         let client = TTSClient(transport: transport)
         let settings = makeSnapshot(
-            engine: "openai",
             apiKey: "",
             model: "",
             voice: "",
-            speed: 1.55
+            speed: 1.5
         )
 
         _ = try await client.synthesize(text: "  Hello  ", settings: settings)

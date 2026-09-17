@@ -7,7 +7,7 @@ Native macOS menu-bar app. Option+Escape reads the clipboard and speaks it throu
 - Global hotkey Option+Escape (`⌥⎋`) reads clipboard text and plays speech
 - Speaker icon stays in the menu bar
 - Floating previous / pause / stop / next panel appears only while speaking
-- Settings: Engine, Endpoint, API key, Model, Voice, Speed, Paragraph split, Open at Login
+- Settings: Endpoint, API key, Model, Voice, Speed, Paragraph split, Open at Login
 
 ## Install / run
 

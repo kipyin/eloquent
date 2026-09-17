@@ -6,7 +6,6 @@ final class AppSettingsTests: XCTestCase {
     func testPublicDefaultsWhenStoreIsEmpty() {
         let (settings, _, secrets) = makeSettings()
 
-        XCTAssertEqual(settings.engine, "openai")
         XCTAssertEqual(settings.endpoint, "")
         XCTAssertEqual(settings.model, "tts-1")
         XCTAssertEqual(settings.voice, "alloy")
@@ -20,14 +19,12 @@ final class AppSettingsTests: XCTestCase {
         let suiteName = "com.kipyin.eloquent.tests.\(UUID().uuidString)"
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
         defaults.removePersistentDomain(forName: suiteName)
-        defaults.set("  ", forKey: "engine")
         defaults.set("  ", forKey: "endpoint")
         defaults.set("  ", forKey: "model")
         defaults.set("  ", forKey: "voice")
 
         let settings = AppSettings(defaults: defaults, secrets: MemoryAPIKeyStore())
 
-        XCTAssertEqual(settings.engine, "openai")
         XCTAssertEqual(settings.endpoint, "")
         XCTAssertEqual(settings.model, "tts-1")
         XCTAssertEqual(settings.voice, "alloy")
@@ -88,7 +85,6 @@ final class AppSettingsTests: XCTestCase {
 
         settings.resetToDefaults()
 
-        XCTAssertEqual(settings.engine, "openai")
         XCTAssertEqual(settings.endpoint, "")
         XCTAssertEqual(settings.apiKey, "")
         XCTAssertEqual(secrets.value, "")

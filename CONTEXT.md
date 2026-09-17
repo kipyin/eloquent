@@ -26,9 +26,6 @@ _Avoid_: hardcoded provider URL
 **TTS request**:
 `POST {endpoint}/audio/speech` with `{ model, voice, input, speed, response_format: "mp3" }`. No `language` field. Bearer token only when an API key is set.
 
-**Engine**:
-Stored in Settings for parity (`openai` by default). Not sent in the TTS JSON body.
-
 **Accessibility**:
 macOS permission required so Option+Escape works in every app. After granting, quit and reopen.
 

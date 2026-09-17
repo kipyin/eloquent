@@ -16,14 +16,14 @@ final class SettingsWindowController {
     private func makeWindow() -> NSWindow {
         let controller = NSHostingController(rootView: SettingsView())
         let window = SettingsWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 560, height: 740),
+            contentRect: NSRect(x: 0, y: 0, width: 560, height: 640),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
         window.contentViewController = controller
         window.title = "Eloquent Settings"
-        window.setContentSize(NSSize(width: 560, height: 740))
+        window.setContentSize(NSSize(width: 560, height: 640))
         window.center()
         window.isReleasedWhenClosed = false
         window.collectionBehavior = [.moveToActiveSpace]
@@ -53,13 +53,11 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("OpenAI TTS") {
-                TextField("Engine", text: $settings.engine)
-                    .textFieldStyle(.roundedBorder)
                 TextField("Endpoint", text: $settings.endpoint, prompt: Text("https://api.openai.com/v1"))
                     .textFieldStyle(.roundedBorder)
                 SecureField("API key", text: $settings.apiKey)
                     .textFieldStyle(.roundedBorder)
-                Text("Configure Endpoint and API key for your OpenAI-compatible provider. Endpoint is the `/v1` base URL. Speak fails until Endpoint is set. Never commit API keys.")
+                Text("Configure Endpoint and API key for your OpenAI-compatible provider. Endpoint is the `/v1` base URL. Speak fails until Endpoint is set.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 TextField("Model", text: $settings.model)
@@ -108,9 +106,6 @@ struct SettingsView: View {
                         accessibility.prompt()
                     }
                 }
-                Text("The client never sends a language field. Providers may apply their own heuristics. ja and auto are never sent.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
 
             Section("Startup") {
@@ -138,7 +133,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(minWidth: 520, minHeight: 560)
+        .frame(minWidth: 520, minHeight: 480)
         .padding(.bottom, 8)
         .onAppear {
             loginItem.refresh()
