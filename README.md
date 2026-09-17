@@ -29,6 +29,7 @@ make run
 
 ```bash
 make build
+make test
 CONFIG=Release make run
 xcodebuild -project Eloquent.xcodeproj -scheme Eloquent -configuration Release -arch arm64 -derivedDataPath build build
 ```

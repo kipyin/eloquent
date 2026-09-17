@@ -1,7 +1,25 @@
 import AVFoundation
 import Foundation
 
-final class AudioPlayback: NSObject, AVAudioPlayerDelegate {
+protocol AudioPlaying: AnyObject {
+    func play(data: Data, completion: @escaping (Bool) -> Void) throws
+    func pause()
+    func resume()
+    func stop()
+}
+
+enum AudioPlaybackError: LocalizedError, Equatable {
+    case playbackFailed
+
+    var errorDescription: String? {
+        switch self {
+        case .playbackFailed:
+            return "Audio playback failed."
+        }
+    }
+}
+
+final class AudioPlayback: NSObject, AVAudioPlayerDelegate, AudioPlaying {
     private var player: AVAudioPlayer?
     private var completion: ((Bool) -> Void)?
     private var tempURL: URL?
@@ -26,7 +44,7 @@ final class AudioPlayback: NSObject, AVAudioPlayerDelegate {
             audioPlayer.prepareToPlay()
             player = audioPlayer
             guard audioPlayer.play() else {
-                throw TTSError.playbackFailed
+                throw AudioPlaybackError.playbackFailed
             }
         } catch {
             self.completion = nil

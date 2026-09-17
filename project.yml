@@ -34,4 +34,26 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: 1
-    scheme: {}
+    scheme:
+      testTargets:
+        - EloquentTests
+  EloquentTests:
+    type: bundle.unit-test
+    platform: macOS
+    sources:
+      - path: EloquentTests
+    dependencies:
+      - target: Eloquent
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.kipyin.eloquent.tests
+        GENERATE_INFOPLIST_FILE: YES
+        CODE_SIGN_IDENTITY: "-"
+        CODE_SIGN_STYLE: Automatic
+        ARCHS: arm64
+        SUPPORTED_PLATFORMS: macosx
+        SWIFT_VERSION: "5.0"
+        MACOSX_DEPLOYMENT_TARGET: "14.0"
+        BUNDLE_LOADER: "$(TEST_HOST)"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Eloquent.app/Contents/MacOS/Eloquent"
+        LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks"

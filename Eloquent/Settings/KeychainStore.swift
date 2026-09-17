@@ -1,11 +1,16 @@
 import Foundation
 import Security
 
-enum KeychainStore {
+protocol APIKeyStoring {
+    func loadAPIKey() -> String
+    func saveAPIKey(_ secret: String)
+}
+
+struct KeychainStore: APIKeyStoring {
     private static let service = "com.kipyin.eloquent"
     private static let account = "api-key"
 
-    static func loadAPIKey() -> String {
+    func loadAPIKey() -> String {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -22,7 +27,7 @@ enum KeychainStore {
         return String(data: data, encoding: .utf8) ?? ""
     }
 
-    static func saveAPIKey(_ secret: String) {
+    func saveAPIKey(_ secret: String) {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
