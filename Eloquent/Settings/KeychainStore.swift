@@ -13,8 +13,8 @@ struct KeychainStore: APIKeyStoring {
     func loadAPIKey() -> String {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
+            kSecAttrService as String: Self.service,
+            kSecAttrAccount as String: Self.account,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
@@ -30,8 +30,8 @@ struct KeychainStore: APIKeyStoring {
     func saveAPIKey(_ secret: String) {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account
+            kSecAttrService as String: Self.service,
+            kSecAttrAccount as String: Self.account
         ]
 
         if secret.isEmpty {
