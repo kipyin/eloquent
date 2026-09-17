@@ -3,7 +3,7 @@
 A glossary for domain terms whose meanings cannot be inferred safely from code. It names concepts; code and tests define behavior.
 
 **Eloquent**:
-Native macOS menu-bar TTS app. Option+Escape reads clipboard text and plays speech from an OpenAI-compatible endpoint.
+Native macOS menu-bar TTS app. The speak hotkey reads clipboard text and plays speech from an OpenAI-compatible endpoint.
 
 **Status item**:
 The always-on speaker icon in the menu bar. It stays there for the life of the app. The app is an `LSUIElement` accessory: no Dock icon.
@@ -29,8 +29,11 @@ _Avoid_: hardcoded provider URL
 **Engine**:
 Stored in Settings for parity (`openai` by default). Not sent in the TTS JSON body.
 
+**Speak hotkey**:
+The user-configured global shortcut that reads the clipboard and speaks it. Default is Option+Escape (⌥⎋). Persisted in Settings. Changing it rebinds the running app. A reserved or conflicting combo keeps the last working binding.
+
 **Accessibility**:
-macOS permission required so Option+Escape works in every app. After granting, quit and reopen.
+macOS permission required so the speak hotkey works in every app. After granting, quit and reopen.
 
 **Open at Login**:
 Optional Login Item via `SMAppService`. Off by default. Not registered on first launch.

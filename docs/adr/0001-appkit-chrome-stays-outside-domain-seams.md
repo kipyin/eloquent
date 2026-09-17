@@ -16,6 +16,7 @@ Do not introduce a seam in status item, hotkey, floating panel, application menu
 - paragraph split (`ParagraphSplitter.split`)
 - speech playback (`AudioPlaying`)
 - settings persistence (`AppSettings` with injected defaults and `APIKeyStoring`)
+- speak hotkey binding (`HotkeyBinding`, persisted on `AppSettings`)
 
 `SpeechController` is the deep speech-session module. It accepts those adapters; it does not own AppKit chrome.
 

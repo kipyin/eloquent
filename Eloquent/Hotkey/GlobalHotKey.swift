@@ -9,33 +9,27 @@ final class GlobalHotKey {
     private var localMonitor: Any?
     private var lastFire: TimeInterval = 0
     private let handler: () -> Void
+    private(set) var binding: HotkeyBinding
+    var isPaused = false
 
     private static var active: GlobalHotKey?
     private static let log = Logger(subsystem: "com.kipyin.eloquent", category: "hotkey")
     private static let signature: OSType = 0x454C4F51 // 'ELOQ'
     private static let hotKeyIDValue: UInt32 = 1
-    private static let escapeKeyCode: UInt32 = 0x35
-    private static let optionModifier: UInt32 = 0x0800
 
-    static func optionEscape(handler: @escaping () -> Void) -> GlobalHotKey {
-        GlobalHotKey(
-            keyCode: escapeKeyCode,
-            carbonModifiers: optionModifier,
-            handler: handler
-        )
-    }
-
-    init(keyCode: UInt32, carbonModifiers: UInt32, handler: @escaping () -> Void) {
+    init(binding: HotkeyBinding, handler: @escaping () -> Void) {
+        self.binding = binding
         self.handler = handler
         Self.active = self
-        install(keyCode: keyCode, carbonModifiers: carbonModifiers)
+        installHandler()
+        if !register(binding) {
+            Self.log.error("RegisterEventHotKey failed for \(binding.words, privacy: .public)")
+        }
         installEventMonitors()
     }
 
     deinit {
-        if let hotKeyRef {
-            UnregisterEventHotKey(hotKeyRef)
-        }
+        unregisterHotKey()
         if let handlerRef {
             RemoveEventHandler(handlerRef)
         }
@@ -48,6 +42,23 @@ final class GlobalHotKey {
         if Self.active === self {
             Self.active = nil
         }
+    }
+
+    func rebind(_ binding: HotkeyBinding) -> Bool {
+        if binding == self.binding, hotKeyRef != nil {
+            return true
+        }
+        let previous = self.binding
+        let hadPrevious = hotKeyRef != nil
+        unregisterHotKey()
+        if register(binding) {
+            self.binding = binding
+            return true
+        }
+        if hadPrevious {
+            _ = register(previous)
+        }
+        return false
     }
 
     fileprivate static func handleCarbonEvent(_ event: EventRef?) -> OSStatus {
@@ -78,12 +89,10 @@ final class GlobalHotKey {
         return noErr
     }
 
-    fileprivate static func isOptionEscape(_ event: NSEvent) -> Bool {
-        let significant = event.modifierFlags.intersection([.command, .shift, .control, .option])
-        return event.keyCode == 53 && significant == .option
-    }
-
     private func fire() {
+        guard !isPaused else {
+            return
+        }
         let now = ProcessInfo.processInfo.systemUptime
         if now - lastFire < 0.2 {
             return
@@ -94,7 +103,7 @@ final class GlobalHotKey {
 
     private func installEventMonitors() {
         globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { event in
-            guard Self.isOptionEscape(event) else {
+            guard let active = Self.active, !active.isPaused, active.binding.matches(event) else {
                 return
             }
             DispatchQueue.main.async {
@@ -102,7 +111,7 @@ final class GlobalHotKey {
             }
         }
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            guard Self.isOptionEscape(event) else {
+            guard let active = Self.active, !active.isPaused, active.binding.matches(event) else {
                 return event
             }
             DispatchQueue.main.async {
@@ -112,7 +121,7 @@ final class GlobalHotKey {
         }
     }
 
-    private func install(keyCode: UInt32, carbonModifiers: UInt32) {
+    private func installHandler() {
         var eventType = EventTypeSpec(
             eventClass: OSType(kEventClassKeyboard),
             eventKind: UInt32(kEventHotKeyPressed)
@@ -125,26 +134,33 @@ final class GlobalHotKey {
             nil,
             &handlerRef
         )
-        guard handlerStatus == noErr else {
+        if handlerStatus != noErr {
             Self.log.error("InstallEventHandler failed: \(handlerStatus, privacy: .public)")
-            return
         }
+    }
 
+    private func register(_ binding: HotkeyBinding) -> Bool {
         let identifier = EventHotKeyID(signature: Self.signature, id: Self.hotKeyIDValue)
         let registerStatus = RegisterEventHotKey(
-            keyCode,
-            carbonModifiers,
+            binding.carbonKeyCode,
+            binding.carbonModifiers,
             identifier,
             GetEventDispatcherTarget(),
             0,
             &hotKeyRef
         )
         if registerStatus != noErr {
+            hotKeyRef = nil
             Self.log.error("RegisterEventHotKey failed: \(registerStatus, privacy: .public)")
-            if let handlerRef {
-                RemoveEventHandler(handlerRef)
-                self.handlerRef = nil
-            }
+            return false
+        }
+        return true
+    }
+
+    private func unregisterHotKey() {
+        if let hotKeyRef {
+            UnregisterEventHotKey(hotKeyRef)
+            self.hotKeyRef = nil
         }
     }
 }

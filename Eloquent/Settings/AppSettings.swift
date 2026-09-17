@@ -46,6 +46,8 @@ final class AppSettings: ObservableObject, SettingsProviding {
         static let voice = "voice"
         static let speed = "speed"
         static let paragraphSplit = "paragraphSplit"
+        static let speakHotkeyKeyCode = "speakHotkeyKeyCode"
+        static let speakHotkeyModifiers = "speakHotkeyModifiers"
     }
 
     private let defaults: UserDefaults
@@ -86,6 +88,13 @@ final class AppSettings: ObservableObject, SettingsProviding {
         didSet { defaults.set(paragraphSplit.rawValue, forKey: Keys.paragraphSplit) }
     }
 
+    @Published var speakHotkey: HotkeyBinding {
+        didSet {
+            defaults.set(Int(speakHotkey.keyCode), forKey: Keys.speakHotkeyKeyCode)
+            defaults.set(Int(speakHotkey.modifiers.rawValue), forKey: Keys.speakHotkeyModifiers)
+        }
+    }
+
     init(defaults: UserDefaults = .standard, secrets: any APIKeyStoring = KeychainStore()) {
         self.defaults = defaults
         self.secrets = secrets
@@ -104,6 +113,10 @@ final class AppSettings: ObservableObject, SettingsProviding {
         } else {
             paragraphSplit = Defaults.paragraphSplit
         }
+        speakHotkey = HotkeyBinding.fromStored(
+            keyCode: defaults.object(forKey: Keys.speakHotkeyKeyCode) as? Int,
+            modifiers: defaults.object(forKey: Keys.speakHotkeyModifiers) as? Int
+        )
         apiKey = secrets.loadAPIKey()
     }
 
@@ -127,6 +140,7 @@ final class AppSettings: ObservableObject, SettingsProviding {
         voice = Defaults.voice
         speed = Defaults.speed
         paragraphSplit = Defaults.paragraphSplit
+        speakHotkey = .optionEscape
     }
 
     static func clampSpeed(_ value: Double) -> Double {

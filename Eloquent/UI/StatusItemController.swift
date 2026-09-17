@@ -41,6 +41,13 @@ final class StatusItemController: NSObject {
                 self?.rebuildMenu()
             }
             .store(in: &cancellables)
+
+        AppSettings.shared.$speakHotkey
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.rebuildMenu()
+            }
+            .store(in: &cancellables)
     }
 
     private func configureButton() {
@@ -74,12 +81,13 @@ final class StatusItemController: NSObject {
     private func rebuildMenu() {
         let menu = NSMenu()
 
+        let hotkey = AppSettings.shared.speakHotkey
         let speakItem = NSMenuItem(
-            title: "Speak Clipboard",
+            title: hotkey.menuTitle,
             action: #selector(speakMenuItem),
-            keyEquivalent: "\u{1b}"
+            keyEquivalent: hotkey.menuKeyEquivalent
         )
-        speakItem.keyEquivalentModifierMask = [.option]
+        speakItem.keyEquivalentModifierMask = hotkey.menuModifierFlags
         speakItem.target = self
         menu.addItem(speakItem)
 

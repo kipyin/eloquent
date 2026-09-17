@@ -49,6 +49,7 @@ struct SettingsView: View {
     @ObservedObject private var settings = AppSettings.shared
     @ObservedObject private var loginItem = LoginItemController.shared
     @ObservedObject private var accessibility = AccessibilityPermission.shared
+    @ObservedObject private var speakHotkey = SpeakHotkeyController.shared
 
     var body: some View {
         Form {
@@ -95,13 +96,13 @@ struct SettingsView: View {
             }
 
             Section("Hotkey") {
-                LabeledContent("Speak clipboard", value: "⌥⎋  Option+Escape")
+                SpeakHotkeyRecorder(settings: settings, controller: speakHotkey)
                 LabeledContent("Accessibility") {
                     Text(accessibility.isTrusted ? "Granted" : "Not granted")
                         .foregroundStyle(accessibility.isTrusted ? Color.secondary : Color.orange)
                 }
                 if !accessibility.isTrusted {
-                    Text("Grant Accessibility so Option+Escape works in every app. After enabling Eloquent, quit from the menu bar and reopen.")
+                    Text("Grant Accessibility so \(settings.speakHotkey.words) works in every app. After enabling Eloquent, quit from the menu bar and reopen.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Button("Grant Accessibility…") {
@@ -134,6 +135,7 @@ struct SettingsView: View {
                 Button("Reset Defaults") {
                     settings.resetToDefaults()
                     loginItem.setEnabled(false)
+                    speakHotkey.reinstallAfterReset()
                 }
             }
         }
@@ -155,5 +157,81 @@ struct SettingsView: View {
             get: { loginItem.isEnabled },
             set: { loginItem.setEnabled($0) }
         )
+    }
+}
+
+private struct SpeakHotkeyRecorder: View {
+    @ObservedObject var settings: AppSettings
+    @ObservedObject var controller: SpeakHotkeyController
+    @State private var monitor: Any?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("Speak clipboard")
+                Spacer()
+                Button(recorderTitle) {
+                    toggleRecording()
+                }
+                .help("Click, then press the new shortcut. Press Escape to cancel.")
+            }
+            if let error = controller.lastError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+            Text("Click the shortcut, then press the new keys. The previous shortcut stays active if the new one is reserved or already used.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .onDisappear {
+            cancelRecording()
+        }
+    }
+
+    private var recorderTitle: String {
+        if controller.isRecording {
+            return "Type a shortcut…"
+        }
+        return settings.speakHotkey.displayLabel
+    }
+
+    private func toggleRecording() {
+        if controller.isRecording {
+            cancelRecording()
+        } else {
+            beginRecording()
+        }
+    }
+
+    private func beginRecording() {
+        removeMonitor()
+        controller.beginRecording()
+        monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            let modifiers = HotkeyModifiers(eventFlags: event.modifierFlags)
+            if event.keyCode == HotkeyBinding.escapeKeyCode, modifiers.isEmpty {
+                cancelRecording()
+                return nil
+            }
+            finishRecording(HotkeyBinding(event: event))
+            return nil
+        }
+    }
+
+    private func finishRecording(_ binding: HotkeyBinding) {
+        removeMonitor()
+        controller.finishRecording(with: binding)
+    }
+
+    private func cancelRecording() {
+        removeMonitor()
+        controller.cancelRecording()
+    }
+
+    private func removeMonitor() {
+        if let monitor {
+            NSEvent.removeMonitor(monitor)
+            self.monitor = nil
+        }
     }
 }
