@@ -75,6 +75,8 @@ final class AppSettings: ObservableObject, SettingsProviding {
         static let voice = "voice"
         static let speed = "speed"
         static let paragraphSplit = "paragraphSplit"
+        static let speakHotkeyKeyCode = "speakHotkeyKeyCode"
+        static let speakHotkeyModifiers = "speakHotkeyModifiers"
         static let speedApply = "speedApply"
     }
 
@@ -116,6 +118,13 @@ final class AppSettings: ObservableObject, SettingsProviding {
         didSet { defaults.set(paragraphSplit.rawValue, forKey: Keys.paragraphSplit) }
     }
 
+    @Published var speakHotkey: HotkeyBinding {
+        didSet {
+            defaults.set(Int(speakHotkey.keyCode), forKey: Keys.speakHotkeyKeyCode)
+            defaults.set(Int(speakHotkey.modifiers.rawValue), forKey: Keys.speakHotkeyModifiers)
+        }
+    }
+
     @Published var speedApply: SpeedApplyMode {
         didSet { defaults.set(speedApply.rawValue, forKey: Keys.speedApply) }
     }
@@ -138,6 +147,10 @@ final class AppSettings: ObservableObject, SettingsProviding {
         } else {
             paragraphSplit = Defaults.paragraphSplit
         }
+        speakHotkey = HotkeyBinding.fromStored(
+            keyCode: defaults.object(forKey: Keys.speakHotkeyKeyCode) as? Int,
+            modifiers: defaults.object(forKey: Keys.speakHotkeyModifiers) as? Int
+        )
         if let raw = defaults.string(forKey: Keys.speedApply),
            let stored = SpeedApplyMode(rawValue: raw) {
             speedApply = stored
@@ -168,6 +181,7 @@ final class AppSettings: ObservableObject, SettingsProviding {
         voice = Defaults.voice
         speed = Defaults.speed
         paragraphSplit = Defaults.paragraphSplit
+        speakHotkey = .optionEscape
         speedApply = Defaults.speedApply
     }
 

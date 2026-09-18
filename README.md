@@ -1,13 +1,13 @@
 # Eloquent
 
-Native macOS menu-bar app. Option+Escape reads the current selection — or the clipboard when nothing is selected — and speaks it through an OpenAI-compatible TTS endpoint.
+Native macOS menu-bar app. The speak hotkey reads the current selection — or the clipboard when nothing is selected — and speaks it through an OpenAI-compatible TTS endpoint.
 
 ## What it does
 
-- Global hotkey Option+Escape (`⌥⎋`) reads the selected text, or the clipboard when nothing is selected, and plays speech
+- Configurable global speak hotkey (default Option+Escape, `⌥⎋`) reads the selected text, or the clipboard when nothing is selected, and plays speech
 - Speaker icon stays in the menu bar
 - Floating previous / pause / stop / next / speed panel appears only while speaking
-- Settings: Engine, Endpoint, API key, Model, Voice, Speed, Speed apply, Paragraph split, Open at Login
+- Settings: Engine, Endpoint, API key, Model, Voice, Speed, Speed apply, Paragraph split, Speak hotkey, Open at Login
 
 ## Text source: selection first, clipboard fallback
 

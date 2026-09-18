@@ -16,10 +16,13 @@
 		A01C00000000000000000316 /* LoginItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000116 /* LoginItemController.swift */; };
 		A01C00000000000000000304 /* GlobalHotKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000104 /* GlobalHotKey.swift */; };
 		A01C00000000000000000317 /* AccessibilityPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000117 /* AccessibilityPermission.swift */; };
+		A01C00000000000000000319 /* HotkeyBinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000119 /* HotkeyBinding.swift */; };
+		A01C00000000000000000320 /* SpeakHotkeyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000120 /* SpeakHotkeyController.swift */; };
+		A01C00000000000000000321 /* HotkeyBinding+AppKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000121 /* HotkeyBinding+AppKit.swift */; };
 		A01C00000000000000000305 /* ClipboardReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000105 /* ClipboardReader.swift */; };
 		A01C00000000000000000306 /* ParagraphSplitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000106 /* ParagraphSplitter.swift */; };
 		A01C00000000000000000307 /* TTSClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000107 /* TTSClient.swift */; };
-		A01C00000000000000000319 /* SelectionReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000119 /* SelectionReader.swift */; };
+		A01C00000000000000000322 /* SelectionReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000122 /* SelectionReader.swift */; };
 		A01C00000000000000000308 /* AudioPlayback.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000108 /* AudioPlayback.swift */; };
 		A01C00000000000000000309 /* SpeechController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000109 /* SpeechController.swift */; };
 		A01C00000000000000000310 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000110 /* StatusItemController.swift */; };
@@ -31,6 +34,7 @@
 		A01C00000000000000000602 /* SpeechControllerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000502 /* SpeechControllerTests.swift */; };
 		A01C00000000000000000603 /* AppSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000503 /* AppSettingsTests.swift */; };
 		A01C00000000000000000604 /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000504 /* TestSupport.swift */; };
+		A01C00000000000000000605 /* HotkeyBindingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000505 /* HotkeyBindingTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -53,10 +57,13 @@
 		A01C00000000000000000116 /* LoginItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginItemController.swift; sourceTree = "<group>"; };
 		A01C00000000000000000104 /* GlobalHotKey.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlobalHotKey.swift; sourceTree = "<group>"; };
 		A01C00000000000000000117 /* AccessibilityPermission.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccessibilityPermission.swift; sourceTree = "<group>"; };
+		A01C00000000000000000119 /* HotkeyBinding.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyBinding.swift; sourceTree = "<group>"; };
+		A01C00000000000000000120 /* SpeakHotkeyController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeakHotkeyController.swift; sourceTree = "<group>"; };
+		A01C00000000000000000121 /* HotkeyBinding+AppKit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "HotkeyBinding+AppKit.swift"; sourceTree = "<group>"; };
 		A01C00000000000000000105 /* ClipboardReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardReader.swift; sourceTree = "<group>"; };
 		A01C00000000000000000106 /* ParagraphSplitter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParagraphSplitter.swift; sourceTree = "<group>"; };
 		A01C00000000000000000107 /* TTSClient.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTSClient.swift; sourceTree = "<group>"; };
-		A01C00000000000000000119 /* SelectionReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionReader.swift; sourceTree = "<group>"; };
+		A01C00000000000000000122 /* SelectionReader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionReader.swift; sourceTree = "<group>"; };
 		A01C00000000000000000108 /* AudioPlayback.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioPlayback.swift; sourceTree = "<group>"; };
 		A01C00000000000000000109 /* SpeechController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechController.swift; sourceTree = "<group>"; };
 		A01C00000000000000000110 /* StatusItemController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StatusItemController.swift; sourceTree = "<group>"; };
@@ -72,6 +79,7 @@
 		A01C00000000000000000502 /* SpeechControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechControllerTests.swift; sourceTree = "<group>"; };
 		A01C00000000000000000503 /* AppSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsTests.swift; sourceTree = "<group>"; };
 		A01C00000000000000000504 /* TestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSupport.swift; sourceTree = "<group>"; };
+		A01C00000000000000000505 /* HotkeyBindingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyBindingTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -135,6 +143,9 @@
 			children = (
 				A01C00000000000000000104 /* GlobalHotKey.swift */,
 				A01C00000000000000000117 /* AccessibilityPermission.swift */,
+				A01C00000000000000000119 /* HotkeyBinding.swift */,
+				A01C00000000000000000120 /* SpeakHotkeyController.swift */,
+				A01C00000000000000000121 /* HotkeyBinding+AppKit.swift */,
 			);
 			path = Hotkey;
 			sourceTree = "<group>";
@@ -145,7 +156,7 @@
 				A01C00000000000000000105 /* ClipboardReader.swift */,
 				A01C00000000000000000106 /* ParagraphSplitter.swift */,
 				A01C00000000000000000107 /* TTSClient.swift */,
-				A01C00000000000000000119 /* SelectionReader.swift */,
+				A01C00000000000000000122 /* SelectionReader.swift */,
 			);
 			path = TTS;
 			sourceTree = "<group>";
@@ -177,6 +188,7 @@
 				A01C00000000000000000502 /* SpeechControllerTests.swift */,
 				A01C00000000000000000503 /* AppSettingsTests.swift */,
 				A01C00000000000000000504 /* TestSupport.swift */,
+				A01C00000000000000000505 /* HotkeyBindingTests.swift */,
 			);
 			path = EloquentTests;
 			sourceTree = "<group>";
@@ -298,10 +310,13 @@
 				A01C00000000000000000316 /* LoginItemController.swift in Sources */,
 				A01C00000000000000000304 /* GlobalHotKey.swift in Sources */,
 				A01C00000000000000000317 /* AccessibilityPermission.swift in Sources */,
+				A01C00000000000000000319 /* HotkeyBinding.swift in Sources */,
+				A01C00000000000000000320 /* SpeakHotkeyController.swift in Sources */,
+				A01C00000000000000000321 /* HotkeyBinding+AppKit.swift in Sources */,
 				A01C00000000000000000305 /* ClipboardReader.swift in Sources */,
 				A01C00000000000000000306 /* ParagraphSplitter.swift in Sources */,
 				A01C00000000000000000307 /* TTSClient.swift in Sources */,
-				A01C00000000000000000319 /* SelectionReader.swift in Sources */,
+				A01C00000000000000000322 /* SelectionReader.swift in Sources */,
 				A01C00000000000000000308 /* AudioPlayback.swift in Sources */,
 				A01C00000000000000000309 /* SpeechController.swift in Sources */,
 				A01C00000000000000000310 /* StatusItemController.swift in Sources */,
@@ -319,6 +334,7 @@
 				A01C00000000000000000602 /* SpeechControllerTests.swift in Sources */,
 				A01C00000000000000000603 /* AppSettingsTests.swift in Sources */,
 				A01C00000000000000000604 /* TestSupport.swift in Sources */,
+				A01C00000000000000000605 /* HotkeyBindingTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

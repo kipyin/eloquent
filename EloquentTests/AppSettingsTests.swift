@@ -12,6 +12,7 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertEqual(settings.voice, "alloy")
         XCTAssertEqual(settings.speed, 1.1, accuracy: 0.0001)
         XCTAssertEqual(settings.paragraphSplit, .blankLinesThenNewlines)
+        XCTAssertEqual(settings.speakHotkey, .optionEscape)
         XCTAssertEqual(settings.speedApply, .nextParagraph)
         XCTAssertEqual(settings.apiKey, "")
         XCTAssertEqual(secrets.value, "")
@@ -96,6 +97,7 @@ final class AppSettingsTests: XCTestCase {
         settings.voice = "other"
         settings.speed = 0.8
         settings.paragraphSplit = .everyNewline
+        settings.speakHotkey = HotkeyBinding(keyCode: 0, modifiers: [.command, .option])
         settings.speedApply = .respeakCurrent
 
         settings.resetToDefaults()
@@ -108,7 +110,29 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertEqual(settings.voice, "alloy")
         XCTAssertEqual(settings.speed, 1.1, accuracy: 0.0001)
         XCTAssertEqual(settings.paragraphSplit, .blankLinesThenNewlines)
+        XCTAssertEqual(settings.speakHotkey, .optionEscape)
         XCTAssertEqual(settings.speedApply, .nextParagraph)
+    }
+
+    func testSpeakHotkeyPersistsAcrossReload() {
+        let (settings, defaults, _) = makeSettings()
+        settings.speakHotkey = HotkeyBinding(keyCode: 0, modifiers: [.command, .option])
+
+        let reloaded = AppSettings(defaults: defaults, secrets: MemoryAPIKeyStore())
+        XCTAssertEqual(reloaded.speakHotkey, HotkeyBinding(keyCode: 0, modifiers: [.command, .option]))
+    }
+
+    func testInvalidStoredSpeakHotkeyFallsBackToOptionEscape() {
+        let suiteName = "com.kipyin.eloquent.tests.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suiteName)!
+        defaults.removePersistentDomain(forName: suiteName)
+        defaults.set(-1, forKey: "speakHotkeyKeyCode")
+        defaults.set(0, forKey: "speakHotkeyModifiers")
+
+        let settings = AppSettings(defaults: defaults, secrets: MemoryAPIKeyStore())
+        XCTAssertEqual(settings.speakHotkey, .optionEscape)
+
+        defaults.removePersistentDomain(forName: suiteName)
     }
 
     private func makeSettings() -> (AppSettings, UserDefaults, MemoryAPIKeyStore) {

@@ -2,12 +2,13 @@ import AppKit
 import SwiftUI
 
 @MainActor
-final class SettingsWindowController {
+final class SettingsWindowController: NSObject, NSWindowDelegate {
     private let speech: SpeechController
     private var window: NSWindow?
 
     init(speech: SpeechController) {
         self.speech = speech
+        super.init()
     }
 
     func show() {
@@ -34,7 +35,12 @@ final class SettingsWindowController {
         window.center()
         window.isReleasedWhenClosed = false
         window.collectionBehavior = [.moveToActiveSpace]
+        window.delegate = self
         return window
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        SpeakHotkeyController.shared.cancelRecording()
     }
 
     private func presentAsKey(_ window: NSWindow) {
@@ -57,6 +63,7 @@ struct SettingsView: View {
     @ObservedObject private var settings = AppSettings.shared
     @ObservedObject private var loginItem = LoginItemController.shared
     @ObservedObject private var accessibility = AccessibilityPermission.shared
+    @ObservedObject private var speakHotkey = SpeakHotkeyController.shared
 
     var body: some View {
         Form {
@@ -115,13 +122,13 @@ struct SettingsView: View {
             }
 
             Section("Hotkey") {
-                LabeledContent("Speak selection or clipboard", value: "⌥⎋  Option+Escape")
+                SpeakHotkeyRecorder(settings: settings, controller: speakHotkey)
                 LabeledContent("Accessibility") {
                     Text(accessibility.isTrusted ? "Granted" : "Not granted")
                         .foregroundStyle(accessibility.isTrusted ? Color.secondary : Color.orange)
                 }
                 if !accessibility.isTrusted {
-                    Text("Grant Accessibility so Option+Escape and selection reading work in every app. After enabling Eloquent, quit from the menu bar and reopen.")
+                    Text("Grant Accessibility so \(settings.speakHotkey.words) and selection reading work in every app. After enabling Eloquent, quit from the menu bar and reopen.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Button("Grant Accessibility…") {
@@ -154,6 +161,7 @@ struct SettingsView: View {
                 Button("Reset Defaults") {
                     settings.resetToDefaults()
                     loginItem.setEnabled(false)
+                    speakHotkey.reinstallAfterReset()
                 }
             }
         }
@@ -175,6 +183,43 @@ struct SettingsView: View {
             get: { loginItem.isEnabled },
             set: { loginItem.setEnabled($0) }
         )
+    }
+}
+
+private struct SpeakHotkeyRecorder: View {
+    @ObservedObject var settings: AppSettings
+    @ObservedObject var controller: SpeakHotkeyController
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Text("Speak selection or clipboard")
+                Spacer()
+                Button(recorderTitle) {
+                    if controller.isRecording {
+                        controller.cancelRecording()
+                    } else {
+                        controller.beginRecording()
+                    }
+                }
+                .help("Click, then press the new shortcut. Press Escape to cancel.")
+            }
+            if let error = controller.lastError {
+                Text(error)
+                    .font(.caption)
+                    .foregroundStyle(.red)
+            }
+            Text("Click the shortcut, then press the new keys. The previous shortcut stays active if the new one is reserved or already used.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+    }
+
+    private var recorderTitle: String {
+        if controller.isRecording {
+            return "Type a shortcut…"
+        }
+        return settings.speakHotkey.displayLabel
     }
 }
 

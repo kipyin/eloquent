@@ -6,8 +6,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var settingsWindow: SettingsWindowController!
     private var statusItem: StatusItemController?
     private var playbackPanel: PlaybackPanelController?
-    private var hotKey: GlobalHotKey?
-
     private static let log = Logger(subsystem: "com.kipyin.eloquent", category: "app")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -26,7 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.settingsWindow.show()
             }
         )
-        hotKey = GlobalHotKey.optionEscape { [weak self] in
+        SpeakHotkeyController.shared.start { [weak self] in
             self?.speech.speak()
         }
 
@@ -43,7 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         speech?.stop()
-        hotKey = nil
+        SpeakHotkeyController.shared.stop()
     }
 
     func applicationSupportsSecureRestorableState(_ app: NSApplication) -> Bool {
