@@ -1,3 +1,4 @@
+import AppKit
 import Combine
 import Foundation
 
@@ -11,6 +12,7 @@ final class SpeakHotkeyController: ObservableObject {
     private static let conflictMessage = "That shortcut is already used by another app."
 
     private var hotKey: GlobalHotKey?
+    private var monitor: Any?
 
     private init() {}
 
@@ -51,14 +53,16 @@ final class SpeakHotkeyController: ObservableObject {
         isRecording = true
         lastError = nil
         hotKey?.setPaused(true)
+        installMonitor()
     }
 
     func cancelRecording() {
+        removeMonitor()
         isRecording = false
         hotKey?.setPaused(false)
     }
 
-    var isAwaitingKeyRelease: Bool {
+    private var isAwaitingKeyRelease: Bool {
         !isRecording && (hotKey?.isPaused == true)
     }
 
@@ -68,10 +72,54 @@ final class SpeakHotkeyController: ObservableObject {
     }
 
     func resumeAfterRecording() {
+        removeMonitor()
         hotKey?.setPaused(false)
     }
 
     func stop() {
+        cancelRecording()
         hotKey = nil
+    }
+
+    private func installMonitor() {
+        removeMonitor()
+        monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp, .flagsChanged]) { [weak self] event in
+            self?.handleCaptureEvent(event) ?? event
+        }
+    }
+
+    private func handleCaptureEvent(_ event: NSEvent) -> NSEvent? {
+        if isRecording {
+            guard event.type == .keyDown else {
+                return nil
+            }
+            if event.isARepeat {
+                return nil
+            }
+            let modifiers = HotkeyModifiers(eventFlags: event.modifierFlags)
+            if event.keyCode == HotkeyBinding.escapeKeyCode, modifiers.isEmpty {
+                cancelRecording()
+                return nil
+            }
+            finishRecording(with: HotkeyBinding(event: event))
+            return nil
+        }
+        if isAwaitingKeyRelease {
+            if event.type == .keyDown {
+                return nil
+            }
+            if event.type == .keyUp || HotkeyModifiers(eventFlags: event.modifierFlags).isEmpty {
+                resumeAfterRecording()
+            }
+            return nil
+        }
+        return event
+    }
+
+    private func removeMonitor() {
+        if let monitor {
+            NSEvent.removeMonitor(monitor)
+            self.monitor = nil
+        }
     }
 }

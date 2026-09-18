@@ -2,12 +2,13 @@ import AppKit
 import SwiftUI
 
 @MainActor
-final class SettingsWindowController {
+final class SettingsWindowController: NSObject, NSWindowDelegate {
     private let speech: SpeechController
     private var window: NSWindow?
 
     init(speech: SpeechController) {
         self.speech = speech
+        super.init()
     }
 
     func show() {
@@ -34,7 +35,12 @@ final class SettingsWindowController {
         window.center()
         window.isReleasedWhenClosed = false
         window.collectionBehavior = [.moveToActiveSpace]
+        window.delegate = self
         return window
+    }
+
+    func windowWillClose(_ notification: Notification) {
+        SpeakHotkeyController.shared.cancelRecording()
     }
 
     private func presentAsKey(_ window: NSWindow) {
@@ -183,7 +189,6 @@ struct SettingsView: View {
 private struct SpeakHotkeyRecorder: View {
     @ObservedObject var settings: AppSettings
     @ObservedObject var controller: SpeakHotkeyController
-    @State private var monitor: Any?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -191,7 +196,11 @@ private struct SpeakHotkeyRecorder: View {
                 Text("Speak selection or clipboard")
                 Spacer()
                 Button(recorderTitle) {
-                    toggleRecording()
+                    if controller.isRecording {
+                        controller.cancelRecording()
+                    } else {
+                        controller.beginRecording()
+                    }
                 }
                 .help("Click, then press the new shortcut. Press Escape to cancel.")
             }
@@ -204,14 +213,6 @@ private struct SpeakHotkeyRecorder: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
-        .onChange(of: controller.isRecording) { _, recording in
-            if !recording, !controller.isAwaitingKeyRelease {
-                removeMonitor()
-            }
-        }
-        .onDisappear {
-            cancelRecording()
-        }
     }
 
     private var recorderTitle: String {
@@ -219,63 +220,6 @@ private struct SpeakHotkeyRecorder: View {
             return "Type a shortcut…"
         }
         return settings.speakHotkey.displayLabel
-    }
-
-    private func toggleRecording() {
-        if controller.isRecording {
-            cancelRecording()
-        } else {
-            beginRecording()
-        }
-    }
-
-    private func beginRecording() {
-        removeMonitor()
-        controller.beginRecording()
-        monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp, .flagsChanged]) { event in
-            if controller.isRecording {
-                guard event.type == .keyDown else {
-                    return nil
-                }
-                if event.isARepeat {
-                    return nil
-                }
-                let modifiers = HotkeyModifiers(eventFlags: event.modifierFlags)
-                if event.keyCode == HotkeyBinding.escapeKeyCode, modifiers.isEmpty {
-                    cancelRecording()
-                    return nil
-                }
-                controller.finishRecording(with: HotkeyBinding(event: event))
-                return nil
-            }
-            if controller.isAwaitingKeyRelease {
-                if event.type == .keyDown {
-                    return nil
-                }
-                if event.type == .keyUp || HotkeyModifiers(eventFlags: event.modifierFlags).isEmpty {
-                    resumeAfterRecording()
-                }
-                return nil
-            }
-            return event
-        }
-    }
-
-    private func resumeAfterRecording() {
-        removeMonitor()
-        controller.resumeAfterRecording()
-    }
-
-    private func cancelRecording() {
-        removeMonitor()
-        controller.cancelRecording()
-    }
-
-    private func removeMonitor() {
-        if let monitor {
-            NSEvent.removeMonitor(monitor)
-            self.monitor = nil
-        }
     }
 }
 
