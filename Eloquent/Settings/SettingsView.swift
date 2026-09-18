@@ -205,7 +205,7 @@ private struct SpeakHotkeyRecorder: View {
                 .foregroundStyle(.secondary)
         }
         .onChange(of: controller.isRecording) { _, recording in
-            if !recording {
+            if !recording, !controller.isAwaitingKeyRelease {
                 removeMonitor()
             }
         }
@@ -232,20 +232,38 @@ private struct SpeakHotkeyRecorder: View {
     private func beginRecording() {
         removeMonitor()
         controller.beginRecording()
-        monitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            let modifiers = HotkeyModifiers(eventFlags: event.modifierFlags)
-            if event.keyCode == HotkeyBinding.escapeKeyCode, modifiers.isEmpty {
-                cancelRecording()
+        monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .keyUp, .flagsChanged]) { event in
+            if controller.isRecording {
+                guard event.type == .keyDown else {
+                    return nil
+                }
+                if event.isARepeat {
+                    return nil
+                }
+                let modifiers = HotkeyModifiers(eventFlags: event.modifierFlags)
+                if event.keyCode == HotkeyBinding.escapeKeyCode, modifiers.isEmpty {
+                    cancelRecording()
+                    return nil
+                }
+                controller.finishRecording(with: HotkeyBinding(event: event))
                 return nil
             }
-            finishRecording(HotkeyBinding(event: event))
-            return nil
+            if controller.isAwaitingKeyRelease {
+                if event.type == .keyDown {
+                    return nil
+                }
+                if event.type == .keyUp || HotkeyModifiers(eventFlags: event.modifierFlags).isEmpty {
+                    resumeAfterRecording()
+                }
+                return nil
+            }
+            return event
         }
     }
 
-    private func finishRecording(_ binding: HotkeyBinding) {
+    private func resumeAfterRecording() {
         removeMonitor()
-        controller.finishRecording(with: binding)
+        controller.resumeAfterRecording()
     }
 
     private func cancelRecording() {

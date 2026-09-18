@@ -58,9 +58,16 @@ final class SpeakHotkeyController: ObservableObject {
         hotKey?.setPaused(false)
     }
 
+    var isAwaitingKeyRelease: Bool {
+        !isRecording && (hotKey?.isPaused == true)
+    }
+
     func finishRecording(with binding: HotkeyBinding) {
         isRecording = false
         apply(binding)
+    }
+
+    func resumeAfterRecording() {
         hotKey?.setPaused(false)
     }
 

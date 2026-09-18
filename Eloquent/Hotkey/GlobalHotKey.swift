@@ -114,7 +114,7 @@ final class GlobalHotKey {
 
     private func installEventMonitors() {
         globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { event in
-            guard let active = Self.active, !active.isPaused, active.binding.matches(event) else {
+            guard let active = Self.active, !active.isPaused, !event.isARepeat, active.binding.matches(event) else {
                 return
             }
             DispatchQueue.main.async {
@@ -122,7 +122,7 @@ final class GlobalHotKey {
             }
         }
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
-            guard let active = Self.active, !active.isPaused, active.binding.matches(event) else {
+            guard let active = Self.active, !active.isPaused, !event.isARepeat, active.binding.matches(event) else {
                 return event
             }
             DispatchQueue.main.async {
