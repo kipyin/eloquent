@@ -38,6 +38,7 @@ final class SpeakHotkeyController: ObservableObject {
     }
 
     func reinstallAfterReset() {
+        cancelRecording()
         if apply(.optionEscape) {
             return
         }
@@ -49,18 +50,18 @@ final class SpeakHotkeyController: ObservableObject {
     func beginRecording() {
         isRecording = true
         lastError = nil
-        hotKey?.isPaused = true
+        hotKey?.setPaused(true)
     }
 
     func cancelRecording() {
         isRecording = false
-        hotKey?.isPaused = false
+        hotKey?.setPaused(false)
     }
 
     func finishRecording(with binding: HotkeyBinding) {
         isRecording = false
-        hotKey?.isPaused = false
         apply(binding)
+        hotKey?.setPaused(false)
     }
 
     func stop() {

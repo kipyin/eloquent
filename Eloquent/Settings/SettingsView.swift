@@ -204,6 +204,11 @@ private struct SpeakHotkeyRecorder: View {
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
+        .onChange(of: controller.isRecording) { _, recording in
+            if !recording {
+                removeMonitor()
+            }
+        }
         .onDisappear {
             cancelRecording()
         }

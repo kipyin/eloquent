@@ -10,7 +10,7 @@ final class GlobalHotKey {
     private var lastFire: TimeInterval = 0
     private let handler: () -> Void
     private(set) var binding: HotkeyBinding
-    var isPaused = false
+    private(set) var isPaused = false
 
     private static var active: GlobalHotKey?
     private static let log = Logger(subsystem: "com.kipyin.eloquent", category: "hotkey")
@@ -41,6 +41,17 @@ final class GlobalHotKey {
         }
         if Self.active === self {
             Self.active = nil
+        }
+    }
+
+    func setPaused(_ paused: Bool) {
+        isPaused = paused
+        if paused {
+            unregisterHotKey()
+            return
+        }
+        if hotKeyRef == nil {
+            _ = register(binding)
         }
     }
 
