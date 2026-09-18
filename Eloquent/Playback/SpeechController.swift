@@ -23,6 +23,7 @@ final class SpeechController: ObservableObject {
     private var speakTask: Task<Void, Never>?
     private var generation = UUID()
     private var transientErrorTask: Task<Void, Never>?
+    private var spokenSpeed: Double?
     private let log = Logger(subsystem: "com.kipyin.eloquent", category: "speech")
 
     init(
@@ -151,6 +152,7 @@ final class SpeechController: ObservableObject {
         player.stop()
         paragraphs = []
         index = 0
+        spokenSpeed = nil
         state = .idle
     }
 
@@ -166,6 +168,24 @@ final class SpeechController: ObservableObject {
             return
         }
         beginSession(paragraphs: paragraphs, startingAt: index + 1)
+    }
+
+    func applySpeedChange() {
+        switch state {
+        case .loading, .playing, .paused:
+            let settings = settingsProvider.snapshot()
+            switch settings.speedApply {
+            case .nextParagraph:
+                break
+            case .respeakCurrent:
+                guard settings.speed != spokenSpeed else {
+                    return
+                }
+                beginSession(paragraphs: paragraphs, startingAt: index)
+            }
+        case .idle, .failed:
+            break
+        }
     }
 
     private func beginSession(paragraphs: [String], startingAt startIndex: Int) {
@@ -187,6 +207,7 @@ final class SpeechController: ObservableObject {
         state = .loading
         let text = paragraphs[index]
         let settings = settingsProvider.snapshot()
+        spokenSpeed = settings.speed
         let synthesizer = self.synthesizer
         log.info("Synthesizing paragraph \(self.index + 1, privacy: .public)/\(self.paragraphs.count, privacy: .public)")
 
@@ -262,6 +283,7 @@ final class SpeechController: ObservableObject {
         player.stop()
         paragraphs = []
         index = 0
+        spokenSpeed = nil
         state = .failed(message)
         transientErrorTask = Task { [weak self] in
             try? await Task.sleep(nanoseconds: 2_400_000_000)

@@ -13,6 +13,7 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertEqual(settings.speed, 1.1, accuracy: 0.0001)
         XCTAssertEqual(settings.paragraphSplit, .blankLinesThenNewlines)
         XCTAssertEqual(settings.speakHotkey, .optionEscape)
+        XCTAssertEqual(settings.speedApply, .nextParagraph)
         XCTAssertEqual(settings.apiKey, "")
         XCTAssertEqual(secrets.value, "")
     }
@@ -78,6 +79,16 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertEqual(reloaded.paragraphSplit, .sentences)
     }
 
+    func testSpeedApplyPersistsRawValue() {
+        let (settings, defaults, _) = makeSettings()
+        settings.speedApply = .respeakCurrent
+
+        XCTAssertEqual(defaults.string(forKey: "speedApply"), "respeakCurrent")
+
+        let reloaded = AppSettings(defaults: defaults, secrets: MemoryAPIKeyStore())
+        XCTAssertEqual(reloaded.speedApply, .respeakCurrent)
+    }
+
     func testResetToDefaultsClearsSecret() {
         let (settings, _, secrets) = makeSettings()
         settings.endpoint = "https://api.example.com/v1"
@@ -87,6 +98,7 @@ final class AppSettingsTests: XCTestCase {
         settings.speed = 0.8
         settings.paragraphSplit = .everyNewline
         settings.speakHotkey = HotkeyBinding(keyCode: 0, modifiers: [.command, .option])
+        settings.speedApply = .respeakCurrent
 
         settings.resetToDefaults()
 
@@ -99,6 +111,7 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertEqual(settings.speed, 1.1, accuracy: 0.0001)
         XCTAssertEqual(settings.paragraphSplit, .blankLinesThenNewlines)
         XCTAssertEqual(settings.speakHotkey, .optionEscape)
+        XCTAssertEqual(settings.speedApply, .nextParagraph)
     }
 
     func testSpeakHotkeyPersistsAcrossReload() {

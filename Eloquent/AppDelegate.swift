@@ -13,7 +13,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.accessory)
 
         speech = SpeechController()
-        settingsWindow = SettingsWindowController()
+        settingsWindow = SettingsWindowController(speech: speech)
         playbackPanel = PlaybackPanelController(speech: speech)
         statusItem = StatusItemController(
             speech: speech,

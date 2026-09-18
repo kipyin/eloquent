@@ -6,8 +6,8 @@ Native macOS menu-bar app. The speak hotkey reads the clipboard and speaks it th
 
 - Configurable global speak hotkey (default Option+Escape, `⌥⎋`) reads clipboard text and plays speech
 - Speaker icon stays in the menu bar
-- Floating previous / pause / stop / next panel appears only while speaking
-- Settings: Engine, Endpoint, API key, Model, Voice, Speed, Paragraph split, Speak hotkey, Open at Login
+- Floating previous / pause / stop / next / speed panel appears only while speaking
+- Settings: Engine, Endpoint, API key, Model, Voice, Speed, Speed apply, Paragraph split, Speak hotkey, Open at Login
 
 ## Install / run
 
