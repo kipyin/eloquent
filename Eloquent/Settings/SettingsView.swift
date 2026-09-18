@@ -53,19 +53,18 @@ struct SettingsView: View {
     var body: some View {
         Form {
             Section("OpenAI TTS") {
-                TextField("Engine", text: $settings.engine)
-                    .textFieldStyle(.roundedBorder)
-                TextField("Endpoint", text: $settings.endpoint, prompt: Text("https://api.openai.com/v1"))
-                    .textFieldStyle(.roundedBorder)
-                SecureField("API key", text: $settings.apiKey)
-                    .textFieldStyle(.roundedBorder)
+                SettingsTextField(title: "Engine", text: $settings.engine)
+                SettingsTextField(
+                    title: "Endpoint",
+                    text: $settings.endpoint,
+                    prompt: Text("https://api.openai.com/v1")
+                )
+                SettingsTextField(title: "API key", text: $settings.apiKey, secure: true)
                 Text("Configure Endpoint and API key for your OpenAI-compatible provider. Endpoint is the `/v1` base URL. Speak fails until Endpoint is set. Never commit API keys.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                TextField("Model", text: $settings.model)
-                    .textFieldStyle(.roundedBorder)
-                TextField("Voice", text: $settings.voice)
-                    .textFieldStyle(.roundedBorder)
+                SettingsTextField(title: "Model", text: $settings.model)
+                SettingsTextField(title: "Voice", text: $settings.voice)
                 HStack {
                     Text("Speed")
                     Slider(
@@ -155,5 +154,113 @@ struct SettingsView: View {
             get: { loginItem.isEnabled },
             set: { loginItem.setEnabled($0) }
         )
+    }
+}
+
+// Grouped Form keeps labeled TextField text trailing. Hide the field label
+// and pin NSTextField.alignment so typed values start at the leading edge.
+private struct SettingsTextField: View {
+    let title: String
+    @Binding var text: String
+    var prompt: Text?
+    var secure = false
+
+    var body: some View {
+        LabeledContent(title) {
+            field
+                .textFieldStyle(.roundedBorder)
+                .labelsHidden()
+                .multilineTextAlignment(.leading)
+                .background(LeadingNSTextFieldAlignment())
+        }
+    }
+
+    @ViewBuilder
+    private var field: some View {
+        if secure {
+            SecureField(title, text: $text)
+        } else if let prompt {
+            TextField(title, text: $text, prompt: prompt)
+        } else {
+            TextField(title, text: $text)
+        }
+    }
+}
+
+private struct LeadingNSTextFieldAlignment: NSViewRepresentable {
+    func makeNSView(context: Context) -> AlignmentProbe {
+        AlignmentProbe()
+    }
+
+    func updateNSView(_ nsView: AlignmentProbe, context: Context) {
+        nsView.apply()
+    }
+}
+
+private final class AlignmentProbe: NSView {
+    override var intrinsicContentSize: NSSize { .zero }
+
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        apply()
+    }
+
+    override func layout() {
+        super.layout()
+        apply()
+    }
+
+    func apply() {
+        DispatchQueue.main.async { [weak self] in
+            self?.alignNearestTextField()
+        }
+    }
+
+    private func alignNearestTextField() {
+        guard let field = nearestTextField() else { return }
+        if field.alignment != .left {
+            field.alignment = .left
+        }
+        if let cell = field.cell as? NSTextFieldCell, cell.alignment != .left {
+            cell.alignment = .left
+        }
+        if let editor = field.currentEditor() as? NSTextView, editor.alignment != .left {
+            editor.alignment = .left
+        }
+    }
+
+    private func nearestTextField() -> NSTextField? {
+        var node: NSView? = superview
+        while let current = node {
+            let fields = collectTextFields(from: current)
+            if fields.count == 1 {
+                return fields[0]
+            }
+            if fields.count > 1 {
+                return closestField(in: fields)
+            }
+            node = current.superview
+        }
+        return nil
+    }
+
+    private func collectTextFields(from view: NSView) -> [NSTextField] {
+        if let field = view as? NSTextField {
+            return [field]
+        }
+        return view.subviews.flatMap { collectTextFields(from: $0) }
+    }
+
+    private func closestField(in fields: [NSTextField]) -> NSTextField? {
+        let origin = convert(NSPoint(x: bounds.midX, y: bounds.midY), to: nil)
+        return fields.min { lhs, rhs in
+            let left = lhs.convert(NSPoint(x: lhs.bounds.midX, y: lhs.bounds.midY), to: nil)
+            let right = rhs.convert(NSPoint(x: rhs.bounds.midX, y: rhs.bounds.midY), to: nil)
+            let leftDistance = hypot(left.x - origin.x, left.y - origin.y)
+            let rightDistance = hypot(right.x - origin.x, right.y - origin.y)
+            return leftDistance < rightDistance
+        }
     }
 }
