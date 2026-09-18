@@ -90,8 +90,10 @@ final class GlobalHotKey {
         if timestamp - lastFire < 0.2 {
             return
         }
-        lastFire = timestamp
         handler()
+        // Stamp completion, not start: a slow handler must swallow the
+        // duplicate deliveries of its own keypress.
+        lastFire = ProcessInfo.processInfo.systemUptime
     }
 
     private func installEventMonitors() {
