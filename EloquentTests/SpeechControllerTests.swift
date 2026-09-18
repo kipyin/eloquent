@@ -3,14 +3,45 @@ import XCTest
 
 @MainActor
 final class SpeechControllerTests: XCTestCase {
-    func testEmptyClipboardFailsWithoutFloatingPanel() {
-        let speech = makeSpeech(clipboard: StubClipboard(text: nil))
+    func testEmptySelectionAndClipboardFailsWithoutFloatingPanel() {
+        let speech = makeSpeech(selection: StubSelection(text: nil), clipboard: StubClipboard(text: nil))
 
-        speech.speakClipboard()
+        speech.speak()
 
-        XCTAssertEqual(speech.state, .failed("Clipboard is empty."))
+        XCTAssertEqual(speech.state, .failed("No text selected and clipboard is empty."))
         XCTAssertFalse(speech.showsFloatingPanel)
         XCTAssertTrue(speech.paragraphs.isEmpty)
+    }
+
+    func testNonEmptySelectionIsSpokenInsteadOfClipboard() async {
+        let synthesizer = FakeSynthesizer()
+        let speech = makeSpeech(
+            synthesizer: synthesizer,
+            selection: StubSelection(text: "Selected text"),
+            clipboard: StubClipboard(text: "Clipboard text")
+        )
+
+        speech.speak()
+        await waitUntil { speech.state == .playing }
+
+        XCTAssertEqual(speech.paragraphs, ["Selected text"])
+        XCTAssertEqual(synthesizer.texts, ["Selected text"])
+        XCTAssertTrue(speech.showsFloatingPanel)
+    }
+
+    func testUnreadableSelectionFallsBackToClipboard() async {
+        let synthesizer = FakeSynthesizer()
+        let speech = makeSpeech(
+            synthesizer: synthesizer,
+            selection: StubSelection(text: nil),
+            clipboard: StubClipboard(text: "Clipboard text")
+        )
+
+        speech.speak()
+        await waitUntil { speech.state == .playing }
+
+        XCTAssertEqual(speech.paragraphs, ["Clipboard text"])
+        XCTAssertEqual(synthesizer.texts, ["Clipboard text"])
     }
 
     func testEmptyEndpointFailsWithoutFloatingPanel() {
@@ -19,7 +50,7 @@ final class SpeechControllerTests: XCTestCase {
             settings: StubSettings(makeSnapshot(endpoint: ""))
         )
 
-        speech.speakClipboard()
+        speech.speak()
 
         XCTAssertEqual(speech.state, .failed(TTSError.missingEndpoint.localizedDescription))
         XCTAssertFalse(speech.showsFloatingPanel)
@@ -36,7 +67,7 @@ final class SpeechControllerTests: XCTestCase {
             settings: StubSettings(makeSnapshot(paragraphSplit: .blankLinesOnly))
         )
 
-        speech.speakClipboard()
+        speech.speak()
         await waitUntil { speech.state == .playing }
 
         XCTAssertEqual(speech.paragraphs, ["First", "Second"])
@@ -59,7 +90,7 @@ final class SpeechControllerTests: XCTestCase {
             settings: StubSettings(makeSnapshot(paragraphSplit: .blankLinesOnly))
         )
 
-        speech.speakClipboard()
+        speech.speak()
         await waitUntil { speech.state == .playing }
         player.finishSuccessfully()
         await waitUntil { speech.index == 1 && speech.state == .playing }
@@ -85,7 +116,7 @@ final class SpeechControllerTests: XCTestCase {
             settings: StubSettings(makeSnapshot(paragraphSplit: .blankLinesOnly))
         )
 
-        speech.speakClipboard()
+        speech.speak()
         await waitUntil { speech.state == .playing }
         speech.next()
         await waitUntil { speech.index == 1 && speech.state == .playing }
@@ -107,7 +138,7 @@ final class SpeechControllerTests: XCTestCase {
             clipboard: StubClipboard(text: "Hello")
         )
 
-        speech.speakClipboard()
+        speech.speak()
         await waitUntil { speech.state == .playing }
         speech.togglePause()
 
@@ -123,7 +154,7 @@ final class SpeechControllerTests: XCTestCase {
     func testStopClearsSession() async {
         let speech = makeSpeech(clipboard: StubClipboard(text: "Hello"))
 
-        speech.speakClipboard()
+        speech.speak()
         await waitUntil { speech.state == .playing }
         speech.stop()
 
@@ -146,7 +177,7 @@ final class SpeechControllerTests: XCTestCase {
             settings: settings
         )
 
-        speech.speakClipboard()
+        speech.speak()
         await waitUntil { speech.state == .playing }
         settings.value.speed = 1.4
         speech.applySpeedChange()
@@ -177,7 +208,7 @@ final class SpeechControllerTests: XCTestCase {
             settings: settings
         )
 
-        speech.speakClipboard()
+        speech.speak()
         await waitUntil { speech.state == .playing }
         settings.value.speed = 1.4
         speech.applySpeedChange()
@@ -203,7 +234,7 @@ final class SpeechControllerTests: XCTestCase {
             settings: settings
         )
 
-        speech.speakClipboard()
+        speech.speak()
         await waitUntil { speech.state == .playing }
         speech.applySpeedChange()
 
@@ -221,7 +252,7 @@ final class SpeechControllerTests: XCTestCase {
             clipboard: StubClipboard(text: "Hello")
         )
 
-        speech.speakClipboard()
+        speech.speak()
         await waitUntil {
             if case .failed = speech.state { return true }
             return false
@@ -243,7 +274,7 @@ final class SpeechControllerTests: XCTestCase {
             settings: StubSettings(makeSnapshot(endpoint: "///"))
         )
 
-        speech.speakClipboard()
+        speech.speak()
         await waitUntil {
             if case .failed = speech.state { return true }
             return false
@@ -257,12 +288,14 @@ final class SpeechControllerTests: XCTestCase {
     private func makeSpeech(
         synthesizer: any TTSSynthesizing = FakeSynthesizer(),
         player: FakePlayer = FakePlayer(),
+        selection: StubSelection = StubSelection(text: nil),
         clipboard: StubClipboard = StubClipboard(text: "Hello"),
         settings: StubSettings? = nil
     ) -> SpeechController {
         SpeechController(
             synthesizer: synthesizer,
             player: player,
+            selection: selection,
             clipboard: clipboard,
             settings: settings ?? StubSettings(makeSnapshot())
         )

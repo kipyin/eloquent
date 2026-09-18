@@ -85,9 +85,9 @@ extension HotkeyBinding {
 
     var menuTitle: String {
         if menuKeyEquivalent.isEmpty {
-            return "Speak Clipboard (\(displayLabel))"
+            return "Speak Selection or Clipboard (\(displayLabel))"
         }
-        return "Speak Clipboard"
+        return "Speak Selection or Clipboard"
     }
 
     private static func functionKey(_ key: Int) -> String {

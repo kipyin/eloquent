@@ -122,7 +122,7 @@ struct SettingsView: View {
                         .foregroundStyle(accessibility.isTrusted ? Color.secondary : Color.orange)
                 }
                 if !accessibility.isTrusted {
-                    Text("Grant Accessibility so \(settings.speakHotkey.words) works in every app. After enabling Eloquent, quit from the menu bar and reopen.")
+                    Text("Grant Accessibility so \(settings.speakHotkey.words) and selection reading work in every app. After enabling Eloquent, quit from the menu bar and reopen.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Button("Grant Accessibility…") {
@@ -188,7 +188,7 @@ private struct SpeakHotkeyRecorder: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack {
-                Text("Speak clipboard")
+                Text("Speak selection or clipboard")
                 Spacer()
                 Button(recorderTitle) {
                     toggleRecording()

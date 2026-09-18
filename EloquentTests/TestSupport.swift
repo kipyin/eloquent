@@ -43,6 +43,14 @@ struct StubClipboard: ClipboardReading {
     }
 }
 
+struct StubSelection: SelectionReading {
+    var text: String?
+
+    func selectedText() -> String? {
+        text
+    }
+}
+
 @MainActor
 final class StubSettings: SettingsProviding {
     var value: SettingsSnapshot

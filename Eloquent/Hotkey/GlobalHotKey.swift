@@ -94,22 +94,26 @@ final class GlobalHotKey {
             return OSStatus(eventNotHandledErr)
         }
 
+        // Stamp event time before the queue hop so both deliveries of one
+        // keypress coalesce no matter how long the handler blocks the queue.
+        let timestamp = ProcessInfo.processInfo.systemUptime
         DispatchQueue.main.async {
-            Self.active?.fire()
+            Self.active?.fire(at: timestamp)
         }
         return noErr
     }
 
-    private func fire() {
+    private func fire(at timestamp: TimeInterval) {
         guard !isPaused else {
             return
         }
-        let now = ProcessInfo.processInfo.systemUptime
-        if now - lastFire < 0.2 {
+        if timestamp - lastFire < 0.2 {
             return
         }
-        lastFire = now
         handler()
+        // Stamp completion, not start: a slow handler must swallow the
+        // duplicate deliveries of its own keypress.
+        lastFire = ProcessInfo.processInfo.systemUptime
     }
 
     private func installEventMonitors() {
@@ -117,16 +121,18 @@ final class GlobalHotKey {
             guard let active = Self.active, !active.isPaused, !event.isARepeat, active.binding.matches(event) else {
                 return
             }
+            let timestamp = ProcessInfo.processInfo.systemUptime
             DispatchQueue.main.async {
-                Self.active?.fire()
+                Self.active?.fire(at: timestamp)
             }
         }
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             guard let active = Self.active, !active.isPaused, !event.isARepeat, active.binding.matches(event) else {
                 return event
             }
+            let timestamp = ProcessInfo.processInfo.systemUptime
             DispatchQueue.main.async {
-                Self.active?.fire()
+                Self.active?.fire(at: timestamp)
             }
             return nil
         }
