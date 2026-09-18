@@ -26,14 +26,14 @@ Fallback source of text to speak, used when there is no readable selection. Empt
 How previous / next walks the spoken text. Four modes: blank lines only; every newline; blank lines when present otherwise every newline (default); sentences.
 
 **Endpoint**:
-The user-configured OpenAI-compatible `/v1` base URL. Required before speaking. Empty Endpoint fails clearly in the UI.
+The user-configured base URL of the active Engine. Required before speaking. Each engine prefills its official URL; user overrides (proxies, gateways) survive engine switches. Empty Endpoint fails clearly in the UI.
 _Avoid_: hardcoded provider URL
 
 **TTS request**:
-`POST {endpoint}/audio/speech` with `{ model, voice, input, speed, response_format: "mp3" }`. No `language` field. Bearer token only when an API key is set.
+Per-engine shape, chosen by Engine. `openai`: POST `{endpoint}/audio/speech` with `{ model, voice, input, speed, response_format: "mp3" }`. No `language` field — providers apply their own heuristics. `grok`: POST `{endpoint}/tts` with `{ text, voice_id, language: "auto", speed }` — the provider requires `language`, hardcoded to `auto`; no `model` field. Bearer token only when an API key is set; one shared key for all engines.
 
 **Engine**:
-Stored in Settings for parity (`openai` by default). Not sent in the TTS JSON body.
+The TTS provider chosen in Settings: `openai` or `grok`. A preset bundle: each engine fixes the request shape, the URL path, the official Endpoint prefill, and the default Voice. Switching engines always resets Voice to the new engine's default, and replaces Endpoint with the official URL only when Endpoint still holds the previous engine's official URL. Unknown stored values fall back to `openai`. The engine choice itself is never sent in the request body.
 
 **Speak hotkey**:
 The user-configured global shortcut that reads the current selection — or the clipboard when nothing is selected — and speaks it. Default is Option+Escape (⌥⎋). Persisted in Settings. Changing it rebinds the running app. A reserved or conflicting combo keeps the last working binding.
