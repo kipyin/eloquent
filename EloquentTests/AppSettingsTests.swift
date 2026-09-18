@@ -12,6 +12,7 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertEqual(settings.voice, "alloy")
         XCTAssertEqual(settings.speed, 1.1, accuracy: 0.0001)
         XCTAssertEqual(settings.paragraphSplit, .blankLinesThenNewlines)
+        XCTAssertEqual(settings.speedApply, .nextParagraph)
         XCTAssertEqual(settings.apiKey, "")
         XCTAssertEqual(secrets.value, "")
     }
@@ -77,6 +78,16 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertEqual(reloaded.paragraphSplit, .sentences)
     }
 
+    func testSpeedApplyPersistsRawValue() {
+        let (settings, defaults, _) = makeSettings()
+        settings.speedApply = .respeakCurrent
+
+        XCTAssertEqual(defaults.string(forKey: "speedApply"), "respeakCurrent")
+
+        let reloaded = AppSettings(defaults: defaults, secrets: MemoryAPIKeyStore())
+        XCTAssertEqual(reloaded.speedApply, .respeakCurrent)
+    }
+
     func testResetToDefaultsClearsSecret() {
         let (settings, _, secrets) = makeSettings()
         settings.endpoint = "https://api.example.com/v1"
@@ -85,6 +96,7 @@ final class AppSettingsTests: XCTestCase {
         settings.voice = "other"
         settings.speed = 0.8
         settings.paragraphSplit = .everyNewline
+        settings.speedApply = .respeakCurrent
 
         settings.resetToDefaults()
 
@@ -96,6 +108,7 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertEqual(settings.voice, "alloy")
         XCTAssertEqual(settings.speed, 1.1, accuracy: 0.0001)
         XCTAssertEqual(settings.paragraphSplit, .blankLinesThenNewlines)
+        XCTAssertEqual(settings.speedApply, .nextParagraph)
     }
 
     private func makeSettings() -> (AppSettings, UserDefaults, MemoryAPIKeyStore) {

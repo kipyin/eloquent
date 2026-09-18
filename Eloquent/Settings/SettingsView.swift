@@ -3,7 +3,12 @@ import SwiftUI
 
 @MainActor
 final class SettingsWindowController {
+    private let speech: SpeechController
     private var window: NSWindow?
+
+    init(speech: SpeechController) {
+        self.speech = speech
+    }
 
     func show() {
         let window = window ?? makeWindow()
@@ -14,16 +19,18 @@ final class SettingsWindowController {
     }
 
     private func makeWindow() -> NSWindow {
-        let controller = NSHostingController(rootView: SettingsView())
+        let controller = NSHostingController(rootView: SettingsView(onSpeedCommitted: { [speech] in
+            speech.applySpeedChange()
+        }))
         let window = SettingsWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 560, height: 740),
+            contentRect: NSRect(x: 0, y: 0, width: 560, height: 800),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
         window.contentViewController = controller
         window.title = "Eloquent Settings"
-        window.setContentSize(NSSize(width: 560, height: 740))
+        window.setContentSize(NSSize(width: 560, height: 800))
         window.center()
         window.isReleasedWhenClosed = false
         window.collectionBehavior = [.moveToActiveSpace]
@@ -46,6 +53,7 @@ private final class SettingsWindow: NSWindow {
 }
 
 struct SettingsView: View {
+    var onSpeedCommitted: () -> Void
     @ObservedObject private var settings = AppSettings.shared
     @ObservedObject private var loginItem = LoginItemController.shared
     @ObservedObject private var accessibility = AccessibilityPermission.shared
@@ -71,7 +79,11 @@ struct SettingsView: View {
                         value: $settings.speed,
                         in: AppSettings.Defaults.minimumSpeed...AppSettings.Defaults.maximumSpeed,
                         step: 0.1
-                    )
+                    ) { editing in
+                        if !editing {
+                            onSpeedCommitted()
+                        }
+                    }
                     Text(speedLabel)
                         .monospacedDigit()
                         .frame(width: 44, alignment: .trailing)
@@ -89,6 +101,15 @@ struct SettingsView: View {
                 }
                 .pickerStyle(.radioGroup)
                 Text(settings.paragraphSplit.helpText)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                Picker("Speed apply", selection: $settings.speedApply) {
+                    ForEach(SpeedApplyMode.allCases) { mode in
+                        Text(mode.menuTitle).tag(mode)
+                    }
+                }
+                .pickerStyle(.radioGroup)
+                Text(settings.speedApply.helpText)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }
