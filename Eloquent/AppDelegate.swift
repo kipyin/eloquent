@@ -20,14 +20,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = StatusItemController(
             speech: speech,
             onSpeak: { [weak self] in
-                self?.speech.speakClipboard()
+                self?.speech.speak()
             },
             onSettings: { [weak self] in
                 self?.settingsWindow.show()
             }
         )
         hotKey = GlobalHotKey.optionEscape { [weak self] in
-            self?.speech.speakClipboard()
+            self?.speech.speak()
         }
 
         Self.log.info("Eloquent launched; status item ready")

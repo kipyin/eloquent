@@ -1,13 +1,24 @@
 # Eloquent
 
-Native macOS menu-bar app. Option+Escape reads the clipboard and speaks it through an OpenAI-compatible TTS endpoint.
+Native macOS menu-bar app. Option+Escape reads the current selection — or the clipboard when nothing is selected — and speaks it through an OpenAI-compatible TTS endpoint.
 
 ## What it does
 
-- Global hotkey Option+Escape (`⌥⎋`) reads clipboard text and plays speech
+- Global hotkey Option+Escape (`⌥⎋`) reads the selected text, or the clipboard when nothing is selected, and plays speech
 - Speaker icon stays in the menu bar
 - Floating previous / pause / stop / next / speed panel appears only while speaking
 - Settings: Engine, Endpoint, API key, Model, Voice, Speed, Speed apply, Paragraph split, Open at Login
+
+## Text source: selection first, clipboard fallback
+
+Speaking prefers the live text selection in the frontmost app, read through the same Accessibility permission the hotkey uses. When nothing is selected or the app does not expose its selection, Eloquent speaks the clipboard instead. If both are empty, it fails with a transient error and the floating panel stays hidden.
+
+The selection cannot be read everywhere; in these cases Eloquent silently falls back to the clipboard:
+
+- Accessibility permission not granted (System Settings → Privacy & Security → Accessibility)
+- Apps that do not expose selected text to Accessibility — some terminals, canvas-rendered editors, and custom text controls
+- Secure text fields (passwords), which never expose their contents
+- No focused text element (for example the selection sits in a dialog that lost focus)
 
 ## Install / run
 

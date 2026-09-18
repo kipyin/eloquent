@@ -115,13 +115,13 @@ struct SettingsView: View {
             }
 
             Section("Hotkey") {
-                LabeledContent("Speak clipboard", value: "⌥⎋  Option+Escape")
+                LabeledContent("Speak selection or clipboard", value: "⌥⎋  Option+Escape")
                 LabeledContent("Accessibility") {
                     Text(accessibility.isTrusted ? "Granted" : "Not granted")
                         .foregroundStyle(accessibility.isTrusted ? Color.secondary : Color.orange)
                 }
                 if !accessibility.isTrusted {
-                    Text("Grant Accessibility so Option+Escape works in every app. After enabling Eloquent, quit from the menu bar and reopen.")
+                    Text("Grant Accessibility so Option+Escape and selection reading work in every app. After enabling Eloquent, quit from the menu bar and reopen.")
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Button("Grant Accessibility…") {

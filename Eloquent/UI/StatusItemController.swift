@@ -108,7 +108,7 @@ final class StatusItemController: NSObject {
         let menu = NSMenu()
 
         let speakItem = NSMenuItem(
-            title: "Speak Clipboard",
+            title: "Speak Selection or Clipboard",
             action: #selector(speakMenuItem),
             keyEquivalent: "\u{1b}"
         )

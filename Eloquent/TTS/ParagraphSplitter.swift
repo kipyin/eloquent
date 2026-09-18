@@ -30,7 +30,7 @@ enum ParagraphSplitMode: String, CaseIterable, Identifiable, Sendable {
         case .everyNewline:
             return "Each newline starts a new paragraph."
         case .blankLinesThenNewlines:
-            return "Use blank lines when the clipboard has them; otherwise split on every newline."
+            return "Use blank lines when the text has them; otherwise split on every newline."
         case .sentences:
             return "Split on sentence endings (. ! ? 。 ！ ？). Prev/next moves one sentence at a time."
         }
