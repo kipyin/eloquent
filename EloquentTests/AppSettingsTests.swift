@@ -87,6 +87,14 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertEqual(settings.endpoint, "https://api.openai.com/v1")
     }
 
+    func testOfficialEndpointWithTrailingSlashIsReplacedOnEngineSwitch() {
+        let (settings, _, _) = makeSettings()
+        settings.endpoint = "https://api.openai.com/v1/"
+
+        settings.engine = .grok
+        XCTAssertEqual(settings.endpoint, "https://api.x.ai/v1")
+    }
+
     func testCustomEndpointSurvivesEngineSwitchRoundTrip() {
         let (settings, _, _) = makeSettings()
         settings.endpoint = "https://proxy.example.com/v1"

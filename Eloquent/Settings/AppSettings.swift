@@ -240,9 +240,17 @@ final class AppSettings: ObservableObject, SettingsProviding {
     private func applyEngineSwitch(from old: Engine, to new: Engine) {
         guard old != new else { return }
         voice = new.defaultVoice
-        if endpoint.trimmingCharacters(in: .whitespacesAndNewlines) == old.officialEndpoint {
+        if Self.normalizedEndpoint(endpoint) == old.officialEndpoint {
             endpoint = new.officialEndpoint
         }
+    }
+
+    private static func normalizedEndpoint(_ endpoint: String) -> String {
+        var base = endpoint.trimmingCharacters(in: .whitespacesAndNewlines)
+        while base.hasSuffix("/") {
+            base.removeLast()
+        }
+        return base
     }
 
     private static func storedEngine(_ value: String?) -> Engine {
