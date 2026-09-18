@@ -200,6 +200,8 @@ private struct LeadingNSTextFieldAlignment: NSViewRepresentable {
 private final class AlignmentProbe: NSView {
     override var intrinsicContentSize: NSSize { .zero }
 
+    override func hitTest(_ point: NSPoint) -> NSView? { nil }
+
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         apply()
