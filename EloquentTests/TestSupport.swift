@@ -2,7 +2,7 @@ import Foundation
 @testable import Eloquent
 
 func makeSnapshot(
-    engine: String = "openai",
+    engine: Engine = .openai,
     endpoint: String = "https://api.example.com/v1",
     apiKey: String = "",
     model: String = "tts-1",

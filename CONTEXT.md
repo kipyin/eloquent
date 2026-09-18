@@ -3,7 +3,7 @@
 A glossary for domain terms whose meanings cannot be inferred safely from code. It names concepts; code and tests define behavior.
 
 **Eloquent**:
-Native macOS menu-bar TTS app. The speak hotkey reads the current selection — or the clipboard when nothing is selected — and plays speech from an OpenAI-compatible endpoint.
+Native macOS menu-bar TTS app. The speak hotkey reads the current selection — or the clipboard when nothing is selected — and plays speech from the selected Engine.
 
 **Status item**:
 The always-on speaker icon in the menu bar. It stays there for the life of the app. The app is an `LSUIElement` accessory: no Dock icon.

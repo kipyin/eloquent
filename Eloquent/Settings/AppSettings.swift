@@ -1,6 +1,51 @@
 import Combine
 import Foundation
 
+enum Engine: String, CaseIterable, Identifiable, Sendable {
+    case openai
+    case grok
+
+    static let `default` = Engine.openai
+
+    var id: String { rawValue }
+
+    var menuTitle: String {
+        switch self {
+        case .openai:
+            return "OpenAI"
+        case .grok:
+            return "Grok"
+        }
+    }
+
+    var officialEndpoint: String {
+        switch self {
+        case .openai:
+            return "https://api.openai.com/v1"
+        case .grok:
+            return "https://api.x.ai/v1"
+        }
+    }
+
+    var defaultVoice: String {
+        switch self {
+        case .openai:
+            return "alloy"
+        case .grok:
+            return "eve"
+        }
+    }
+
+    var speechPath: String {
+        switch self {
+        case .openai:
+            return "/audio/speech"
+        case .grok:
+            return "/tts"
+        }
+    }
+}
+
 enum SpeedApplyMode: String, CaseIterable, Identifiable, Sendable {
     case nextParagraph = "nextParagraph"
     case respeakCurrent = "respeakCurrent"
@@ -29,10 +74,10 @@ enum SpeedApplyMode: String, CaseIterable, Identifiable, Sendable {
 }
 
 enum TTSDefaults {
-    static let engine = "openai"
+    static let engine = Engine.default
     static let endpoint = ""
     static let model = "tts-1"
-    static let voice = "alloy"
+    static let voice = Engine.openai.defaultVoice
     static let speed = 1.1
     static let minimumSpeed = 0.7
     static let maximumSpeed = 1.5
@@ -47,7 +92,7 @@ enum TTSDefaults {
 }
 
 struct SettingsSnapshot: Sendable, Equatable {
-    var engine: String
+    var engine: Engine
     var endpoint: String
     var apiKey: String
     var model: String
@@ -83,8 +128,11 @@ final class AppSettings: ObservableObject, SettingsProviding {
     private let defaults: UserDefaults
     private let secrets: any APIKeyStoring
 
-    @Published var engine: String {
-        didSet { defaults.set(engine, forKey: Keys.engine) }
+    @Published var engine: Engine {
+        didSet {
+            defaults.set(engine.rawValue, forKey: Keys.engine)
+            applyEngineSwitch(from: oldValue, to: engine)
+        }
     }
 
     @Published var endpoint: String {
@@ -132,7 +180,7 @@ final class AppSettings: ObservableObject, SettingsProviding {
     init(defaults: UserDefaults = .standard, secrets: any APIKeyStoring = KeychainStore()) {
         self.defaults = defaults
         self.secrets = secrets
-        engine = Self.nonEmpty(defaults.string(forKey: Keys.engine), fallback: Defaults.engine)
+        engine = Self.storedEngine(defaults.string(forKey: Keys.engine))
         endpoint = Self.nonEmpty(defaults.string(forKey: Keys.endpoint), fallback: Defaults.endpoint)
         model = Self.nonEmpty(defaults.string(forKey: Keys.model), fallback: Defaults.model)
         voice = Self.nonEmpty(defaults.string(forKey: Keys.voice), fallback: Defaults.voice)
@@ -162,7 +210,7 @@ final class AppSettings: ObservableObject, SettingsProviding {
 
     func snapshot() -> SettingsSnapshot {
         SettingsSnapshot(
-            engine: engine.trimmingCharacters(in: .whitespacesAndNewlines),
+            engine: engine,
             endpoint: endpoint.trimmingCharacters(in: .whitespacesAndNewlines),
             apiKey: apiKey.trimmingCharacters(in: .whitespacesAndNewlines),
             model: model.trimmingCharacters(in: .whitespacesAndNewlines),
@@ -187,6 +235,19 @@ final class AppSettings: ObservableObject, SettingsProviding {
 
     static func clampSpeed(_ value: Double) -> Double {
         TTSDefaults.clampSpeed(value)
+    }
+
+    private func applyEngineSwitch(from old: Engine, to new: Engine) {
+        guard old != new else { return }
+        voice = new.defaultVoice
+        if endpoint.trimmingCharacters(in: .whitespacesAndNewlines) == old.officialEndpoint {
+            endpoint = new.officialEndpoint
+        }
+    }
+
+    private static func storedEngine(_ value: String?) -> Engine {
+        let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return Engine(rawValue: trimmed) ?? .openai
     }
 
     private static func nonEmpty(_ value: String?, fallback: String) -> String {

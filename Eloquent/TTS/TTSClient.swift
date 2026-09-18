@@ -28,7 +28,7 @@ struct TTSClient: TTSSynthesizing {
         guard !endpoint.isEmpty else {
             throw TTSError.missingEndpoint
         }
-        guard let url = Self.speechURL(from: endpoint) else {
+        guard let url = Self.speechURL(from: endpoint, engine: settings.engine) else {
             throw TTSError.invalidEndpoint(endpoint)
         }
 
@@ -41,17 +41,7 @@ struct TTSClient: TTSSynthesizing {
             request.setValue("Bearer \(settings.apiKey)", forHTTPHeaderField: "Authorization")
         }
 
-        // Engine is stored for settings parity and is not sent in the body.
-        // Language is omitted. Providers may apply their own heuristics.
-        // Never send ja or auto.
-        let body = SpeechRequestBody(
-            model: settings.model.isEmpty ? TTSDefaults.model : settings.model,
-            voice: settings.voice.isEmpty ? TTSDefaults.voice : settings.voice,
-            input: trimmed,
-            speed: TTSDefaults.clampSpeed(settings.speed),
-            response_format: "mp3"
-        )
-        request.httpBody = try JSONEncoder().encode(body)
+        request.httpBody = try Self.encodeBody(text: trimmed, settings: settings)
 
         let (data, response) = try await transport.data(for: request)
         guard let http = response as? HTTPURLResponse else {
@@ -69,7 +59,7 @@ struct TTSClient: TTSSynthesizing {
         return data
     }
 
-    private static func speechURL(from endpoint: String) -> URL? {
+    private static func speechURL(from endpoint: String, engine: Engine) -> URL? {
         var base = endpoint.trimmingCharacters(in: .whitespacesAndNewlines)
         while base.hasSuffix("/") {
             base.removeLast()
@@ -77,7 +67,30 @@ struct TTSClient: TTSSynthesizing {
         guard !base.isEmpty else {
             return nil
         }
-        return URL(string: base + "/audio/speech")
+        return URL(string: base + engine.speechPath)
+    }
+
+    private static func encodeBody(text: String, settings: SettingsSnapshot) throws -> Data {
+        let voice = settings.voice.isEmpty ? settings.engine.defaultVoice : settings.voice
+        switch settings.engine {
+        case .openai:
+            let body = SpeechRequestBody(
+                model: settings.model.isEmpty ? TTSDefaults.model : settings.model,
+                voice: voice,
+                input: text,
+                speed: TTSDefaults.clampSpeed(settings.speed),
+                response_format: "mp3"
+            )
+            return try JSONEncoder().encode(body)
+        case .grok:
+            let body = GrokSpeechRequestBody(
+                text: text,
+                voice_id: voice,
+                language: "auto",
+                speed: TTSDefaults.clampSpeed(settings.speed)
+            )
+            return try JSONEncoder().encode(body)
+        }
     }
 
     private func looksLikeJSON(_ data: Data) -> Bool {
@@ -109,6 +122,13 @@ private struct SpeechRequestBody: Encodable {
     let response_format: String
 }
 
+private struct GrokSpeechRequestBody: Encodable {
+    let text: String
+    let voice_id: String
+    let language: String
+    let speed: Double
+}
+
 enum TTSError: LocalizedError, Equatable {
     case emptyInput
     case missingEndpoint
@@ -122,7 +142,7 @@ enum TTSError: LocalizedError, Equatable {
         case .emptyInput:
             return "Nothing to speak."
         case .missingEndpoint:
-            return "Set Endpoint in Settings. Eloquent needs an OpenAI-compatible /v1 base URL."
+            return "Set Endpoint in Settings. Eloquent needs a /v1 base URL."
         case .invalidEndpoint(let endpoint):
             return "Invalid endpoint: \(endpoint)"
         case .invalidResponse:
