@@ -1,6 +1,33 @@
 import Combine
 import Foundation
 
+enum SpeedApplyMode: String, CaseIterable, Identifiable, Sendable {
+    case nextParagraph = "nextParagraph"
+    case respeakCurrent = "respeakCurrent"
+
+    static let `default` = SpeedApplyMode.nextParagraph
+
+    var id: String { rawValue }
+
+    var menuTitle: String {
+        switch self {
+        case .nextParagraph:
+            return "Next paragraph only"
+        case .respeakCurrent:
+            return "Re-speak current paragraph"
+        }
+    }
+
+    var helpText: String {
+        switch self {
+        case .nextParagraph:
+            return "Keep the current paragraph playing. The new speed is used on the next synthesis."
+        case .respeakCurrent:
+            return "Cancel the current paragraph and synthesize it again at the new speed."
+        }
+    }
+}
+
 enum TTSDefaults {
     static let engine = "openai"
     static let endpoint = ""
@@ -11,6 +38,7 @@ enum TTSDefaults {
     static let maximumSpeed = 1.5
 
     static let paragraphSplit = ParagraphSplitMode.default
+    static let speedApply = SpeedApplyMode.default
 
     static func clampSpeed(_ value: Double) -> Double {
         let clamped = min(max(value, minimumSpeed), maximumSpeed)
@@ -26,6 +54,7 @@ struct SettingsSnapshot: Sendable, Equatable {
     var voice: String
     var speed: Double
     var paragraphSplit: ParagraphSplitMode
+    var speedApply: SpeedApplyMode
 }
 
 @MainActor
@@ -46,6 +75,7 @@ final class AppSettings: ObservableObject, SettingsProviding {
         static let voice = "voice"
         static let speed = "speed"
         static let paragraphSplit = "paragraphSplit"
+        static let speedApply = "speedApply"
     }
 
     private let defaults: UserDefaults
@@ -86,6 +116,10 @@ final class AppSettings: ObservableObject, SettingsProviding {
         didSet { defaults.set(paragraphSplit.rawValue, forKey: Keys.paragraphSplit) }
     }
 
+    @Published var speedApply: SpeedApplyMode {
+        didSet { defaults.set(speedApply.rawValue, forKey: Keys.speedApply) }
+    }
+
     init(defaults: UserDefaults = .standard, secrets: any APIKeyStoring = KeychainStore()) {
         self.defaults = defaults
         self.secrets = secrets
@@ -104,6 +138,12 @@ final class AppSettings: ObservableObject, SettingsProviding {
         } else {
             paragraphSplit = Defaults.paragraphSplit
         }
+        if let raw = defaults.string(forKey: Keys.speedApply),
+           let stored = SpeedApplyMode(rawValue: raw) {
+            speedApply = stored
+        } else {
+            speedApply = Defaults.speedApply
+        }
         apiKey = secrets.loadAPIKey()
     }
 
@@ -115,7 +155,8 @@ final class AppSettings: ObservableObject, SettingsProviding {
             model: model.trimmingCharacters(in: .whitespacesAndNewlines),
             voice: voice.trimmingCharacters(in: .whitespacesAndNewlines),
             speed: TTSDefaults.clampSpeed(speed),
-            paragraphSplit: paragraphSplit
+            paragraphSplit: paragraphSplit,
+            speedApply: speedApply
         )
     }
 
@@ -127,6 +168,7 @@ final class AppSettings: ObservableObject, SettingsProviding {
         voice = Defaults.voice
         speed = Defaults.speed
         paragraphSplit = Defaults.paragraphSplit
+        speedApply = Defaults.speedApply
     }
 
     static func clampSpeed(_ value: Double) -> Double {

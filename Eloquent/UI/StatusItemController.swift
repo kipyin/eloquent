@@ -13,17 +13,12 @@ final class StatusItemController: NSObject {
         self.speech = speech
         self.onSpeak = onSpeak
         self.onSettings = onSettings
-        // Fixed square length + title fallback so the item stays visible when the
-        // menu bar is crowded or the SF Symbol fails to resolve.
+        // Square length keeps an icon-only item from collapsing in a packed menu bar.
         self.statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         super.init()
         statusItem.autosaveName = "EloquentStatusItem"
         statusItem.isVisible = true
-        if let button = statusItem.button {
-            button.toolTip = "Eloquent"
-            button.title = "Elo"
-            button.imagePosition = .imageLeading
-        }
+        statusItem.button?.toolTip = "Eloquent"
         configureButton()
         rebuildMenu()
 
@@ -47,29 +42,67 @@ final class StatusItemController: NSObject {
         guard let button = statusItem.button else {
             return
         }
-        let symbolName: String
-        switch speech.state {
+        button.title = ""
+        button.imagePosition = .imageOnly
+        button.image = templateSymbol(named: symbolName(for: speech.state))
+            ?? templateSymbol(named: "speaker.fill")
+            ?? Self.fallbackSpeakerImage
+    }
+
+    private func symbolName(for state: SpeechController.State) -> String {
+        switch state {
         case .playing:
-            symbolName = "speaker.wave.2.fill"
+            return "speaker.wave.3.fill"
         case .paused:
-            symbolName = "speaker.wave.2"
+            return "speaker.wave.2"
         case .loading:
-            symbolName = "ellipsis.circle"
+            return "speaker.wave.1.fill"
         case .failed:
-            symbolName = "speaker.slash"
+            return "speaker.slash.fill"
         case .idle:
-            symbolName = "speaker.wave.2.fill"
-        }
-        if let image = NSImage(systemSymbolName: symbolName, accessibilityDescription: "Eloquent") {
-            image.isTemplate = true
-            button.image = image
-            button.title = "Elo"
-            button.imagePosition = .imageLeading
-        } else {
-            button.image = nil
-            button.title = "Elo"
+            return "speaker.fill"
         }
     }
+
+    private func templateSymbol(named name: String) -> NSImage? {
+        let configuration = NSImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
+        guard let image = NSImage(systemSymbolName: name, accessibilityDescription: "Eloquent")?
+            .withSymbolConfiguration(configuration)
+        else {
+            return nil
+        }
+        image.isTemplate = true
+        return image
+    }
+
+    private static let fallbackSpeakerImage: NSImage = {
+        let size = NSSize(width: 18, height: 18)
+        let image = NSImage(size: size, flipped: false) { rect in
+            NSColor.black.setFill()
+            let cone = NSBezierPath()
+            cone.move(to: NSPoint(x: rect.minX + 2.5, y: rect.midY - 2.5))
+            cone.line(to: NSPoint(x: rect.minX + 7, y: rect.midY - 2.5))
+            cone.line(to: NSPoint(x: rect.minX + 11.5, y: rect.midY - 6.5))
+            cone.line(to: NSPoint(x: rect.minX + 11.5, y: rect.midY + 6.5))
+            cone.line(to: NSPoint(x: rect.minX + 7, y: rect.midY + 2.5))
+            cone.line(to: NSPoint(x: rect.minX + 2.5, y: rect.midY + 2.5))
+            cone.close()
+            cone.fill()
+            NSColor.black.setStroke()
+            let wave = NSBezierPath()
+            wave.appendArc(
+                withCenter: NSPoint(x: rect.minX + 11, y: rect.midY),
+                radius: 4.5,
+                startAngle: -48,
+                endAngle: 48
+            )
+            wave.lineWidth = 1.6
+            wave.stroke()
+            return true
+        }
+        image.isTemplate = true
+        return image
+    }()
 
     private func rebuildMenu() {
         let menu = NSMenu()

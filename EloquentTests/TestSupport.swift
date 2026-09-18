@@ -8,7 +8,8 @@ func makeSnapshot(
     model: String = "tts-1",
     voice: String = "alloy",
     speed: Double = 1.1,
-    paragraphSplit: ParagraphSplitMode = .blankLinesThenNewlines
+    paragraphSplit: ParagraphSplitMode = .blankLinesThenNewlines,
+    speedApply: SpeedApplyMode = .nextParagraph
 ) -> SettingsSnapshot {
     SettingsSnapshot(
         engine: engine,
@@ -17,7 +18,8 @@ func makeSnapshot(
         model: model,
         voice: voice,
         speed: speed,
-        paragraphSplit: paragraphSplit
+        paragraphSplit: paragraphSplit,
+        speedApply: speedApply
     )
 }
 
@@ -64,10 +66,12 @@ final class StubSettings: SettingsProviding {
 
 final class FakeSynthesizer: TTSSynthesizing, @unchecked Sendable {
     var texts: [String] = []
+    var speeds: [Double] = []
     var result: Result<Data, Error> = .success(Data([0xFF, 0xFB, 0x90]))
 
     func synthesize(text: String, settings: SettingsSnapshot) async throws -> Data {
         texts.append(text)
+        speeds.append(settings.speed)
         return try result.get()
     }
 }

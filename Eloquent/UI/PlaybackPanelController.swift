@@ -48,7 +48,7 @@ final class PlaybackPanelController: NSObject, NSWindowDelegate {
     private func makePanel() -> NSPanel {
         let hosting = NSHostingController(rootView: ControlPanelView(speech: speech))
         let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 340, height: 120),
+            contentRect: NSRect(x: 0, y: 0, width: 340, height: 156),
             styleMask: [.titled, .fullSizeContentView, .closable, .nonactivatingPanel, .utilityWindow],
             backing: .buffered,
             defer: false
@@ -67,7 +67,7 @@ final class PlaybackPanelController: NSObject, NSWindowDelegate {
         panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
         panel.standardWindowButton(.zoomButton)?.isHidden = true
         panel.delegate = self
-        panel.setContentSize(NSSize(width: 340, height: 118))
+        panel.setContentSize(NSSize(width: 340, height: 154))
         return panel
     }
 

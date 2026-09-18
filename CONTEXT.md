@@ -10,8 +10,11 @@ The always-on speaker icon in the menu bar. It stays there for the life of the a
 _Avoid_: playback-only extra, Dock app
 
 **Floating control panel**:
-Previous / pause / stop / next. Shown only while speaking (loading, playing, paused). Hidden when idle or stopped.
+Previous / pause / stop / next, plus speed. Shown only while speaking (loading, playing, paused). Hidden when idle or stopped.
 _Avoid_: standing window, always-on panel
+
+**Speed apply**:
+When speed changes during a speech session (loading, playing, paused). Next paragraph only (default) leaves the current paragraph playing and uses the new speed on the next synthesis. Re-speak current paragraph cancels the current paragraph’s audio and synthesizes it again at the new speed. Reset Defaults restores 1.1× and next-paragraph-only.
 
 **Selection**:
 The live text selection in the frontmost app, read through Accessibility. Preferred source of text to speak; when the selection is empty or the app does not expose it, speaking falls back to the clipboard.
