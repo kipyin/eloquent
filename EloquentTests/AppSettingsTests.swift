@@ -6,7 +6,7 @@ final class AppSettingsTests: XCTestCase {
     func testPublicDefaultsWhenStoreIsEmpty() {
         let (settings, _, secrets) = makeSettings()
 
-        XCTAssertEqual(settings.engine, "openai")
+        XCTAssertEqual(settings.engine, .openai)
         XCTAssertEqual(settings.endpoint, "")
         XCTAssertEqual(settings.model, "tts-1")
         XCTAssertEqual(settings.voice, "alloy")
@@ -29,12 +29,81 @@ final class AppSettingsTests: XCTestCase {
 
         let settings = AppSettings(defaults: defaults, secrets: MemoryAPIKeyStore())
 
-        XCTAssertEqual(settings.engine, "openai")
+        XCTAssertEqual(settings.engine, .openai)
         XCTAssertEqual(settings.endpoint, "")
         XCTAssertEqual(settings.model, "tts-1")
         XCTAssertEqual(settings.voice, "alloy")
 
         defaults.removePersistentDomain(forName: suiteName)
+    }
+
+    func testUnknownStoredEngineFallsBackToOpenAI() throws {
+        let suiteName = "com.kipyin.eloquent.tests.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suiteName))
+        defaults.removePersistentDomain(forName: suiteName)
+        defaults.set("custom", forKey: "engine")
+        defaults.set("nova", forKey: "voice")
+        defaults.set("https://proxy.example.com/v1", forKey: "endpoint")
+
+        let settings = AppSettings(defaults: defaults, secrets: MemoryAPIKeyStore())
+
+        XCTAssertEqual(settings.engine, .openai)
+        XCTAssertEqual(settings.voice, "nova")
+        XCTAssertEqual(settings.endpoint, "https://proxy.example.com/v1")
+        XCTAssertEqual(settings.snapshot().engine, .openai)
+
+        defaults.removePersistentDomain(forName: suiteName)
+    }
+
+    func testEnginePersistsRawValue() {
+        let (settings, defaults, _) = makeSettings()
+        settings.engine = .grok
+
+        XCTAssertEqual(defaults.string(forKey: "engine"), "grok")
+
+        let reloaded = AppSettings(defaults: defaults, secrets: MemoryAPIKeyStore())
+        XCTAssertEqual(reloaded.engine, .grok)
+    }
+
+    func testSwitchingEngineResetsVoiceToEngineDefault() {
+        let (settings, _, _) = makeSettings()
+        settings.voice = "nova"
+
+        settings.engine = .grok
+        XCTAssertEqual(settings.voice, "eve")
+
+        settings.engine = .openai
+        XCTAssertEqual(settings.voice, "alloy")
+    }
+
+    func testOfficialEndpointIsReplacedOnEngineSwitch() {
+        let (settings, _, _) = makeSettings()
+        settings.endpoint = "https://api.openai.com/v1"
+
+        settings.engine = .grok
+        XCTAssertEqual(settings.endpoint, "https://api.x.ai/v1")
+
+        settings.engine = .openai
+        XCTAssertEqual(settings.endpoint, "https://api.openai.com/v1")
+    }
+
+    func testOfficialEndpointWithTrailingSlashIsReplacedOnEngineSwitch() {
+        let (settings, _, _) = makeSettings()
+        settings.endpoint = "https://api.openai.com/v1/"
+
+        settings.engine = .grok
+        XCTAssertEqual(settings.endpoint, "https://api.x.ai/v1")
+    }
+
+    func testCustomEndpointSurvivesEngineSwitchRoundTrip() {
+        let (settings, _, _) = makeSettings()
+        settings.endpoint = "https://proxy.example.com/v1"
+
+        settings.engine = .grok
+        XCTAssertEqual(settings.endpoint, "https://proxy.example.com/v1")
+
+        settings.engine = .openai
+        XCTAssertEqual(settings.endpoint, "https://proxy.example.com/v1")
     }
 
     func testSnapshotTrimsAndClampsSpeed() {
@@ -102,7 +171,7 @@ final class AppSettingsTests: XCTestCase {
 
         settings.resetToDefaults()
 
-        XCTAssertEqual(settings.engine, "openai")
+        XCTAssertEqual(settings.engine, .openai)
         XCTAssertEqual(settings.endpoint, "")
         XCTAssertEqual(settings.apiKey, "")
         XCTAssertEqual(secrets.value, "")

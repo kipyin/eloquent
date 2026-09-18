@@ -67,18 +67,24 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section("OpenAI TTS") {
-                SettingsTextField(title: "Engine", text: $settings.engine)
+            Section("TTS") {
+                Picker("Engine", selection: $settings.engine) {
+                    ForEach(Engine.allCases) { engine in
+                        Text(engine.menuTitle).tag(engine)
+                    }
+                }
                 SettingsTextField(
                     title: "Endpoint",
                     text: $settings.endpoint,
-                    prompt: Text("https://api.openai.com/v1")
+                    prompt: Text(settings.engine.officialEndpoint)
                 )
                 SettingsTextField(title: "API key", text: $settings.apiKey, secure: true)
-                Text("Configure Endpoint and API key for your OpenAI-compatible provider. Endpoint is the `/v1` base URL. Speak fails until Endpoint is set. Never commit API keys.")
+                Text("Configure Endpoint and API key for the selected engine. Endpoint is the `/v1` base URL. Speak fails until Endpoint is set. Never commit API keys.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
-                SettingsTextField(title: "Model", text: $settings.model)
+                if settings.engine == .openai {
+                    SettingsTextField(title: "Model", text: $settings.model)
+                }
                 SettingsTextField(title: "Voice", text: $settings.voice)
                 HStack {
                     Text("Speed")
@@ -135,7 +141,7 @@ struct SettingsView: View {
                         accessibility.prompt()
                     }
                 }
-                Text("The client never sends a language field. Providers may apply their own heuristics. ja and auto are never sent.")
+                Text("OpenAI requests omit a language field; providers may apply their own heuristics. Grok always sends language auto. ja is never sent.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

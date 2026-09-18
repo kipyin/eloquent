@@ -1,6 +1,6 @@
 # Eloquent
 
-Native macOS menu-bar app. The speak hotkey reads the current selection — or the clipboard when nothing is selected — and speaks it through an OpenAI-compatible TTS endpoint.
+Native macOS menu-bar app. The speak hotkey reads the current selection — or the clipboard when nothing is selected — and speaks it through OpenAI-compatible or Grok (xAI) TTS.
 
 ## What it does
 
@@ -28,7 +28,7 @@ macOS 14+, Apple Silicon, Xcode 15.4+.
 open Eloquent.xcodeproj
 ```
 
-Select the **Eloquent** scheme, destination **My Mac**, then Run. Grant Accessibility when prompted so the hotkey works in every app. Open Settings and set **Endpoint** (the `/v1` base URL) plus an API key.
+Select the **Eloquent** scheme, destination **My Mac**, then Run. Grant Accessibility when prompted so the hotkey works in every app. Open Settings, pick an **Engine**, and set **Endpoint** (the `/v1` base URL) plus an API key.
 
 From the command line:
 

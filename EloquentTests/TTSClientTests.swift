@@ -62,7 +62,7 @@ final class TTSClientTests: XCTestCase {
         let transport = FakeHTTPTransport()
         let client = TTSClient(transport: transport)
         let settings = makeSnapshot(
-            engine: "openai",
+            engine: .openai,
             apiKey: "",
             model: "",
             voice: "",
@@ -82,6 +82,52 @@ final class TTSClientTests: XCTestCase {
         XCTAssertNil(json["engine"])
         XCTAssertNil(json["language"])
         XCTAssertNil(transport.lastRequest?.value(forHTTPHeaderField: "Authorization"))
+    }
+
+    func testGrokPostsTTSPathWithProviderFieldNames() async throws {
+        let transport = FakeHTTPTransport()
+        let client = TTSClient(transport: transport)
+        let settings = makeSnapshot(
+            engine: .grok,
+            endpoint: "https://api.x.ai/v1/",
+            apiKey: "xai-test",
+            model: "tts-1",
+            voice: "eve",
+            speed: 1.2
+        )
+
+        _ = try await client.synthesize(text: "  你好  ", settings: settings)
+
+        XCTAssertEqual(transport.lastRequest?.url?.absoluteString, "https://api.x.ai/v1/tts")
+        XCTAssertEqual(transport.lastRequest?.httpMethod, "POST")
+        XCTAssertEqual(transport.lastRequest?.value(forHTTPHeaderField: "Authorization"), "Bearer xai-test")
+
+        let body = try XCTUnwrap(transport.lastRequest?.httpBody)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+        XCTAssertEqual(json["text"] as? String, "你好")
+        XCTAssertEqual(json["voice_id"] as? String, "eve")
+        XCTAssertEqual(json["language"] as? String, "auto")
+        let speed = json["speed"] as? Double ?? (json["speed"] as? NSNumber)?.doubleValue
+        XCTAssertEqual(speed, 1.2)
+        XCTAssertNil(json["model"])
+        XCTAssertNil(json["input"])
+        XCTAssertNil(json["voice"])
+        XCTAssertNil(json["response_format"])
+        XCTAssertNil(json["engine"])
+    }
+
+    func testGrokEmptyVoiceUsesEngineDefault() async throws {
+        let transport = FakeHTTPTransport()
+        let client = TTSClient(transport: transport)
+
+        _ = try await client.synthesize(
+            text: "Hello",
+            settings: makeSnapshot(engine: .grok, endpoint: "https://api.x.ai/v1", voice: "")
+        )
+
+        let body = try XCTUnwrap(transport.lastRequest?.httpBody)
+        let json = try XCTUnwrap(JSONSerialization.jsonObject(with: body) as? [String: Any])
+        XCTAssertEqual(json["voice_id"] as? String, "eve")
     }
 
     func testBearerTokenOnlyWhenAPIKeyIsSet() async throws {
