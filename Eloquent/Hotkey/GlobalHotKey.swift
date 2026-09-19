@@ -5,9 +5,7 @@ import os
 final class GlobalHotKey {
     private var hotKeyRef: EventHotKeyRef?
     private var handlerRef: EventHandlerRef?
-    private var globalMonitor: Any?
     private var localMonitor: Any?
-    private var lastFire: TimeInterval = 0
     private let handler: () -> Void
     private(set) var binding: HotkeyBinding
     private(set) var isPaused = false
@@ -25,16 +23,13 @@ final class GlobalHotKey {
         if !register(binding) {
             Self.log.error("RegisterEventHotKey failed for \(binding.words, privacy: .public)")
         }
-        installEventMonitors()
+        installLocalMonitor()
     }
 
     deinit {
         unregisterHotKey()
         if let handlerRef {
             RemoveEventHandler(handlerRef)
-        }
-        if let globalMonitor {
-            NSEvent.removeMonitor(globalMonitor)
         }
         if let localMonitor {
             NSEvent.removeMonitor(localMonitor)
@@ -94,45 +89,31 @@ final class GlobalHotKey {
             return OSStatus(eventNotHandledErr)
         }
 
-        // Stamp event time before the queue hop so both deliveries of one
-        // keypress coalesce no matter how long the handler blocks the queue.
-        let timestamp = ProcessInfo.processInfo.systemUptime
         DispatchQueue.main.async {
-            Self.active?.fire(at: timestamp)
+            Self.active?.fire()
         }
         return noErr
     }
 
-    private func fire(at timestamp: TimeInterval) {
+    private func fire() {
         guard !isPaused else {
             return
         }
-        if timestamp - lastFire < 0.2 {
-            return
-        }
         handler()
-        // Stamp completion, not start: a slow handler must swallow the
-        // duplicate deliveries of its own keypress.
-        lastFire = ProcessInfo.processInfo.systemUptime
     }
 
-    private func installEventMonitors() {
-        globalMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { event in
-            guard let active = Self.active, !active.isPaused, !event.isARepeat, active.binding.matches(event) else {
-                return
-            }
-            let timestamp = ProcessInfo.processInfo.systemUptime
-            DispatchQueue.main.async {
-                Self.active?.fire(at: timestamp)
-            }
-        }
+    private func installLocalMonitor() {
         localMonitor = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             guard let active = Self.active, !active.isPaused, !event.isARepeat, active.binding.matches(event) else {
                 return event
             }
-            let timestamp = ProcessInfo.processInfo.systemUptime
-            DispatchQueue.main.async {
-                Self.active?.fire(at: timestamp)
+            // Carbon already delivers this press. Swallow so a focused Settings
+            // field does not also type the shortcut. Fire here only when
+            // RegisterEventHotKey is not installed, so Settings-key still speaks.
+            if active.hotKeyRef == nil {
+                DispatchQueue.main.async {
+                    Self.active?.fire()
+                }
             }
             return nil
         }
