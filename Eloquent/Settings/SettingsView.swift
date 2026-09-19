@@ -24,14 +24,14 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
             speech.applySpeedChange()
         }))
         let window = SettingsWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 560, height: 800),
+            contentRect: NSRect(x: 0, y: 0, width: 560, height: 720),
             styleMask: [.titled, .closable, .miniaturizable, .resizable],
             backing: .buffered,
             defer: false
         )
         window.contentViewController = controller
         window.title = "Eloquent Settings"
-        window.setContentSize(NSSize(width: 560, height: 800))
+        window.setContentSize(NSSize(width: 560, height: 720))
         window.center()
         window.isReleasedWhenClosed = false
         window.collectionBehavior = [.moveToActiveSpace]
@@ -79,7 +79,7 @@ struct SettingsView: View {
                     prompt: Text(settings.engine.officialEndpoint)
                 )
                 SettingsTextField(title: "API key", text: $settings.apiKey, secure: true)
-                Text("Configure Endpoint and API key for the selected engine. Endpoint is the `/v1` base URL. Speak fails until Endpoint is set. Never commit API keys.")
+                Text("Configure Endpoint and API key for the selected engine. Endpoint is the `/v1` base URL. Speak fails until Endpoint is set.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
                 if settings.engine == .openai {
@@ -141,9 +141,6 @@ struct SettingsView: View {
                         accessibility.prompt()
                     }
                 }
-                Text("OpenAI requests omit a language field; providers may apply their own heuristics. Grok always sends language auto. ja is never sent.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
             }
 
             Section("Startup") {
@@ -172,7 +169,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(minWidth: 520, minHeight: 560)
+        .frame(minWidth: 520, minHeight: 520)
         .padding(.bottom, 8)
         .onAppear {
             loginItem.refresh()
