@@ -34,3 +34,11 @@ profile
 # SwiftPM
 .swiftpm/
 .build/
+
+# Local Developer ID / Team ID overlay. Copy from
+# Config/Release-Signing.xcconfig.example — never commit a real Team ID.
+Config/Release-Signing.xcconfig
+
+# Signing material that must never be committed
+*.p12
+AuthKey_*.p8
