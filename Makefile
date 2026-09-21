@@ -3,6 +3,12 @@ PROJECT := Eloquent.xcodeproj
 CONFIG ?= Debug
 DERIVED := build
 
+# Full Xcode.app (or Xcode-beta.app) is required. Command Line Tools alone
+# is not enough. If xcodebuild fails with a CLT error, point at the Xcode
+# you actually have, for example:
+#   export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+#   # or: sudo xcode-select -s /Applications/Xcode.app
+
 # Optional: sign with your own Apple Development certificate so macOS
 # Keychain stops re-prompting after every rebuild. Not committed per-repo;
 # set it in your shell profile, e.g. export DEVELOPMENT_TEAM=ABCDEF1234
