@@ -82,6 +82,11 @@
 		A01C00000000000000000115 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A01C00000000000000000006 /* Eloquent.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Eloquent.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		A01C00000000000000000031 /* EloquentTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = EloquentTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		A01C00000000000000000800 /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = Release.xcconfig; sourceTree = "<group>"; };
+		A01C00000000000000000801 /* Release-Signing.xcconfig.example */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; path = "Release-Signing.xcconfig.example"; sourceTree = "<group>"; };
+		A01C00000000000000000802 /* ci_pre_xcodebuild.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = ci_pre_xcodebuild.sh; sourceTree = "<group>"; };
+		A01C00000000000000000803 /* ci_post_xcodebuild.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = ci_post_xcodebuild.sh; sourceTree = "<group>"; };
+		A01C00000000000000000804 /* ExportOptions-DeveloperID.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "ExportOptions-DeveloperID.plist"; sourceTree = "<group>"; };
 		A01C00000000000000000500 /* ParagraphSplitterTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ParagraphSplitterTests.swift; sourceTree = "<group>"; };
 		A01C00000000000000000501 /* TTSClientTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TTSClientTests.swift; sourceTree = "<group>"; };
 		A01C00000000000000000502 /* SpeechControllerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SpeechControllerTests.swift; sourceTree = "<group>"; };
@@ -115,8 +120,29 @@
 				A01C00000000000000000014 /* Eloquent */,
 				A01C00000000000000000040 /* EloquentTests */,
 				A01C00000000000000000130 /* Eloquent.xctestplan */,
+				A01C00000000000000000810 /* Config */,
+				A01C00000000000000000811 /* ci_scripts */,
+				A01C00000000000000000804 /* ExportOptions-DeveloperID.plist */,
 				A01C00000000000000000015 /* Products */,
 			);
+			sourceTree = "<group>";
+		};
+		A01C00000000000000000810 /* Config */ = {
+			isa = PBXGroup;
+			children = (
+				A01C00000000000000000800 /* Release.xcconfig */,
+				A01C00000000000000000801 /* Release-Signing.xcconfig.example */,
+			);
+			path = Config;
+			sourceTree = "<group>";
+		};
+		A01C00000000000000000811 /* ci_scripts */ = {
+			isa = PBXGroup;
+			children = (
+				A01C00000000000000000802 /* ci_pre_xcodebuild.sh */,
+				A01C00000000000000000803 /* ci_post_xcodebuild.sh */,
+			);
+			path = ci_scripts;
 			sourceTree = "<group>";
 		};
 		A01C00000000000000000014 /* Eloquent */ = {
@@ -497,7 +523,6 @@
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = NO;
 				ENABLE_HARDENED_RUNTIME = NO;
 				GENERATE_INFOPLIST_FILE = NO;
@@ -516,19 +541,18 @@
 		};
 		A01C00000000000000000010 /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = A01C00000000000000000800 /* Release.xcconfig */;
 			buildSettings = {
 				ARCHS = arm64;
 				SUPPORTED_PLATFORMS = macosx;
 				SDKROOT = macosx;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Eloquent/Eloquent.entitlements;
-				CODE_SIGN_IDENTITY = "-";
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = "";
 				ENABLE_APP_SANDBOX = NO;
-				ENABLE_HARDENED_RUNTIME = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Eloquent/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (

@@ -1,0 +1,11 @@
+// Release defaults. Local `CONFIG=Release make run` stays unsigned unless
+// DEVELOPMENT_TEAM is passed on the xcodebuild command line (Makefile) or a
+// gitignored overlay is present.
+//
+// Xcode Cloud Archive: ci_pre_xcodebuild.sh writes Release-Signing.xcconfig
+// from DEVELOPMENT_TEAM when that env var is set. Do not put a Team ID here.
+
+ENABLE_HARDENED_RUNTIME = YES
+CODE_SIGN_STYLE = Automatic
+
+#include? "Release-Signing.xcconfig"

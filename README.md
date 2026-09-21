@@ -22,9 +22,7 @@ The selection cannot be read everywhere; in these cases Eloquent silently falls 
 
 ## Install
 
-There is no notarized DMG, Homebrew cask, or App Store build yet. A usable app today is a **Release** `.app` you build from a clone — not Xcode as an installer.
-
-Requires macOS 14+, Apple Silicon, and a full Xcode 15.4+ install. Command Line Tools alone is not enough.
+**Today:** a **Release** `.app` you build from a clone. Requires macOS 14+, Apple Silicon, and a full Xcode 15.4+ install. Command Line Tools alone is not enough.
 
 ```bash
 git clone https://github.com/kipyin/eloquent.git
@@ -34,6 +32,8 @@ CONFIG=Release make run
 
 That builds `build/Build/Products/Release/Eloquent.app` and opens it. Copy that `.app` somewhere stable (for example `/Applications`) if you want to keep using it after you leave the clone.
 
+**GitHub Releases (notarized):** the intended public path — a Developer ID signed, notarized zip on a GitHub Release. **Not published yet** (no `v*` tag / Release asset until the first one). How to turn that on: [docs/release.md](docs/release.md). Homebrew is later, after that Release exists.
+
 ### First run
 
 1. Grant **Accessibility** when prompted so the global speak hotkey and selection reading work in every app. System Settings → Privacy & Security → Accessibility → enable Eloquent, then quit from the menu bar and reopen.
@@ -41,7 +41,9 @@ That builds `build/Build/Products/Release/Eloquent.app` and opens it. Copy that 
 
 ### Signing and Accessibility after rebuilds
 
-The project is ad-hoc signed by default. Optional Apple Development signing via `DEVELOPMENT_TEAM` is still a local identity. After a rebuild, System Settings may still show Accessibility “on” for an old binary while the running one is untrusted. Remove Eloquent from the Accessibility list, add the current `.app`, grant it, then quit and reopen.
+Local Makefile builds are ad-hoc unless you set `DEVELOPMENT_TEAM` (Apple Development — a local identity, not Developer ID). After a rebuild, System Settings may still show Accessibility “on” for an old binary while the running one is untrusted. Remove Eloquent from the Accessibility list, add the current `.app`, grant it, then quit and reopen.
+
+Public distribution is Developer ID + notarization, not this local identity. See [docs/release.md](docs/release.md).
 
 ### If `xcodebuild` fails with Command Line Tools
 
@@ -70,10 +72,12 @@ open Eloquent.xcodeproj
 
 Optional: set `DEVELOPMENT_TEAM` in your shell so the Makefile signs with your Apple Development certificate. That stops macOS Keychain from re-prompting after every rebuild. It is not a committed repo default.
 
-`Eloquent/` is the app. `Eloquent.xcodeproj` is the Xcode project; `project.yml` can regenerate it with XcodeGen. `Makefile` wraps xcodebuild.
+`Eloquent/` is the app. `Eloquent.xcodeproj` is the Xcode project; `project.yml` can regenerate it with XcodeGen. `Makefile` wraps xcodebuild. `make archive` / `make release-zip` need a Developer ID identity — [docs/release.md](docs/release.md).
 
 ## Distribution
 
 **Today:** source plus a local Release build, as in [Install](#install).
 
-**Not yet:** Developer ID + notarization, GitHub Releases artifacts, Homebrew Cask (official or a personal tap), Sparkle auto-update.
+**Intended:** Developer ID + notarization → GitHub Releases. Scaffolded; not published yet. Follow [docs/release.md](docs/release.md).
+
+**Later:** a personal Homebrew tap that fetches that Release. Sparkle auto-update is separate.

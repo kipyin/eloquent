@@ -4,6 +4,10 @@ options:
   deploymentTarget:
     macOS: "14.0"
   createIntermediateGroups: true
+fileGroups:
+  - Config
+  - ci_scripts
+  - ExportOptions-DeveloperID.plist
 settings:
   base:
     SWIFT_VERSION: "5.0"
@@ -18,6 +22,8 @@ targets:
         excludes:
           - Info.plist
           - "*.entitlements"
+    configFiles:
+      Release: Config/Release.xcconfig
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.kipyin.eloquent
@@ -25,15 +31,19 @@ targets:
         INFOPLIST_FILE: Eloquent/Info.plist
         GENERATE_INFOPLIST_FILE: NO
         CODE_SIGN_ENTITLEMENTS: Eloquent/Eloquent.entitlements
-        CODE_SIGN_IDENTITY: "-"
         CODE_SIGN_STYLE: Automatic
         ARCHS: arm64
         SUPPORTED_PLATFORMS: macosx
         COMBINE_HIDPI_IMAGES: YES
-        ENABLE_HARDENED_RUNTIME: NO
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: 1
+      configs:
+        debug:
+          CODE_SIGN_IDENTITY: "-"
+          ENABLE_HARDENED_RUNTIME: NO
+        release:
+          ENABLE_HARDENED_RUNTIME: YES
   EloquentTests:
     type: bundle.unit-test
     platform: macOS
