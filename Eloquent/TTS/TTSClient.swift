@@ -13,7 +13,7 @@ protocol TTSSynthesizing: Sendable {
 struct TTSClient: TTSSynthesizing {
     private static let timeout: TimeInterval = 180
 
-    var transport: any HTTPPerforming
+    private let transport: any HTTPPerforming
 
     init(transport: any HTTPPerforming = URLSession.shared) {
         self.transport = transport
