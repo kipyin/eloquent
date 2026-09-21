@@ -30,7 +30,7 @@ open:
 	open $(PROJECT)
 
 test:
-	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIG) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED) $(SIGNING_ARGS) test
+	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIG) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED) $(SIGNING_ARGS) -parallel-testing-enabled NO -test-timeouts-enabled YES -default-test-execution-time-allowance 60 -maximum-test-execution-time-allowance 120 test
 
 clean:
 	rm -rf $(DERIVED)

@@ -34,23 +34,22 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         MARKETING_VERSION: "1.0.0"
         CURRENT_PROJECT_VERSION: 1
-    scheme:
-      testTargets:
-        - name: EloquentTests
-          parallelizable: true
   EloquentTests:
     type: bundle.unit-test
     platform: macOS
     sources:
       - path: EloquentTests
-      # Logic tests in the xctest process — not TEST_HOST into Eloquent.app.
-      # main.swift is the app entry point (NSApplicationMain).
-      - path: Eloquent
-        excludes:
-          - Info.plist
-          - "*.entitlements"
-          - main.swift
-          - Assets.xcassets
+      # Domain-only: no AppKit/SwiftUI/Carbon, so xctest is not an AppKit process.
+      - path: Eloquent/AppProcess.swift
+      - path: Eloquent/Settings/AppSettings.swift
+      - path: Eloquent/Settings/KeychainStore.swift
+      - path: Eloquent/Hotkey/HotkeyBinding.swift
+      - path: Eloquent/TTS/ParagraphSplitter.swift
+      - path: Eloquent/TTS/TTSClient.swift
+      - path: Eloquent/TTS/ClipboardReading.swift
+      - path: Eloquent/TTS/SelectionReading.swift
+      - path: Eloquent/Playback/SpeechController.swift
+      - path: Eloquent/Playback/AudioPlayback.swift
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.kipyin.eloquent.tests
@@ -62,3 +61,31 @@ targets:
         SWIFT_VERSION: "5.0"
         MACOSX_DEPLOYMENT_TARGET: "14.0"
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks"
+schemes:
+  Eloquent:
+    build:
+      targets:
+        Eloquent:
+          - running
+          - profiling
+          - archiving
+          - analyzing
+        EloquentTests:
+          - testing
+          - analyzing
+    run:
+      config: Debug
+    test:
+      config: Debug
+      debugEnabled: false
+      gatherCoverageData: false
+      targets:
+        - name: EloquentTests
+          parallelizable: false
+      testPlans:
+        - path: Eloquent.xctestplan
+          defaultPlan: true
+    profile:
+      config: Release
+    archive:
+      config: Release

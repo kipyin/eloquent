@@ -6,11 +6,6 @@ final class TestProcessTests: XCTestCase {
         XCTAssertTrue(AppProcess.isRunningTests)
     }
 
-    func testAccessibilityPromptReturnsWithoutAModal() {
-        AccessibilityPermission.shared.promptIfNeeded()
-        AccessibilityPermission.shared.prompt()
-    }
-
     func testKeychainLoadDoesNotPresentAuthenticationUI() {
         _ = KeychainStore().loadAPIKey()
     }

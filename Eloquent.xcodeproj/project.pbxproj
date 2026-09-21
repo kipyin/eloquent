@@ -29,6 +29,8 @@
 		A01C00000000000000000311 /* PlaybackPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000111 /* PlaybackPanelController.swift */; };
 		A01C00000000000000000312 /* ControlPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000112 /* ControlPanelView.swift */; };
 		A01C00000000000000000324 /* AppProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000124 /* AppProcess.swift */; };
+		A01C00000000000000000325 /* ClipboardReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000125 /* ClipboardReading.swift */; };
+		A01C00000000000000000326 /* SelectionReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000126 /* SelectionReading.swift */; };
 		A01C00000000000000000315 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000115 /* Assets.xcassets */; };
 		A01C00000000000000000600 /* ParagraphSplitterTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000500 /* ParagraphSplitterTests.swift */; };
 		A01C00000000000000000601 /* TTSClientTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000501 /* TTSClientTests.swift */; };
@@ -37,27 +39,16 @@
 		A01C00000000000000000604 /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000504 /* TestSupport.swift */; };
 		A01C00000000000000000605 /* HotkeyBindingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000505 /* HotkeyBindingTests.swift */; };
 		A01C00000000000000000607 /* TestProcessTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000507 /* TestProcessTests.swift */; };
-		A01C00000000000000000700 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000100 /* AppDelegate.swift */; };
-		A01C00000000000000000718 /* ApplicationMenu.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000118 /* ApplicationMenu.swift */; };
 		A01C00000000000000000701 /* AppSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000101 /* AppSettings.swift */; };
 		A01C00000000000000000702 /* KeychainStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000102 /* KeychainStore.swift */; };
-		A01C00000000000000000703 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000103 /* SettingsView.swift */; };
-		A01C00000000000000000716 /* LoginItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000116 /* LoginItemController.swift */; };
-		A01C00000000000000000704 /* GlobalHotKey.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000104 /* GlobalHotKey.swift */; };
-		A01C00000000000000000717 /* AccessibilityPermission.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000117 /* AccessibilityPermission.swift */; };
 		A01C00000000000000000719 /* HotkeyBinding.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000119 /* HotkeyBinding.swift */; };
-		A01C00000000000000000720 /* SpeakHotkeyController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000120 /* SpeakHotkeyController.swift */; };
-		A01C00000000000000000721 /* HotkeyBinding+AppKit.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000121 /* HotkeyBinding+AppKit.swift */; };
-		A01C00000000000000000705 /* ClipboardReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000105 /* ClipboardReader.swift */; };
 		A01C00000000000000000706 /* ParagraphSplitter.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000106 /* ParagraphSplitter.swift */; };
 		A01C00000000000000000707 /* TTSClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000107 /* TTSClient.swift */; };
-		A01C00000000000000000722 /* SelectionReader.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000122 /* SelectionReader.swift */; };
 		A01C00000000000000000708 /* AudioPlayback.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000108 /* AudioPlayback.swift */; };
 		A01C00000000000000000709 /* SpeechController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000109 /* SpeechController.swift */; };
-		A01C00000000000000000710 /* StatusItemController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000110 /* StatusItemController.swift */; };
-		A01C00000000000000000711 /* PlaybackPanelController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000111 /* PlaybackPanelController.swift */; };
-		A01C00000000000000000712 /* ControlPanelView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000112 /* ControlPanelView.swift */; };
 		A01C00000000000000000724 /* AppProcess.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000124 /* AppProcess.swift */; };
+		A01C00000000000000000725 /* ClipboardReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000125 /* ClipboardReading.swift */; };
+		A01C00000000000000000726 /* SelectionReading.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000126 /* SelectionReading.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -83,6 +74,9 @@
 		A01C00000000000000000111 /* PlaybackPanelController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PlaybackPanelController.swift; sourceTree = "<group>"; };
 		A01C00000000000000000112 /* ControlPanelView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ControlPanelView.swift; sourceTree = "<group>"; };
 		A01C00000000000000000124 /* AppProcess.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppProcess.swift; sourceTree = "<group>"; };
+		A01C00000000000000000125 /* ClipboardReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClipboardReading.swift; sourceTree = "<group>"; };
+		A01C00000000000000000126 /* SelectionReading.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SelectionReading.swift; sourceTree = "<group>"; };
+		A01C00000000000000000130 /* Eloquent.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = Eloquent.xctestplan; sourceTree = "<group>"; };
 		A01C00000000000000000113 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A01C00000000000000000114 /* Eloquent.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Eloquent.entitlements; sourceTree = "<group>"; };
 		A01C00000000000000000115 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -120,6 +114,7 @@
 			children = (
 				A01C00000000000000000014 /* Eloquent */,
 				A01C00000000000000000040 /* EloquentTests */,
+				A01C00000000000000000130 /* Eloquent.xctestplan */,
 				A01C00000000000000000015 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -170,9 +165,11 @@
 			isa = PBXGroup;
 			children = (
 				A01C00000000000000000105 /* ClipboardReader.swift */,
+				A01C00000000000000000125 /* ClipboardReading.swift */,
 				A01C00000000000000000106 /* ParagraphSplitter.swift */,
 				A01C00000000000000000107 /* TTSClient.swift */,
 				A01C00000000000000000122 /* SelectionReader.swift */,
+				A01C00000000000000000126 /* SelectionReading.swift */,
 			);
 			path = TTS;
 			sourceTree = "<group>";
@@ -333,6 +330,8 @@
 				A01C00000000000000000306 /* ParagraphSplitter.swift in Sources */,
 				A01C00000000000000000307 /* TTSClient.swift in Sources */,
 				A01C00000000000000000322 /* SelectionReader.swift in Sources */,
+				A01C00000000000000000325 /* ClipboardReading.swift in Sources */,
+				A01C00000000000000000326 /* SelectionReading.swift in Sources */,
 				A01C00000000000000000308 /* AudioPlayback.swift in Sources */,
 				A01C00000000000000000309 /* SpeechController.swift in Sources */,
 				A01C00000000000000000310 /* StatusItemController.swift in Sources */,
@@ -352,26 +351,15 @@
 				A01C00000000000000000604 /* TestSupport.swift in Sources */,
 				A01C00000000000000000605 /* HotkeyBindingTests.swift in Sources */,
 				A01C00000000000000000607 /* TestProcessTests.swift in Sources */,
-				A01C00000000000000000700 /* AppDelegate.swift in Sources */,
-				A01C00000000000000000718 /* ApplicationMenu.swift in Sources */,
 				A01C00000000000000000701 /* AppSettings.swift in Sources */,
 				A01C00000000000000000702 /* KeychainStore.swift in Sources */,
-				A01C00000000000000000703 /* SettingsView.swift in Sources */,
-				A01C00000000000000000716 /* LoginItemController.swift in Sources */,
-				A01C00000000000000000704 /* GlobalHotKey.swift in Sources */,
-				A01C00000000000000000717 /* AccessibilityPermission.swift in Sources */,
 				A01C00000000000000000719 /* HotkeyBinding.swift in Sources */,
-				A01C00000000000000000720 /* SpeakHotkeyController.swift in Sources */,
-				A01C00000000000000000721 /* HotkeyBinding+AppKit.swift in Sources */,
-				A01C00000000000000000705 /* ClipboardReader.swift in Sources */,
 				A01C00000000000000000706 /* ParagraphSplitter.swift in Sources */,
 				A01C00000000000000000707 /* TTSClient.swift in Sources */,
-				A01C00000000000000000722 /* SelectionReader.swift in Sources */,
+				A01C00000000000000000725 /* ClipboardReading.swift in Sources */,
+				A01C00000000000000000726 /* SelectionReading.swift in Sources */,
 				A01C00000000000000000708 /* AudioPlayback.swift in Sources */,
 				A01C00000000000000000709 /* SpeechController.swift in Sources */,
-				A01C00000000000000000710 /* StatusItemController.swift in Sources */,
-				A01C00000000000000000711 /* PlaybackPanelController.swift in Sources */,
-				A01C00000000000000000712 /* ControlPanelView.swift in Sources */,
 				A01C00000000000000000724 /* AppProcess.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

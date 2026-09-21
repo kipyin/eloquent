@@ -30,8 +30,8 @@ final class SpeechController: ObservableObject {
     init(
         synthesizer: any TTSSynthesizing = TTSClient(),
         player: any AudioPlaying = AudioPlayback(),
-        selection: any SelectionReading = SelectionReader(),
-        clipboard: any ClipboardReading = ClipboardReader(),
+        selection: any SelectionReading,
+        clipboard: any ClipboardReading,
         settings: (any SettingsProviding)? = nil
     ) {
         self.synthesizer = synthesizer

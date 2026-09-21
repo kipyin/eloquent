@@ -20,7 +20,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         ApplicationMenu.install()
         NSApp.setActivationPolicy(.accessory)
 
-        speech = SpeechController()
+        speech = SpeechController(
+            selection: SelectionReader(),
+            clipboard: ClipboardReader()
+        )
         settingsWindow = SettingsWindowController(speech: speech)
         playbackPanel = PlaybackPanelController(speech: speech)
         statusItem = StatusItemController(
