@@ -20,6 +20,9 @@ final class AccessibilityPermission: ObservableObject {
 
     func promptIfNeeded() {
         refresh()
+        guard !AppProcess.isRunningTests else {
+            return
+        }
         guard !isTrusted else {
             return
         }
@@ -32,6 +35,9 @@ final class AccessibilityPermission: ObservableObject {
 
     func prompt() {
         refresh()
+        guard !AppProcess.isRunningTests else {
+            return
+        }
         guard !isTrusted else {
             return
         }

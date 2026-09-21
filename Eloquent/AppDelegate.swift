@@ -9,6 +9,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private static let log = Logger(subsystem: "com.kipyin.eloquent", category: "app")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // TEST_HOST launches this app. Skip menu-bar chrome, Keychain, and
+        // Accessibility prompts so XCTest is not blocked by a modal, and
+        // become a regular app so an LSUIElement host does not wait forever.
+        if AppProcess.isRunningTests {
+            NSApp.setActivationPolicy(.regular)
+            return
+        }
+
         ApplicationMenu.install()
         NSApp.setActivationPolicy(.accessory)
 
@@ -36,6 +44,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {
+        guard !AppProcess.isRunningTests else {
+            return
+        }
         AccessibilityPermission.shared.refresh()
     }
 

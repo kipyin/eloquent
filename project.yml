@@ -36,7 +36,8 @@ targets:
         CURRENT_PROJECT_VERSION: 1
     scheme:
       testTargets:
-        - EloquentTests
+        - name: EloquentTests
+          parallelizable: false
   EloquentTests:
     type: bundle.unit-test
     platform: macOS

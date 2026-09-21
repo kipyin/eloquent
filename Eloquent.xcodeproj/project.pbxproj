@@ -35,6 +35,7 @@
 		A01C00000000000000000603 /* AppSettingsTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000503 /* AppSettingsTests.swift */; };
 		A01C00000000000000000604 /* TestSupport.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000504 /* TestSupport.swift */; };
 		A01C00000000000000000605 /* HotkeyBindingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000505 /* HotkeyBindingTests.swift */; };
+		A01C00000000000000000606 /* TestHostLaunchTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A01C00000000000000000506 /* TestHostLaunchTests.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -80,6 +81,7 @@
 		A01C00000000000000000503 /* AppSettingsTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsTests.swift; sourceTree = "<group>"; };
 		A01C00000000000000000504 /* TestSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestSupport.swift; sourceTree = "<group>"; };
 		A01C00000000000000000505 /* HotkeyBindingTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HotkeyBindingTests.swift; sourceTree = "<group>"; };
+		A01C00000000000000000506 /* TestHostLaunchTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TestHostLaunchTests.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -189,6 +191,7 @@
 				A01C00000000000000000503 /* AppSettingsTests.swift */,
 				A01C00000000000000000504 /* TestSupport.swift */,
 				A01C00000000000000000505 /* HotkeyBindingTests.swift */,
+				A01C00000000000000000506 /* TestHostLaunchTests.swift */,
 			);
 			path = EloquentTests;
 			sourceTree = "<group>";
@@ -335,6 +338,7 @@
 				A01C00000000000000000603 /* AppSettingsTests.swift in Sources */,
 				A01C00000000000000000604 /* TestSupport.swift in Sources */,
 				A01C00000000000000000605 /* HotkeyBindingTests.swift in Sources */,
+				A01C00000000000000000606 /* TestHostLaunchTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
