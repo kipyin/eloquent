@@ -2,6 +2,7 @@ SCHEME := Eloquent
 PROJECT := Eloquent.xcodeproj
 CONFIG ?= Debug
 DERIVED := build
+DESTINATION ?= platform=macOS,arch=arm64
 
 # Full Xcode.app (or Xcode-beta.app) is required. Command Line Tools alone
 # is not enough. If xcodebuild fails with a CLT error, point at the Xcode
@@ -20,7 +21,7 @@ endif
 .PHONY: build run open clean test
 
 build:
-	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIG) -arch arm64 -derivedDataPath $(DERIVED) $(SIGNING_ARGS) build
+	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIG) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED) $(SIGNING_ARGS) build
 
 run: build
 	open "$(DERIVED)/Build/Products/$(CONFIG)/Eloquent.app"
@@ -29,7 +30,7 @@ open:
 	open $(PROJECT)
 
 test:
-	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIG) -arch arm64 -derivedDataPath $(DERIVED) $(SIGNING_ARGS) test
+	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIG) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED) $(SIGNING_ARGS) -parallel-testing-enabled NO -test-timeouts-enabled YES -default-test-execution-time-allowance 60 -maximum-test-execution-time-allowance 120 test
 
 clean:
 	rm -rf $(DERIVED)

@@ -1,5 +1,4 @@
 import XCTest
-@testable import Eloquent
 
 final class TTSClientTests: XCTestCase {
     func testEmptyInputThrowsBeforeTransport() async {

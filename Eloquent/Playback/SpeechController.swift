@@ -30,15 +30,15 @@ final class SpeechController: ObservableObject {
     init(
         synthesizer: any TTSSynthesizing = TTSClient(),
         player: any AudioPlaying = AudioPlayback(),
-        selection: any SelectionReading = SelectionReader(),
-        clipboard: any ClipboardReading = ClipboardReader(),
-        settings: any SettingsProviding = AppSettings.shared
+        selection: any SelectionReading,
+        clipboard: any ClipboardReading,
+        settings: (any SettingsProviding)? = nil
     ) {
         self.synthesizer = synthesizer
         self.player = player
         self.selection = selection
         self.clipboard = clipboard
-        self.settingsProvider = settings
+        self.settingsProvider = settings ?? AppSettings.shared
     }
 
     var canGoPrevious: Bool {
@@ -214,7 +214,7 @@ final class SpeechController: ObservableObject {
         let synthesizer = self.synthesizer
         log.info("Synthesizing paragraph \(self.index + 1, privacy: .public)/\(self.paragraphs.count, privacy: .public)")
 
-        speakTask = Task { [weak self] in
+        speakTask = Task { @MainActor [weak self] in
             guard let self else {
                 return
             }
@@ -223,11 +223,11 @@ final class SpeechController: ObservableObject {
                 guard !Task.isCancelled else {
                     return
                 }
-                await self.play(data: data, token: token)
+                self.play(data: data, token: token)
             } catch is CancellationError {
                 return
             } catch {
-                await self.fail(error.localizedDescription, token: token)
+                self.fail(error.localizedDescription, token: token)
             }
         }
     }
@@ -288,18 +288,16 @@ final class SpeechController: ObservableObject {
         index = 0
         spokenSpeed = nil
         state = .failed(message)
-        transientErrorTask = Task { [weak self] in
+        transientErrorTask = Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: 2_400_000_000)
             guard !Task.isCancelled else {
                 return
             }
-            await MainActor.run {
-                guard let self else {
-                    return
-                }
-                if case .failed(let current) = self.state, current == message {
-                    self.state = .idle
-                }
+            guard let self else {
+                return
+            }
+            if case .failed(let current) = self.state, current == message {
+                self.state = .idle
             }
         }
     }

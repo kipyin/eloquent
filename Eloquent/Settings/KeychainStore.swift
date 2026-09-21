@@ -16,7 +16,8 @@ struct KeychainStore: APIKeyStoring {
             kSecAttrService as String: Self.service,
             kSecAttrAccount as String: Self.account,
             kSecReturnData as String: true,
-            kSecMatchLimit as String: kSecMatchLimitOne
+            kSecMatchLimit as String: kSecMatchLimitOne,
+            kSecUseAuthenticationUI as String: kSecUseAuthenticationUIFail
         ]
 
         var item: CFTypeRef?
@@ -31,7 +32,8 @@ struct KeychainStore: APIKeyStoring {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: Self.service,
-            kSecAttrAccount as String: Self.account
+            kSecAttrAccount as String: Self.account,
+            kSecUseAuthenticationUI as String: kSecUseAuthenticationUIFail
         ]
 
         if secret.isEmpty {

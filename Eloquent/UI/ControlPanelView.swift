@@ -4,9 +4,9 @@ struct ControlPanelView: View {
     @ObservedObject var speech: SpeechController
     @ObservedObject var settings: AppSettings
 
-    init(speech: SpeechController, settings: AppSettings = .shared) {
+    init(speech: SpeechController, settings: AppSettings? = nil) {
         self.speech = speech
-        self.settings = settings
+        self.settings = settings ?? .shared
     }
 
     var body: some View {
@@ -23,25 +23,25 @@ struct ControlPanelView: View {
                     systemName: "backward.end.fill",
                     label: "Previous paragraph",
                     enabled: speech.canGoPrevious,
-                    action: speech.previous
+                    action: { speech.previous() }
                 )
                 controlButton(
                     systemName: speech.isPaused ? "play.fill" : "pause.fill",
                     label: speech.isPaused ? "Resume" : "Pause",
                     enabled: speech.canTogglePause,
-                    action: speech.togglePause
+                    action: { speech.togglePause() }
                 )
                 controlButton(
                     systemName: "stop.fill",
                     label: "Stop",
                     enabled: speech.canStop,
-                    action: speech.stop
+                    action: { speech.stop() }
                 )
                 controlButton(
                     systemName: "forward.end.fill",
                     label: "Next paragraph",
                     enabled: speech.canGoNext,
-                    action: speech.next
+                    action: { speech.next() }
                 )
             }
             .frame(maxWidth: .infinity)

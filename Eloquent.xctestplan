@@ -1,0 +1,28 @@
+{
+  "configurations" : [
+    {
+      "id" : "B543A01C-0000-4000-8000-000000000001",
+      "name" : "Test",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false,
+    "defaultTestExecutionTimeAllowance" : 60,
+    "maximumTestExecutionTimeAllowance" : 120,
+    "testTimeoutsEnabled" : true
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : false,
+      "target" : {
+        "containerPath" : "container:Eloquent.xcodeproj",
+        "identifier" : "A01C00000000000000000030",
+        "name" : "EloquentTests"
+      }
+    }
+  ],
+  "version" : 1
+}

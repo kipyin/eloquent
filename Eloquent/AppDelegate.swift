@@ -9,10 +9,21 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private static let log = Logger(subsystem: "com.kipyin.eloquent", category: "app")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        // If XCTest is injected into this process, skip menu-bar chrome,
+        // Keychain, and Accessibility prompts so a modal cannot block the
+        // runner, and become a regular app so an LSUIElement host can activate.
+        if AppProcess.isRunningTests {
+            NSApp.setActivationPolicy(.regular)
+            return
+        }
+
         ApplicationMenu.install()
         NSApp.setActivationPolicy(.accessory)
 
-        speech = SpeechController()
+        speech = SpeechController(
+            selection: SelectionReader(),
+            clipboard: ClipboardReader()
+        )
         settingsWindow = SettingsWindowController(speech: speech)
         playbackPanel = PlaybackPanelController(speech: speech)
         statusItem = StatusItemController(
@@ -36,6 +47,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ notification: Notification) {
+        guard !AppProcess.isRunningTests else {
+            return
+        }
         AccessibilityPermission.shared.refresh()
     }
 

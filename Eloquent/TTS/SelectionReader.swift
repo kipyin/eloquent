@@ -1,11 +1,6 @@
 import ApplicationServices
 import Foundation
 
-// Reads the frontmost app's focused selected text through Accessibility.
-protocol SelectionReading: Sendable {
-    func selectedText() -> String?
-}
-
 struct SelectionReader: SelectionReading {
     // Bound the IPC so a hung frontmost app fails into the clipboard fallback
     // instead of freezing the hotkey path.
