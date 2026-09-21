@@ -1,5 +1,4 @@
 import Foundation
-@testable import Eloquent
 
 func makeSnapshot(
     engine: Engine = .openai,

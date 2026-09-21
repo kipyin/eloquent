@@ -1,9 +1,8 @@
 import XCTest
-@testable import Eloquent
 
 @MainActor
-final class TestHostLaunchTests: XCTestCase {
-    func testDefaultSuiteRunsInsideTheXCTestHost() {
+final class TestProcessTests: XCTestCase {
+    func testDefaultSuiteRunsInTheXCTestProcess() {
         XCTAssertTrue(AppProcess.isRunningTests)
     }
 

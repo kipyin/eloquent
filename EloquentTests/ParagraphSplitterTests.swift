@@ -1,5 +1,4 @@
 import XCTest
-@testable import Eloquent
 
 final class ParagraphSplitterTests: XCTestCase {
     func testEmptyAndWhitespaceYieldNoParagraphs() {

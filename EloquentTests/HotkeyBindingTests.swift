@@ -1,5 +1,4 @@
 import XCTest
-@testable import Eloquent
 
 final class HotkeyBindingTests: XCTestCase {
     func testOptionEscapeIsTheDefaultSpeakHotkey() {

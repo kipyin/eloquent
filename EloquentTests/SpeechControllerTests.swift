@@ -1,5 +1,4 @@
 import XCTest
-@testable import Eloquent
 
 @MainActor
 final class SpeechControllerTests: XCTestCase {

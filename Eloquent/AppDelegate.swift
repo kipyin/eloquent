@@ -9,9 +9,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private static let log = Logger(subsystem: "com.kipyin.eloquent", category: "app")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
-        // TEST_HOST launches this app. Skip menu-bar chrome, Keychain, and
-        // Accessibility prompts so XCTest is not blocked by a modal, and
-        // become a regular app so an LSUIElement host does not wait forever.
+        // If XCTest is injected into this process, skip menu-bar chrome,
+        // Keychain, and Accessibility prompts so a modal cannot block the
+        // runner, and become a regular app so an LSUIElement host can activate.
         if AppProcess.isRunningTests {
             NSApp.setActivationPolicy(.regular)
             return

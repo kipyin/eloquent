@@ -37,14 +37,20 @@ targets:
     scheme:
       testTargets:
         - name: EloquentTests
-          parallelizable: false
+          parallelizable: true
   EloquentTests:
     type: bundle.unit-test
     platform: macOS
     sources:
       - path: EloquentTests
-    dependencies:
-      - target: Eloquent
+      # Logic tests in the xctest process — not TEST_HOST into Eloquent.app.
+      # main.swift is the app entry point (NSApplicationMain).
+      - path: Eloquent
+        excludes:
+          - Info.plist
+          - "*.entitlements"
+          - main.swift
+          - Assets.xcassets
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.kipyin.eloquent.tests
@@ -55,6 +61,4 @@ targets:
         SUPPORTED_PLATFORMS: macosx
         SWIFT_VERSION: "5.0"
         MACOSX_DEPLOYMENT_TARGET: "14.0"
-        BUNDLE_LOADER: "$(TEST_HOST)"
-        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Eloquent.app/Contents/MacOS/Eloquent"
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks"
