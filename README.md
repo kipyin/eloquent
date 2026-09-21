@@ -20,29 +20,60 @@ The selection cannot be read everywhere; in these cases Eloquent silently falls 
 - Secure text fields (passwords), which never expose their contents
 - No focused text element (for example the selection sits in a dialog that lost focus)
 
-## Install / run
+## Install
 
-macOS 14+, Apple Silicon, Xcode 15.4+.
+There is no notarized DMG, Homebrew cask, or App Store build yet. A usable app today is a **Release** `.app` you build from a clone — not Xcode as an installer.
 
-```bash
-open Eloquent.xcodeproj
-```
-
-Select the **Eloquent** scheme, destination **My Mac**, then Run. Grant Accessibility when prompted so the hotkey works in every app. Open Settings, pick an **Engine**, and set **Endpoint** (the `/v1` base URL) plus an API key.
-
-From the command line:
+Requires macOS 14+, Apple Silicon, and a full Xcode 15.4+ install. Command Line Tools alone is not enough.
 
 ```bash
-make run
+git clone https://github.com/kipyin/eloquent.git
+cd eloquent
+CONFIG=Release make run
 ```
+
+That builds `build/Build/Products/Release/Eloquent.app` and opens it. Copy that `.app` somewhere stable (for example `/Applications`) if you want to keep using it after you leave the clone.
+
+### First run
+
+1. Grant **Accessibility** when prompted so the global speak hotkey and selection reading work in every app. System Settings → Privacy & Security → Accessibility → enable Eloquent, then quit from the menu bar and reopen.
+2. Open Settings. Pick an **Engine**, then set **Endpoint** (the `/v1` base URL) and an API key.
+
+### Signing and Accessibility after rebuilds
+
+The project is ad-hoc signed by default. Optional Apple Development signing via `DEVELOPMENT_TEAM` is still a local identity. After a rebuild, System Settings may still show Accessibility “on” for an old binary while the running one is untrusted. Remove Eloquent from the Accessibility list, add the current `.app`, grant it, then quit and reopen.
+
+### If `xcodebuild` fails with Command Line Tools
+
+`xcodebuild` needs a full `Xcode.app` or `Xcode-beta.app`. Point it at the Xcode you actually have:
+
+```bash
+export DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer
+```
+
+or:
+
+```bash
+sudo xcode-select -s /Applications/Xcode.app
+```
+
+Use your machine’s real Xcode path. Command Line Tools alone is not enough.
 
 ## Develop
 
 ```bash
-make build
+make build          # Debug
 make test
-CONFIG=Release make run
-xcodebuild -project Eloquent.xcodeproj -scheme Eloquent -configuration Release -arch arm64 -derivedDataPath build build
+make run            # Debug, then open the .app
+open Eloquent.xcodeproj
 ```
 
+Optional: set `DEVELOPMENT_TEAM` in your shell so the Makefile signs with your Apple Development certificate. That stops macOS Keychain from re-prompting after every rebuild. It is not a committed repo default.
+
 `Eloquent/` is the app. `Eloquent.xcodeproj` is the Xcode project; `project.yml` can regenerate it with XcodeGen. `Makefile` wraps xcodebuild.
+
+## Distribution
+
+**Today:** source plus a local Release build, as in [Install](#install).
+
+**Not yet:** Developer ID + notarization, GitHub Releases artifacts, Homebrew Cask (official or a personal tap), Sparkle auto-update.
