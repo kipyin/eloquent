@@ -171,10 +171,6 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(minWidth: 520, minHeight: 520)
         .padding(.bottom, 8)
-        .onAppear {
-            loginItem.refresh()
-            accessibility.refresh()
-        }
     }
 
     private var speedLabel: String {
