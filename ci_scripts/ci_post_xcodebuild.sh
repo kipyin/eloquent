@@ -1,6 +1,8 @@
 #!/bin/sh
 # After a successful Xcode Cloud Archive, notarize and staple the Developer ID
 # app on tag builds, zip it, and optionally attach it to a GitHub Release.
+# If Cloud did not set CI_DEVELOPER_ID_SIGNED_APP_PATH, stamp the archive team
+# first: an ad-hoc archive has no Team and exportArchive reports No Team Found.
 #
 # Runs after xcodebuild and before Cloud's Notarize post-action. Keep that
 # post-action on the Archive workflow: it is what populates
@@ -78,9 +80,20 @@ else
 	mkdir -p "$EXPORT_DIR"
 	echo "ci_post_xcodebuild: CI_DEVELOPER_ID_SIGNED_APP_PATH missing; exporting archive with ExportOptions-DeveloperID.plist."
 	echo "ci_post_xcodebuild: add the Notarize (macOS) post-action on the Xcode Cloud Archive workflow so Cloud exports a Developer ID-signed app into CI_DEVELOPER_ID_SIGNED_APP_PATH. See docs/release.md."
+	if ! command -v python3 >/dev/null 2>&1; then
+		echo "ci_post_xcodebuild: python3 not found; cannot stamp a team into the ad-hoc archive before Developer ID export." >&2
+		exit 1
+	fi
+	# Keep the generated plist outside -exportPath. xcodebuild clears that directory.
+	EXPORT_PLIST="$OUT_DIR/ExportOptions-DeveloperID.plist"
+	python3 "$SCRIPT_DIR/stamp_developer_id_export.py" \
+		--archive "$CI_ARCHIVE_PATH" \
+		--export-template "$EXPORT_OPTIONS" \
+		--export-out "$EXPORT_PLIST" \
+		--product "$PRODUCT_NAME"
 	xcodebuild -exportArchive \
 		-archivePath "$CI_ARCHIVE_PATH" \
-		-exportOptionsPlist "$EXPORT_OPTIONS" \
+		-exportOptionsPlist "$EXPORT_PLIST" \
 		-exportPath "$EXPORT_DIR"
 	if ! APP_PATH=$(find_app "$EXPORT_DIR"); then
 		echo "ci_post_xcodebuild: export did not produce ${PRODUCT_NAME}.app in $EXPORT_DIR" >&2

@@ -43,6 +43,8 @@ targets:
           CODE_SIGN_IDENTITY: "-"
           ENABLE_HARDENED_RUNTIME: NO
         release:
+          # Team and Developer ID identity come from Release-Signing.xcconfig.
+          # Cloud's command-line CODE_SIGN_IDENTITY=- still overrides that file.
           ENABLE_HARDENED_RUNTIME: YES
   EloquentTests:
     type: bundle.unit-test

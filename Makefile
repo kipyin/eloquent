@@ -22,7 +22,7 @@ ifneq ($(DEVELOPMENT_TEAM),)
 SIGNING_ARGS := CODE_SIGN_IDENTITY=Apple\ Development DEVELOPMENT_TEAM=$(DEVELOPMENT_TEAM)
 endif
 
-.PHONY: build run open clean test archive release-zip
+.PHONY: build run open clean test archive release-zip ci-script-test
 
 build:
 	xcodebuild -project $(PROJECT) -scheme $(SCHEME) -configuration $(CONFIG) -destination '$(DESTINATION)' -derivedDataPath $(DERIVED) $(SIGNING_ARGS) build
@@ -51,6 +51,9 @@ release-zip: archive
 	ditto -c -k --keepParent "$(EXPORT_PATH)/Eloquent.app" "$(RELEASE_ZIP)"
 	@echo "Wrote $(RELEASE_ZIP)"
 	@echo "Not notarized. Staple after notarytool. GitHub Release zips are notarized+stapled in ci_post_xcodebuild.sh. DMG is not produced yet. See docs/release.md"
+
+ci-script-test:
+	sh ci_scripts/developer_id_export_test.sh
 
 clean:
 	rm -rf $(DERIVED)

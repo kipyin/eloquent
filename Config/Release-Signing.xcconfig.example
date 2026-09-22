@@ -6,6 +6,9 @@
 //
 // Xcode Cloud can write this file from the DEVELOPMENT_TEAM environment
 // variable instead (see ci_scripts/ci_pre_xcodebuild.sh and docs/release.md).
+// Cloud's archive command passes CODE_SIGN_IDENTITY=- which overrides the
+// identity below. ci_post stamps DEVELOPMENT_TEAM into that ad-hoc archive
+// before Developer ID export.
 
 DEVELOPMENT_TEAM = YOUR_TEAM_ID
 CODE_SIGN_IDENTITY = Developer ID Application
