@@ -1,20 +1,17 @@
 #!/bin/sh
-# After a successful Xcode Cloud Archive, notarize and staple the Developer ID
-# app on tag builds, zip it, and optionally attach it to a GitHub Release.
-# If Cloud did not set CI_DEVELOPER_ID_SIGNED_APP_PATH, stamp the archive team
-# first: an ad-hoc archive has no Team and exportArchive reports No Team Found.
+# After a successful Xcode Cloud Archive, sign the app with Developer ID,
+# notarize and staple it on tag builds, zip it, and attach it to a GitHub Release.
 #
-# Runs after xcodebuild and before Cloud's Notarize post-action. Keep that
-# post-action on the Archive workflow: it is what populates
-# CI_DEVELOPER_ID_SIGNED_APP_PATH. The GitHub zip is notarized here because
-# Cloud has no custom-script hook after Notarize. Staple the .app, then zip;
-# stapler cannot staple a zip.
+# Cloud archives with CODE_SIGN_IDENTITY=- (Sign to Run Locally). exportArchive
+# of that ad-hoc archive fails with "No Team Found in Archive". This script
+# codesigns Products/Applications/PRODUCT.app instead. Notarize runs after this
+# script, so CI_DEVELOPER_ID_SIGNED_APP_PATH is not set yet. Staple the .app,
+# then zip; stapler cannot staple a zip.
 set -e
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
 REPO_ROOT=${CI_PRIMARY_REPOSITORY_PATH:-$(CDPATH= cd -- "$SCRIPT_DIR/.." && pwd)}
 PRODUCT_NAME=${CI_PRODUCT:-Eloquent}
-EXPORT_OPTIONS="$REPO_ROOT/ExportOptions-DeveloperID.plist"
 OUT_DIR="$REPO_ROOT/build/release"
 GITHUB_REPO=${GITHUB_REPOSITORY:-kipyin/eloquent}
 
@@ -68,38 +65,25 @@ find_app() {
 	return 1
 }
 
-# Official Cloud name is CI_DEVELOPER_ID_SIGNED_APP_PATH (a .app or a
-# directory that contains PRODUCT.app). Set when the workflow includes the
-# Notarize (macOS) post-action, even though this script runs before that
-# post-action finishes.
-APP_PATH=
-if APP_PATH=$(find_app "${CI_DEVELOPER_ID_SIGNED_APP_PATH:-}"); then
-	echo "ci_post_xcodebuild: using CI_DEVELOPER_ID_SIGNED_APP_PATH."
+# Notarize runs after this script, so CI_DEVELOPER_ID_SIGNED_APP_PATH is unset.
+# Sign the archived app. Fall back to Cloud's development export if the
+# archive product is missing. exportArchive cannot Developer ID-sign an ad-hoc archive.
+SOURCE_APP=
+if SOURCE_APP=$(find_app "$CI_ARCHIVE_PATH/Products/Applications/${PRODUCT_NAME}.app"); then
+	echo "ci_post_xcodebuild: signing the archived app with Developer ID Application."
+elif SOURCE_APP=$(find_app "${CI_DEVELOPMENT_SIGNED_APP_PATH:-}"); then
+	echo "ci_post_xcodebuild: archived app missing; signing CI_DEVELOPMENT_SIGNED_APP_PATH with Developer ID Application."
 else
-	EXPORT_DIR="$OUT_DIR/export"
-	mkdir -p "$EXPORT_DIR"
-	echo "ci_post_xcodebuild: CI_DEVELOPER_ID_SIGNED_APP_PATH missing; exporting archive with ExportOptions-DeveloperID.plist."
-	echo "ci_post_xcodebuild: add the Notarize (macOS) post-action on the Xcode Cloud Archive workflow so Cloud exports a Developer ID-signed app into CI_DEVELOPER_ID_SIGNED_APP_PATH. See docs/release.md."
-	if ! command -v python3 >/dev/null 2>&1; then
-		echo "ci_post_xcodebuild: python3 not found; cannot stamp a team into the ad-hoc archive before Developer ID export." >&2
-		exit 1
-	fi
-	# Keep the generated plist outside -exportPath. xcodebuild clears that directory.
-	EXPORT_PLIST="$OUT_DIR/ExportOptions-DeveloperID.plist"
-	python3 "$SCRIPT_DIR/stamp_developer_id_export.py" \
-		--archive "$CI_ARCHIVE_PATH" \
-		--export-template "$EXPORT_OPTIONS" \
-		--export-out "$EXPORT_PLIST" \
-		--product "$PRODUCT_NAME"
-	xcodebuild -exportArchive \
-		-archivePath "$CI_ARCHIVE_PATH" \
-		-exportOptionsPlist "$EXPORT_PLIST" \
-		-exportPath "$EXPORT_DIR"
-	if ! APP_PATH=$(find_app "$EXPORT_DIR"); then
-		echo "ci_post_xcodebuild: export did not produce ${PRODUCT_NAME}.app in $EXPORT_DIR" >&2
-		exit 1
-	fi
+	echo "ci_post_xcodebuild: no ${PRODUCT_NAME}.app in the archive or CI_DEVELOPMENT_SIGNED_APP_PATH." >&2
+	exit 1
 fi
+if ! command -v python3 >/dev/null 2>&1; then
+	echo "ci_post_xcodebuild: python3 not found; cannot sign the app with Developer ID." >&2
+	exit 1
+fi
+APP_PATH="$OUT_DIR/${PRODUCT_NAME}.app"
+rm -rf "$APP_PATH"
+python3 "$SCRIPT_DIR/sign_developer_id.py" --source "$SOURCE_APP" --dest "$APP_PATH"
 
 # Official tag start-condition variable is CI_TAG. CI_GIT_TAG is a synonym
 # some images set; refs/tags/* on CI_GIT_REF covers the rest.

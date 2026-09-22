@@ -53,7 +53,7 @@ release-zip: archive
 	@echo "Not notarized. Staple after notarytool. GitHub Release zips are notarized+stapled in ci_post_xcodebuild.sh. DMG is not produced yet. See docs/release.md"
 
 ci-script-test:
-	sh ci_scripts/developer_id_export_test.sh
+	sh ci_scripts/developer_id_sign_test.sh
 
 clean:
 	rm -rf $(DERIVED)

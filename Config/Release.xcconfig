@@ -5,8 +5,8 @@
 // Xcode Cloud Archive: ci_pre_xcodebuild.sh writes Release-Signing.xcconfig
 // from DEVELOPMENT_TEAM when that env var is set. Do not put a Team ID here.
 // Cloud also passes CODE_SIGN_IDENTITY=- on the xcodebuild command line, which
-// overrides any identity in that overlay. ci_post stamps the team before
-// Developer ID export. See docs/release.md.
+// overrides any identity in that overlay. ci_post re-signs the archived app
+// with Developer ID Application. See docs/release.md.
 
 ENABLE_HARDENED_RUNTIME = YES
 CODE_SIGN_STYLE = Automatic
