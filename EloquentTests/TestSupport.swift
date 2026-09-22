@@ -80,11 +80,9 @@ final class FakePlayer: AudioPlaying {
     private(set) var pauseCount = 0
     private(set) var resumeCount = 0
     private(set) var stopCount = 0
-    private(set) var lastData: Data?
     private var completion: ((Bool) -> Void)?
 
-    func play(data: Data, completion: @escaping (Bool) -> Void) throws {
-        lastData = data
+    func play(data _: Data, completion: @escaping (Bool) -> Void) throws {
         playCount += 1
         self.completion = completion
     }

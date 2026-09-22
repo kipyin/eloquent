@@ -8,7 +8,7 @@ protocol AudioPlaying: AnyObject {
     func stop()
 }
 
-enum AudioPlaybackError: LocalizedError, Equatable {
+enum AudioPlaybackError: LocalizedError {
     case playbackFailed
 
     var errorDescription: String? {

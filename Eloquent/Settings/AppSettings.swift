@@ -91,7 +91,7 @@ enum TTSDefaults {
     }
 }
 
-struct SettingsSnapshot: Sendable, Equatable {
+struct SettingsSnapshot: Sendable {
     var engine: Engine
     var endpoint: String
     var apiKey: String

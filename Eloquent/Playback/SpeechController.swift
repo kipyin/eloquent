@@ -97,7 +97,7 @@ final class SpeechController: ObservableObject {
 
     var progressLabel: String {
         guard !paragraphs.isEmpty else {
-            return "Eloquent"
+            return ""
         }
         return "Paragraph \(index + 1) of \(paragraphs.count)"
     }
