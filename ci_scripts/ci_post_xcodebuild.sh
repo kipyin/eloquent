@@ -1,5 +1,12 @@
 #!/bin/sh
-# After a successful Xcode Cloud Archive, zip the Developer ID app and optionally attach it to a GitHub Release.
+# After a successful Xcode Cloud Archive, notarize and staple the Developer ID
+# app on tag builds, zip it, and optionally attach it to a GitHub Release.
+#
+# Runs after xcodebuild and before Cloud's Notarize post-action. Keep that
+# post-action on the Archive workflow: it is what populates
+# CI_DEVELOPER_ID_SIGNED_APP_PATH. The GitHub zip is notarized here because
+# Cloud has no custom-script hook after Notarize. Staple the .app, then zip;
+# stapler cannot staple a zip.
 set -e
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
@@ -9,9 +16,23 @@ EXPORT_OPTIONS="$REPO_ROOT/ExportOptions-DeveloperID.plist"
 OUT_DIR="$REPO_ROOT/build/release"
 GITHUB_REPO=${GITHUB_REPOSITORY:-kipyin/eloquent}
 
+KEY_FILE=
+NOTARY_ZIP=
+
 skip() {
 	echo "ci_post_xcodebuild: $*"
 	exit 0
+}
+
+cleanup_notary_materials() {
+	if [ -n "$KEY_FILE" ]; then
+		rm -f "$KEY_FILE"
+		KEY_FILE=
+	fi
+	if [ -n "$NOTARY_ZIP" ]; then
+		rm -f "$NOTARY_ZIP"
+		NOTARY_ZIP=
+	fi
 }
 
 if [ -z "${CI_ARCHIVE_PATH:-}" ]; then
@@ -45,6 +66,10 @@ find_app() {
 	return 1
 }
 
+# Official Cloud name is CI_DEVELOPER_ID_SIGNED_APP_PATH (a .app or a
+# directory that contains PRODUCT.app). Set when the workflow includes the
+# Notarize (macOS) post-action, even though this script runs before that
+# post-action finishes.
 APP_PATH=
 if APP_PATH=$(find_app "${CI_DEVELOPER_ID_SIGNED_APP_PATH:-}"); then
 	echo "ci_post_xcodebuild: using CI_DEVELOPER_ID_SIGNED_APP_PATH."
@@ -52,7 +77,7 @@ else
 	EXPORT_DIR="$OUT_DIR/export"
 	mkdir -p "$EXPORT_DIR"
 	echo "ci_post_xcodebuild: CI_DEVELOPER_ID_SIGNED_APP_PATH missing; exporting archive with ExportOptions-DeveloperID.plist."
-	echo "ci_post_xcodebuild: add the Notarize (macOS) post-action on the Xcode Cloud Archive workflow so Cloud signs Developer ID and notarizes. See docs/release.md."
+	echo "ci_post_xcodebuild: add the Notarize (macOS) post-action on the Xcode Cloud Archive workflow so Cloud exports a Developer ID-signed app into CI_DEVELOPER_ID_SIGNED_APP_PATH. See docs/release.md."
 	xcodebuild -exportArchive \
 		-archivePath "$CI_ARCHIVE_PATH" \
 		-exportOptionsPlist "$EXPORT_OPTIONS" \
@@ -63,8 +88,61 @@ else
 	fi
 fi
 
+# Official tag start-condition variable is CI_TAG. CI_GIT_TAG is a synonym
+# some images set; refs/tags/* on CI_GIT_REF covers the rest.
 TAG=${CI_GIT_TAG:-${CI_TAG:-}}
+if [ -z "$TAG" ]; then
+	case "${CI_GIT_REF:-}" in
+	refs/tags/*) TAG=${CI_GIT_REF#refs/tags/} ;;
+	esac
+fi
+
+notarize_and_staple() {
+	app=$1
+	missing=
+	[ -n "${APP_STORE_CONNECT_KEY_ID:-}" ] || missing="$missing APP_STORE_CONNECT_KEY_ID"
+	[ -n "${APP_STORE_CONNECT_ISSUER_ID:-}" ] || missing="$missing APP_STORE_CONNECT_ISSUER_ID"
+	[ -n "${APP_STORE_CONNECT_API_KEY_P8:-}" ] || missing="$missing APP_STORE_CONNECT_API_KEY_P8"
+	if [ -n "$missing" ]; then
+		echo "ci_post_xcodebuild: tag Archive ${TAG} requires App Store Connect API credentials so the GitHub zip is notarized and stapled." >&2
+		echo "ci_post_xcodebuild: missing:${missing}." >&2
+		echo "ci_post_xcodebuild: set APP_STORE_CONNECT_KEY_ID, APP_STORE_CONNECT_ISSUER_ID, and APP_STORE_CONNECT_API_KEY_P8 as Xcode Cloud Secrets (docs/release.md)." >&2
+		echo "ci_post_xcodebuild: refusing to ship an unnotarized zip." >&2
+		exit 1
+	fi
+
+	KEY_FILE=$(mktemp "${TMPDIR:-/tmp}/eloquent-notary-key.XXXXXX")
+	NOTARY_ZIP="$OUT_DIR/${PRODUCT_NAME}-notary.zip"
+	trap cleanup_notary_materials EXIT INT HUP TERM
+
+	# Expand literal \n so a single-line Cloud secret still becomes PEM.
+	# Do not log the key, key id, or issuer.
+	printf '%b\n' "$APP_STORE_CONNECT_API_KEY_P8" > "$KEY_FILE"
+	chmod 600 "$KEY_FILE"
+	if ! grep -q "BEGIN .*PRIVATE KEY" "$KEY_FILE"; then
+		echo "ci_post_xcodebuild: APP_STORE_CONNECT_API_KEY_P8 is not PEM (missing BEGIN PRIVATE KEY). Paste the full .p8 text as an Xcode Cloud Secret." >&2
+		exit 1
+	fi
+
+	rm -f "$NOTARY_ZIP"
+	ditto -c -k --keepParent "$app" "$NOTARY_ZIP"
+	echo "ci_post_xcodebuild: submitting Developer ID app to notarytool (--wait)."
+	xcrun notarytool submit "$NOTARY_ZIP" \
+		--key "$KEY_FILE" \
+		--key-id "$APP_STORE_CONNECT_KEY_ID" \
+		--issuer "$APP_STORE_CONNECT_ISSUER_ID" \
+		--wait
+	cleanup_notary_materials
+	trap - EXIT INT HUP TERM
+
+	echo "ci_post_xcodebuild: stapling $app"
+	xcrun stapler staple "$app"
+	xcrun stapler validate "$app"
+	echo "ci_post_xcodebuild: notarized and stapled $app"
+}
+
 if [ -n "$TAG" ]; then
+	notarize_and_staple "$APP_PATH"
 	ZIP_NAME="${PRODUCT_NAME}-${TAG}.zip"
 else
 	ZIP_NAME="${PRODUCT_NAME}-macos-arm64.zip"
@@ -82,7 +160,7 @@ if [ -z "$TOKEN" ]; then
 fi
 
 if [ -z "$TAG" ]; then
-	skip "no CI_GIT_TAG / CI_TAG; skipping GitHub Release upload. Token is set but this Archive was not tag-triggered."
+	skip "no CI_GIT_TAG / CI_TAG / refs/tags CI_GIT_REF; skipping GitHub Release upload. Token is set but this Archive was not tag-triggered."
 fi
 
 upload_with_gh() {
