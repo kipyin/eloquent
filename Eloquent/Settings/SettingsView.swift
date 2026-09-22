@@ -90,7 +90,7 @@ struct SettingsView: View {
                     Text("Speed")
                     Slider(
                         value: $settings.speed,
-                        in: AppSettings.Defaults.minimumSpeed...AppSettings.Defaults.maximumSpeed,
+                        in: TTSDefaults.minimumSpeed...TTSDefaults.maximumSpeed,
                         step: 0.1
                     ) { editing in
                         if !editing {

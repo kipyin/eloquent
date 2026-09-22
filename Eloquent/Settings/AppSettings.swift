@@ -153,7 +153,7 @@ final class AppSettings: ObservableObject, SettingsProviding {
 
     @Published var speed: Double {
         didSet {
-            let clamped = Self.clampSpeed(speed)
+            let clamped = TTSDefaults.clampSpeed(speed)
             if clamped != speed {
                 speed = clamped
                 return
@@ -185,7 +185,7 @@ final class AppSettings: ObservableObject, SettingsProviding {
         model = Self.nonEmpty(defaults.string(forKey: Keys.model), fallback: Defaults.model)
         voice = Self.nonEmpty(defaults.string(forKey: Keys.voice), fallback: Defaults.voice)
         if let storedSpeed = defaults.object(forKey: Keys.speed) as? Double {
-            speed = Self.clampSpeed(storedSpeed)
+            speed = TTSDefaults.clampSpeed(storedSpeed)
         } else {
             speed = Defaults.speed
         }
@@ -215,7 +215,7 @@ final class AppSettings: ObservableObject, SettingsProviding {
             apiKey: apiKey.trimmingCharacters(in: .whitespacesAndNewlines),
             model: model.trimmingCharacters(in: .whitespacesAndNewlines),
             voice: voice.trimmingCharacters(in: .whitespacesAndNewlines),
-            speed: TTSDefaults.clampSpeed(speed),
+            speed: speed,
             paragraphSplit: paragraphSplit,
             speedApply: speedApply
         )
@@ -231,10 +231,6 @@ final class AppSettings: ObservableObject, SettingsProviding {
         paragraphSplit = Defaults.paragraphSplit
         speakHotkey = .optionEscape
         speedApply = Defaults.speedApply
-    }
-
-    static func clampSpeed(_ value: Double) -> Double {
-        TTSDefaults.clampSpeed(value)
     }
 
     private func applyEngineSwitch(from old: Engine, to new: Engine) {
