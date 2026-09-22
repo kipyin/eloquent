@@ -50,7 +50,7 @@ release-zip: archive
 	xcodebuild -exportArchive -archivePath $(ARCHIVE_PATH) -exportOptionsPlist $(EXPORT_OPTIONS) -exportPath $(EXPORT_PATH)
 	ditto -c -k --keepParent "$(EXPORT_PATH)/Eloquent.app" "$(RELEASE_ZIP)"
 	@echo "Wrote $(RELEASE_ZIP)"
-	@echo "Not notarized. Staple after notarytool, or use the Xcode Cloud Notarize post-action. DMG is not produced yet. See docs/release.md"
+	@echo "Not notarized. Staple after notarytool. GitHub Release zips are notarized+stapled in ci_post_xcodebuild.sh. DMG is not produced yet. See docs/release.md"
 
 clean:
 	rm -rf $(DERIVED)
