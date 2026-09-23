@@ -32,7 +32,7 @@ CONFIG=Release make run
 
 That builds `build/Build/Products/Release/Eloquent.app` and opens it. Copy that `.app` somewhere stable (for example `/Applications`) if you want to keep using it after you leave the clone.
 
-**GitHub Releases (notarized):** the intended public path — a Developer ID signed, notarized zip on a GitHub Release. **Not published yet** (no `v*` tag / Release asset until the first one). How to turn that on: [docs/release.md](docs/release.md). Homebrew is later, after that Release exists.
+**GitHub Releases (notarized):** a Developer ID signed, notarized zip. Latest tag `v0.1.5`, asset `Eloquent-v0.1.5.zip`. How a tag stays in lockstep with the marketing version: [docs/release.md](docs/release.md). Homebrew is later.
 
 ### First run
 
@@ -78,6 +78,6 @@ Optional: set `DEVELOPMENT_TEAM` in your shell so the Makefile signs with your A
 
 **Today:** source plus a local Release build, as in [Install](#install).
 
-**Intended:** Developer ID + notarization → GitHub Releases. Scaffolded; not published yet. Follow [docs/release.md](docs/release.md).
+**Public download:** Developer ID + notarization → GitHub Releases (latest `v0.1.5`). Follow [docs/release.md](docs/release.md).
 
 **Later:** a personal Homebrew tap that fetches that Release. Sparkle auto-update is separate.

@@ -4,7 +4,7 @@ Public distribution is a **Developer ID** signed, **notarized and stapled** `.ap
 
 Xcode Cloud’s **Notarize** post-action is what produces the Developer ID Managed export. When that post-action is on the Archive workflow, Cloud sets `CI_DEVELOPER_ID_SIGNED_APP_PATH` before `ci_post_xcodebuild.sh`. Build 6 used that app for the GitHub zip. Keep Notarize. The post script copies that app, then notarizes, staples, zips, and uploads it. Notarize itself is not the GitHub upload, and the build page still has a notarized app to download by hand. If `CI_DEVELOPER_ID_SIGNED_APP_PATH` is missing or empty, `ci_post` codesigns the archived `.app` instead (local, or a workflow without Notarize).
 
-Until the first `v*` tag produces an artifact, there is no public download. Local `CONFIG=Release make run` remains the way to run a build from a clone ([README Install](../README.md#install)). Homebrew is later, after that first Release exists.
+Published GitHub Releases use SemVer tags `vX.Y.Z` (latest `v0.1.5`, asset `Eloquent-v0.1.5.zip`). Local `CONFIG=Release make run` remains the way to run a build from a clone ([README Install](../README.md#install)). Homebrew is later.
 
 ## Checklist
 
@@ -104,19 +104,26 @@ Xcode Cloud's `xcodebuild archive` command line sets `CODE_SIGN_IDENTITY=-` and 
 4. Zip the stapled `.app` (`ditto`; stapler cannot staple a zip).
 5. Create or update the GitHub Release for that tag and upload the zip (`GITHUB_TOKEN` / `GH_TOKEN`). Upload skips when the token is missing.
 
-### 5. First GitHub Release
+### 5. Version and GitHub Release
 
-1. Marketing version is `MARKETING_VERSION` / `CFBundleShortVersionString` (today `1.0.0`). Bump it in `project.yml`, `Eloquent.xcodeproj`, and `Eloquent/Info.plist` when you intend a new version.
-2. Tag and push:
+The public version scheme is SemVer `0.1.x`. Git tags look like `v0.1.5`. The marketing version is the same numbers without the leading `v`.
 
-   ```bash
-   git tag v1.0.0
-   git push origin v1.0.0
-   ```
+`MARKETING_VERSION` in `project.yml` is the source of truth. It is set on the Eloquent target and the EloquentTests target. The About panel reads `CFBundleShortVersionString` from `Eloquent/Info.plist`. `GENERATE_INFOPLIST_FILE` is NO, so that plist string is what ships. XcodeGen can regenerate `Eloquent.xcodeproj` from `project.yml`; it does not rewrite `Info.plist`. The Makefile builds the committed Xcode project and does not run XcodeGen.
 
-3. Wait for the **Release** workflow. In Cloud logs, confirm `ci_post_xcodebuild` submitted to notarytool, stapled, and uploaded. Cloud’s Notarize post-action can still succeed afterward; it is not the GitHub upload.
-4. GitHub → **Releases** → the `v1.0.0` release (created by the post script if the token was set, or **Draft a new release** yourself). Attach `Eloquent-v1.0.0.zip` if it is not already there.
-5. Spot-check on a Mac that is not your build machine: unzip, move `Eloquent.app` to `/Applications`, then:
+Before tagging `vX.Y.Z`, set `MARKETING_VERSION` to `X.Y.Z` in `project.yml` (and regenerate `Eloquent.xcodeproj` if you use XcodeGen, or set the same `MARKETING_VERSION` on the Eloquent and EloquentTests configurations in the committed project). Set `CFBundleShortVersionString` in `Eloquent/Info.plist` to the same `X.Y.Z`. Tags and the marketing version must stay in lockstep. Commit those edits, then tag that commit:
+
+```bash
+git tag vX.Y.Z
+git push origin vX.Y.Z
+```
+
+`CURRENT_PROJECT_VERSION` (`CFBundleVersion` in `Eloquent/Info.plist`) is the build number. It is a simple integer, independent of the marketing version and the git tag. It stays `1` until a build-number bump is needed. A marketing-version change does not require a build-number change.
+
+The marketing version on `main` is `0.1.5`, matching tag `v0.1.5` and asset `Eloquent-v0.1.5.zip`.
+
+1. Wait for the **Release** workflow. In Cloud logs, confirm `ci_post_xcodebuild` submitted to notarytool, stapled, and uploaded. Cloud’s Notarize post-action can still succeed afterward; it is not the GitHub upload.
+2. GitHub → **Releases** → the `vX.Y.Z` release (created by the post script if the token was set, or **Draft a new release** yourself). Attach `Eloquent-vX.Y.Z.zip` if it is not already there. The post script names a tag zip `Eloquent-<tag>.zip`.
+3. Spot-check on a Mac that is not your build machine: unzip, move `Eloquent.app` to `/Applications`, then:
 
    ```bash
    spctl --assess --verbose --type execute /Applications/Eloquent.app
