@@ -108,16 +108,16 @@ Xcode Cloud's `xcodebuild archive` command line sets `CODE_SIGN_IDENTITY=-` and 
 
 The public version scheme is SemVer `0.1.x`. Git tags look like `v0.1.5`. The marketing version is the same numbers without the leading `v`.
 
-`MARKETING_VERSION` in `project.yml` is the source of truth. It is set on the Eloquent target and the EloquentTests target. The About panel reads `CFBundleShortVersionString` from `Eloquent/Info.plist`. `GENERATE_INFOPLIST_FILE` is NO, so that plist string is what ships. XcodeGen can regenerate `Eloquent.xcodeproj` from `project.yml`; it does not rewrite `Info.plist`. The Makefile builds the committed Xcode project and does not run XcodeGen.
+`MARKETING_VERSION` in `project.yml` is the source of truth. It is set on the Eloquent target and the EloquentTests target. The About panel reads `CFBundleShortVersionString` from the processed `Eloquent/Info.plist`. `GENERATE_INFOPLIST_FILE` is NO, so that plist is what ships. `CFBundleShortVersionString` is `$(MARKETING_VERSION)` and `CFBundleVersion` is `$(CURRENT_PROJECT_VERSION)`. Xcode expands those settings when it processes the plist, the same way it expands `$(PRODUCT_BUNDLE_IDENTIFIER)`. Leave those two keys as build-setting references. XcodeGen can regenerate `Eloquent.xcodeproj` from `project.yml`; it does not rewrite `Info.plist`. The Makefile builds the committed Xcode project and does not run XcodeGen.
 
-Before tagging `vX.Y.Z`, set `MARKETING_VERSION` to `X.Y.Z` in `project.yml` (and regenerate `Eloquent.xcodeproj` if you use XcodeGen, or set the same `MARKETING_VERSION` on the Eloquent and EloquentTests configurations in the committed project). Set `CFBundleShortVersionString` in `Eloquent/Info.plist` to the same `X.Y.Z`. Tags and the marketing version must stay in lockstep. Commit those edits, then tag that commit:
+Before tagging `vX.Y.Z`, set `MARKETING_VERSION` to `X.Y.Z` in `project.yml` (and regenerate `Eloquent.xcodeproj` if you use XcodeGen, or set the same `MARKETING_VERSION` on the Eloquent and EloquentTests configurations in the committed project). The plist already picks that value up through `$(MARKETING_VERSION)`. Tags and the marketing version must stay in lockstep. Commit those edits, then tag that commit:
 
 ```bash
 git tag vX.Y.Z
 git push origin vX.Y.Z
 ```
 
-`CURRENT_PROJECT_VERSION` (`CFBundleVersion` in `Eloquent/Info.plist`) is the build number. It is a simple integer, independent of the marketing version and the git tag. It stays `1` until a build-number bump is needed. A marketing-version change does not require a build-number change.
+`CURRENT_PROJECT_VERSION` in `project.yml` is the build number. The processed plist writes it to `CFBundleVersion` through `$(CURRENT_PROJECT_VERSION)`. It is a simple integer, independent of the marketing version and the git tag. It stays `1` until a build-number bump is needed. Bump it in `project.yml` and the committed project settings. A marketing-version change does not require a build-number change.
 
 The marketing version on `main` is `0.1.5`, matching tag `v0.1.5` and asset `Eloquent-v0.1.5.zip`.
 
