@@ -302,4 +302,118 @@ grep -q "CI_DEVELOPMENT_SIGNED_APP_PATH" "$log" || fail "fallback should name th
 grep -q -- "--force" "$TMP/dev-codesign.log" || fail "fallback did not codesign"
 echo "ok: development app fallback"
 
+# Tag Archive: trailing newlines on issuer and key id must not reach notarytool.
+# Command substitution strips trailing newlines, so keep a sentinel until after.
+issuer=$(printf ' 11111111-2222-4333-8444-555555555555\r\n\nX')
+issuer=${issuer%X}
+key_id=$(printf 'ABCDE12345\n\nX')
+key_id=${key_id%X}
+# Real newlines surround a one-line Cloud secret whose PEM body uses literal \n.
+p8=$(printf '\n\n  -----BEGIN PRIVATE KEY-----\\nnot-a-real-key\\n-----END PRIVATE KEY-----  \n\nX')
+p8=${p8%X}
+cat > "$TMP/bin/xcrun" <<'EOF'
+#!/bin/sh
+if [ -n "${XCRUN_LOG:-}" ]; then
+	python3 -c 'import json, os, sys; open(os.environ["XCRUN_LOG"], "a").write(json.dumps(sys.argv[1:]) + "\n")' "$@"
+fi
+if [ "${1:-}" = "notarytool" ] && [ -n "${XCRUN_KEY_COPY:-}" ]; then
+	prev=
+	for arg in "$@"; do
+		if [ "$prev" = "--key" ]; then
+			cp "$arg" "$XCRUN_KEY_COPY"
+		fi
+		prev=$arg
+	done
+fi
+exit 0
+EOF
+chmod +x "$TMP/bin/xcrun"
+: > "$TMP/sign-state"
+log="$TMP/notary.log"
+: > "$TMP/notary-codesign.log"
+: > "$TMP/xcrun.log"
+: > "$XCODEBUILD_LOG"
+env -u GITHUB_TOKEN -u GH_TOKEN -u CI_GIT_TAG -u CI_GIT_REF \
+	-u CI_DEVELOPMENT_SIGNED_APP_PATH -u DEVELOPMENT_TEAM \
+	-u CODESIGN_FORCE_EXIT -u SECURITY_IDENTITIES \
+	CI_ARCHIVE_PATH="$POST_ROOT/Eloquent.xcarchive" \
+	CI_DEVELOPER_ID_SIGNED_APP_PATH="$MANAGED" \
+	CI_TAG=v0.1.4 \
+	CI_XCODEBUILD_EXIT_CODE=0 \
+	CI_PRIMARY_REPOSITORY_PATH="$POST_ROOT" \
+	CI_PRODUCT=Eloquent \
+	APP_STORE_CONNECT_ISSUER_ID="$issuer" \
+	APP_STORE_CONNECT_KEY_ID="$key_id" \
+	APP_STORE_CONNECT_API_KEY_P8="$p8" \
+	CODESIGN_LOG="$TMP/notary-codesign.log" \
+	XCRUN_LOG="$TMP/xcrun.log" \
+	XCRUN_KEY_COPY="$TMP/notary-key.p8" \
+	PATH="$TMP/bin:/usr/bin:/bin" \
+	sh "$SCRIPT_DIR/ci_post_xcodebuild.sh" >"$log" 2>&1 || fail "trimmed notary credentials should submit"
+grep -q "using CI_DEVELOPER_ID_SIGNED_APP_PATH" "$log" || fail "tag Archive should still use the Managed app"
+if grep -q -- "--force" "$TMP/notary-codesign.log"; then
+	fail "tag Archive codesigned the Managed app"
+fi
+grep -q "developer-id-managed" "$POST_ROOT/build/release/Eloquent.app/Contents/MacOS/marker" || fail "tag Archive release app is not the Managed export"
+assert_log_hides "$log" "11111111-2222-4333-8444-555555555555"
+assert_log_hides "$log" "ABCDE12345"
+assert_log_hides "$log" "not-a-real-key"
+python3 - "$TMP/xcrun.log" "$TMP/notary-key.p8" <<'PY' || fail "notarytool argv was not trimmed"
+import json
+import sys
+
+log_path, key_path = sys.argv[1], sys.argv[2]
+calls = [json.loads(line) for line in open(log_path) if line.strip()]
+submit = next(args for args in calls if args[:2] == ["notarytool", "submit"])
+
+def flag(name):
+    return submit[submit.index(name) + 1]
+
+issuer = flag("--issuer")
+key_id = flag("--key-id")
+expected_issuer = "11111111-2222-4333-8444-555555555555"
+expected_key_id = "ABCDE12345"
+if issuer != expected_issuer:
+    raise SystemExit("notarytool --issuer was not the trimmed UUID")
+if key_id != expected_key_id:
+    raise SystemExit("notarytool --key-id was not the trimmed key id")
+if any(ch in issuer or ch in key_id for ch in "\r\n \t"):
+    raise SystemExit("notarytool id still contains whitespace")
+pem = open(key_path).read()
+expected_pem = "-----BEGIN PRIVATE KEY-----\nnot-a-real-key\n-----END PRIVATE KEY-----\n"
+if pem != expected_pem:
+    raise SystemExit("p8 surrounding whitespace was not trimmed")
+PY
+echo "ok: notarytool argv trims issuer and key id"
+
+# A non-UUID issuer fails before notarytool and is not printed.
+bad_issuer=$(printf 'not-a-uuid-value\n\nX')
+bad_issuer=${bad_issuer%X}
+log="$TMP/bad-issuer.log"
+: > "$TMP/xcrun-bad.log"
+set +e
+env -u GITHUB_TOKEN -u GH_TOKEN -u CI_GIT_TAG -u CI_GIT_REF \
+	-u CI_DEVELOPMENT_SIGNED_APP_PATH -u DEVELOPMENT_TEAM \
+	CI_ARCHIVE_PATH="$POST_ROOT/Eloquent.xcarchive" \
+	CI_DEVELOPER_ID_SIGNED_APP_PATH="$MANAGED" \
+	CI_TAG=v0.1.4 \
+	CI_XCODEBUILD_EXIT_CODE=0 \
+	CI_PRIMARY_REPOSITORY_PATH="$POST_ROOT" \
+	CI_PRODUCT=Eloquent \
+	APP_STORE_CONNECT_ISSUER_ID="$bad_issuer" \
+	APP_STORE_CONNECT_KEY_ID="$key_id" \
+	APP_STORE_CONNECT_API_KEY_P8="$p8" \
+	XCRUN_LOG="$TMP/xcrun-bad.log" \
+	PATH="$TMP/bin:/usr/bin:/bin" \
+	sh "$SCRIPT_DIR/ci_post_xcodebuild.sh" >"$log" 2>&1
+code=$?
+set -e
+[ "$code" -ne 0 ] || fail "a non-UUID issuer should fail"
+grep -q "is not a UUID after trimming whitespace" "$log" || fail "non-UUID issuer was not reported"
+assert_log_hides "$log" "not-a-uuid-value"
+if [ -s "$TMP/xcrun-bad.log" ]; then
+	fail "non-UUID issuer called notarytool"
+fi
+echo "ok: non-UUID issuer fails closed"
+
 echo "developer_id_sign_test: pass"

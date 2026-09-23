@@ -78,6 +78,32 @@ copy_app() {
 	cp -R "$src" "$dest"
 }
 
+# Xcode Cloud secret fields keep a trailing newline from paste. notarytool
+# rejects that as an invalid --issuer (exit 64). Strip CR/LF, then surrounding
+# spaces. Do not print the result.
+normalize_asc_id() {
+	printf '%s' "$1" | tr -d '\r\n' | sed 's/^[[:space:]]*//;s/[[:space:]]*$//'
+}
+
+# Trim whitespace around a PEM secret only. Keep the body, including internal
+# newlines. A one-line Cloud secret may still contain literal \n; the caller
+# expands those after this trim.
+trim_surrounding_whitespace() {
+	printf '%s' "$1" | tr -d '\r' | awk '
+		{ lines[NR] = $0 }
+		END {
+			start = 1
+			end = NR
+			while (start <= end && lines[start] ~ /^[[:space:]]*$/) start++
+			while (end >= start && lines[end] ~ /^[[:space:]]*$/) end--
+			if (start > end) exit
+			sub(/^[[:space:]]+/, "", lines[start])
+			sub(/[[:space:]]+$/, "", lines[end])
+			for (i = start; i <= end; i++) print lines[i]
+		}
+	'
+}
+
 # Notarize's Developer ID Managed export is available here when that
 # post-action is configured. Build 6 used this path for the GitHub zip.
 APP_PATH="$OUT_DIR/${PRODUCT_NAME}.app"
@@ -130,13 +156,29 @@ notarize_and_staple() {
 		exit 1
 	fi
 
+	# Check ids before writing the .p8 or calling notarytool. A bad paste
+	# must fail here: notarytool's usage error prints the issuer value.
+	ISSUER=$(normalize_asc_id "$APP_STORE_CONNECT_ISSUER_ID")
+	KEY_ID=$(normalize_asc_id "$APP_STORE_CONNECT_KEY_ID")
+	if ! printf '%s' "$ISSUER" | grep -E -q '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'; then
+		echo "ci_post_xcodebuild: APP_STORE_CONNECT_ISSUER_ID is not a UUID after trimming whitespace. Paste the Issuer ID only (docs/release.md)." >&2
+		exit 1
+	fi
+	case "$KEY_ID" in
+	''|*[!A-Za-z0-9]*)
+		echo "ci_post_xcodebuild: APP_STORE_CONNECT_KEY_ID is not a key id after trimming whitespace. Paste the Key ID only (docs/release.md)." >&2
+		exit 1
+		;;
+	esac
+
 	KEY_FILE=$(mktemp "${TMPDIR:-/tmp}/eloquent-notary-key.XXXXXX")
 	NOTARY_ZIP="$OUT_DIR/${PRODUCT_NAME}-notary.zip"
 	trap cleanup_notary_materials EXIT INT HUP TERM
 
 	# Expand literal \n so a single-line Cloud secret still becomes PEM.
 	# Do not log the key, key id, or issuer.
-	printf '%b\n' "$APP_STORE_CONNECT_API_KEY_P8" > "$KEY_FILE"
+	p8=$(trim_surrounding_whitespace "$APP_STORE_CONNECT_API_KEY_P8")
+	printf '%b\n' "$p8" > "$KEY_FILE"
 	chmod 600 "$KEY_FILE"
 	if ! grep -q "BEGIN .*PRIVATE KEY" "$KEY_FILE"; then
 		echo "ci_post_xcodebuild: APP_STORE_CONNECT_API_KEY_P8 is not PEM (missing BEGIN PRIVATE KEY). Paste the full .p8 text as an Xcode Cloud Secret." >&2
@@ -148,8 +190,8 @@ notarize_and_staple() {
 	echo "ci_post_xcodebuild: submitting Developer ID app to notarytool (--wait)."
 	xcrun notarytool submit "$NOTARY_ZIP" \
 		--key "$KEY_FILE" \
-		--key-id "$APP_STORE_CONNECT_KEY_ID" \
-		--issuer "$APP_STORE_CONNECT_ISSUER_ID" \
+		--key-id "$KEY_ID" \
+		--issuer "$ISSUER" \
 		--wait
 	cleanup_notary_materials
 	trap - EXIT INT HUP TERM
