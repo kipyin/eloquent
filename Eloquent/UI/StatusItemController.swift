@@ -53,7 +53,6 @@ final class StatusItemController: NSObject {
         button.imagePosition = .imageOnly
         button.image = templateSymbol(named: symbolName(for: speech.state))
             ?? templateSymbol(named: "speaker.fill")
-            ?? Self.fallbackSpeakerImage
     }
 
     private func symbolName(for state: SpeechController.State) -> String {
@@ -81,35 +80,6 @@ final class StatusItemController: NSObject {
         image.isTemplate = true
         return image
     }
-
-    private static let fallbackSpeakerImage: NSImage = {
-        let size = NSSize(width: 18, height: 18)
-        let image = NSImage(size: size, flipped: false) { rect in
-            NSColor.black.setFill()
-            let cone = NSBezierPath()
-            cone.move(to: NSPoint(x: rect.minX + 2.5, y: rect.midY - 2.5))
-            cone.line(to: NSPoint(x: rect.minX + 7, y: rect.midY - 2.5))
-            cone.line(to: NSPoint(x: rect.minX + 11.5, y: rect.midY - 6.5))
-            cone.line(to: NSPoint(x: rect.minX + 11.5, y: rect.midY + 6.5))
-            cone.line(to: NSPoint(x: rect.minX + 7, y: rect.midY + 2.5))
-            cone.line(to: NSPoint(x: rect.minX + 2.5, y: rect.midY + 2.5))
-            cone.close()
-            cone.fill()
-            NSColor.black.setStroke()
-            let wave = NSBezierPath()
-            wave.appendArc(
-                withCenter: NSPoint(x: rect.minX + 11, y: rect.midY),
-                radius: 4.5,
-                startAngle: -48,
-                endAngle: 48
-            )
-            wave.lineWidth = 1.6
-            wave.stroke()
-            return true
-        }
-        image.isTemplate = true
-        return image
-    }()
 
     private func rebuildMenu() {
         let menu = NSMenu()

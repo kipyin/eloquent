@@ -64,8 +64,6 @@ final class PlaybackPanelController: NSObject, NSWindowDelegate {
         panel.isMovableByWindowBackground = true
         panel.becomesKeyOnlyIfNeeded = true
         panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
-        panel.standardWindowButton(.zoomButton)?.isHidden = true
         panel.delegate = self
         panel.setContentSize(NSSize(width: 340, height: 154))
         return panel

@@ -2,11 +2,11 @@ import SwiftUI
 
 struct ControlPanelView: View {
     @ObservedObject var speech: SpeechController
-    @ObservedObject var settings: AppSettings
+    @ObservedObject private var settings: AppSettings
 
-    init(speech: SpeechController, settings: AppSettings? = nil) {
+    init(speech: SpeechController) {
         self.speech = speech
-        self.settings = settings ?? .shared
+        self.settings = .shared
     }
 
     var body: some View {
@@ -73,8 +73,7 @@ struct ControlPanelView: View {
     private var statusBadge: some View {
         switch speech.state {
         case .idle:
-            Text("Idle")
-                .foregroundStyle(.secondary)
+            EmptyView()
         case .loading:
             Text("Loading")
                 .foregroundStyle(.secondary)
