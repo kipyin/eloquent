@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-"""Sign an Xcode Cloud app with Developer ID Application.
+"""Codesign an app with Developer ID Application.
 
-Cloud's archive command passes CODE_SIGN_IDENTITY=- and
-AD_HOC_CODE_SIGNING_ALLOWED=YES, which overrides Release-Signing.xcconfig.
-The .xcarchive is Sign to Run Locally and has no team, so exportArchive fails
-with "No Team Found in Archive". codesign replaces that signature directly.
-Notarize runs after ci_post, so CI_DEVELOPER_ID_SIGNED_APP_PATH is not set yet.
+ci_post calls this only when CI_DEVELOPER_ID_SIGNED_APP_PATH is missing or
+empty. On Xcode Cloud with the Notarize post-action, that variable is the
+Developer ID Managed export and this script does not run.
 """
 
 import argparse
@@ -20,6 +18,7 @@ TEAM_RE = re.compile(r"^[A-Za-z0-9]{10}$")
 IDENTITY_RE = re.compile(
     r'"(Developer ID Application:[^"]*\(([A-Za-z0-9]{10})\))"'
 )
+PAREN_TEAM_RE = re.compile(r"\(([A-Za-z0-9]{10})\)")
 
 
 def log(message):
@@ -27,9 +26,12 @@ def log(message):
 
 
 def redact(text, team):
-    if not text or not team:
+    if not text:
         return text
-    return text.replace(team, "[team]")
+    redacted = PAREN_TEAM_RE.sub("([team])", text)
+    if team:
+        redacted = re.sub(re.escape(team), "[team]", redacted, flags=re.IGNORECASE)
+    return redacted
 
 
 def run_codesign(args):
@@ -46,6 +48,14 @@ def developer_id_identity(security_output, team):
     return ""
 
 
+def safe_listing(text, team):
+    if not text or not text.strip():
+        return ""
+    if "PRIVATE KEY" in text or "BEGIN " in text:
+        return "[redacted: unexpected secret material]"
+    return redact(text, team)
+
+
 def is_developer_id(details):
     if "Signature=adhoc" in details or "TeamIdentifier=not set" in details:
         return False
@@ -58,13 +68,23 @@ def require_identity(team):
         check=False,
         capture_output=True,
     )
-    identity = developer_id_identity(found.stdout.decode("utf-8", "replace"), team)
+    stdout = found.stdout.decode("utf-8", "replace")
+    stderr = found.stderr.decode("utf-8", "replace")
+    identity = developer_id_identity(stdout, team)
     if not identity:
         log(
             "no Developer ID Application identity for DEVELOPMENT_TEAM "
-            "(value not logged). The Release workflow's Notarize post-action "
-            "installs that certificate. See docs/release.md."
+            "(value not logged). This codesign fallback runs only when "
+            "CI_DEVELOPER_ID_SIGNED_APP_PATH is missing. See docs/release.md."
         )
+        log("security find-identity -v -p codesigning:")
+        listing = safe_listing(stdout, team)
+        if not listing.strip():
+            listing = safe_listing(stderr, team)
+        if listing.strip():
+            print(listing.rstrip(), file=sys.stderr)
+        else:
+            log("(no output)")
         raise SystemExit(3)
     return identity
 

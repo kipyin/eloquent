@@ -1,12 +1,12 @@
 #!/bin/sh
-# After a successful Xcode Cloud Archive, sign the app with Developer ID,
+# After a successful Xcode Cloud Archive, package the Developer ID app,
 # notarize and staple it on tag builds, zip it, and attach it to a GitHub Release.
 #
-# Cloud archives with CODE_SIGN_IDENTITY=- (Sign to Run Locally). exportArchive
-# of that ad-hoc archive fails with "No Team Found in Archive". This script
-# codesigns Products/Applications/PRODUCT.app instead. Notarize runs after this
-# script, so CI_DEVELOPER_ID_SIGNED_APP_PATH is not set yet. Staple the .app,
-# then zip; stapler cannot staple a zip.
+# When the Notarize post-action is configured, Cloud sets
+# CI_DEVELOPER_ID_SIGNED_APP_PATH before this script (Developer ID Managed
+# export). Build 6 uploaded the GitHub zip from that app. Use it.
+# If the variable is missing or empty, codesign the ad-hoc archive product.
+# Staple the .app, then zip; stapler cannot staple a zip.
 set -e
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
@@ -65,25 +65,47 @@ find_app() {
 	return 1
 }
 
-# Notarize runs after this script, so CI_DEVELOPER_ID_SIGNED_APP_PATH is unset.
-# Sign the archived app. Fall back to Cloud's development export if the
-# archive product is missing. exportArchive cannot Developer ID-sign an ad-hoc archive.
-SOURCE_APP=
-if SOURCE_APP=$(find_app "$CI_ARCHIVE_PATH/Products/Applications/${PRODUCT_NAME}.app"); then
-	echo "ci_post_xcodebuild: signing the archived app with Developer ID Application."
-elif SOURCE_APP=$(find_app "${CI_DEVELOPMENT_SIGNED_APP_PATH:-}"); then
-	echo "ci_post_xcodebuild: archived app missing; signing CI_DEVELOPMENT_SIGNED_APP_PATH with Developer ID Application."
-else
-	echo "ci_post_xcodebuild: no ${PRODUCT_NAME}.app in the archive or CI_DEVELOPMENT_SIGNED_APP_PATH." >&2
-	exit 1
-fi
-if ! command -v python3 >/dev/null 2>&1; then
-	echo "ci_post_xcodebuild: python3 not found; cannot sign the app with Developer ID." >&2
-	exit 1
-fi
+copy_app() {
+	src=$1
+	dest=$2
+	rm -rf "$dest"
+	mkdir -p "$(dirname "$dest")"
+	# ditto keeps the Managed signature. cp is the fallback where ditto is absent.
+	if command -v ditto >/dev/null 2>&1; then
+		ditto "$src" "$dest"
+		return
+	fi
+	cp -R "$src" "$dest"
+}
+
+# Notarize's Developer ID Managed export is available here when that
+# post-action is configured. Build 6 used this path for the GitHub zip.
 APP_PATH="$OUT_DIR/${PRODUCT_NAME}.app"
-rm -rf "$APP_PATH"
-python3 "$SCRIPT_DIR/sign_developer_id.py" --source "$SOURCE_APP" --dest "$APP_PATH"
+if [ -n "${CI_DEVELOPER_ID_SIGNED_APP_PATH:-}" ]; then
+	if ! SIGNED_APP=$(find_app "$CI_DEVELOPER_ID_SIGNED_APP_PATH"); then
+		echo "ci_post_xcodebuild: CI_DEVELOPER_ID_SIGNED_APP_PATH is set but ${PRODUCT_NAME}.app was not found." >&2
+		exit 1
+	fi
+	echo "ci_post_xcodebuild: using CI_DEVELOPER_ID_SIGNED_APP_PATH."
+	copy_app "$SIGNED_APP" "$APP_PATH"
+else
+	# Local/dev, or a workflow without Notarize. exportArchive cannot
+	# Developer ID-sign an ad-hoc archive (No Team Found in Archive).
+	SOURCE_APP=
+	if SOURCE_APP=$(find_app "$CI_ARCHIVE_PATH/Products/Applications/${PRODUCT_NAME}.app"); then
+		echo "ci_post_xcodebuild: CI_DEVELOPER_ID_SIGNED_APP_PATH unset; signing the archived app with Developer ID Application."
+	elif SOURCE_APP=$(find_app "${CI_DEVELOPMENT_SIGNED_APP_PATH:-}"); then
+		echo "ci_post_xcodebuild: CI_DEVELOPER_ID_SIGNED_APP_PATH unset; archived app missing; signing CI_DEVELOPMENT_SIGNED_APP_PATH with Developer ID Application."
+	else
+		echo "ci_post_xcodebuild: no ${PRODUCT_NAME}.app in the archive or CI_DEVELOPMENT_SIGNED_APP_PATH." >&2
+		exit 1
+	fi
+	if ! command -v python3 >/dev/null 2>&1; then
+		echo "ci_post_xcodebuild: python3 not found; cannot sign the app with Developer ID." >&2
+		exit 1
+	fi
+	python3 "$SCRIPT_DIR/sign_developer_id.py" --source "$SOURCE_APP" --dest "$APP_PATH"
+fi
 
 # Official tag start-condition variable is CI_TAG. CI_GIT_TAG is a synonym
 # some images set; refs/tags/* on CI_GIT_REF covers the rest.

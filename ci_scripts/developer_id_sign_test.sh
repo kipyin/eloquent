@@ -1,6 +1,7 @@
 #!/bin/sh
 # Ad-hoc Xcode Cloud archives cannot Developer ID-export (No Team Found).
-# ci_post must codesign the archived app instead of calling exportArchive.
+# When CI_DEVELOPER_ID_SIGNED_APP_PATH is set, ci_post uses that Managed app.
+# Otherwise it codesigns the archived app instead of calling exportArchive.
 set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
@@ -61,11 +62,18 @@ EOF
 	cat > "$bin/security" <<'EOF'
 #!/bin/sh
 if [ "$1" = "find-identity" ]; then
-	if [ "${SECURITY_IDENTITIES:-developer-id}" = "none" ]; then
+	case "${SECURITY_IDENTITIES:-developer-id}" in
+	none)
 		printf '%s\n' '  1) AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA "Apple Development: Example (TESTTEAM01)"'
-	else
+		;;
+	secret)
+		printf '%s\n' '-----BEGIN PRIVATE KEY-----'
+		printf '%s\n' 'not-a-real-key'
+		;;
+	*)
 		printf '%s\n' '  1) AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA "Developer ID Application: Example (TESTTEAM01)"'
-	fi
+		;;
+	esac
 	exit 0
 fi
 exit 1
@@ -96,13 +104,33 @@ grep -q -- "--entitlements" "$CODESIGN_LOG" || fail "entitlements were not passe
 grep -q "signed the app with Developer ID Application" "$log" || fail "missing sign confirmation"
 echo "ok: codesign developer id"
 
-# No matching identity: fail, and do not print the team.
+# No matching identity: fail, and do not print the team. Print a redacted listing.
 log="$TMP/noid.log"
+set +e
 PATH="$TMP/bin:/usr/bin:/bin" SECURITY_IDENTITIES=none DEVELOPMENT_TEAM=$TEAM python3 "$SIGN" \
-	--source "$SRC" --dest "$TMP/noid/Eloquent.app" >"$TMP/noid.out" 2>"$log" && fail "missing identity should fail"
+	--source "$SRC" --dest "$TMP/noid/Eloquent.app" >"$TMP/noid.out" 2>"$log"
+code=$?
+set -e
+[ "$code" -eq 3 ] || fail "expected exit 3 for a missing identity, got $code"
 assert_log_hides "$log" "$TEAM"
 grep -q "no Developer ID Application identity" "$log" || fail "missing identity was not reported"
+grep -q "security find-identity -v -p codesigning" "$log" || fail "missing identity omitted the identity listing"
+grep -q "Apple Development: Example (\[team\])" "$log" || fail "redacted listing missing"
 echo "ok: missing identity fails"
+
+# A listing that looks like a PEM is not printed.
+log="$TMP/secret.log"
+set +e
+PATH="$TMP/bin:/usr/bin:/bin" SECURITY_IDENTITIES=secret DEVELOPMENT_TEAM=$TEAM python3 "$SIGN" \
+	--source "$SRC" --dest "$TMP/secret/Eloquent.app" >"$TMP/secret.out" 2>"$log"
+code=$?
+set -e
+[ "$code" -eq 3 ] || fail "expected exit 3 when the listing is unusable, got $code"
+if grep -q "BEGIN PRIVATE KEY" "$log" || grep -q "not-a-real-key" "$log"; then
+	fail "identity listing leaked key material"
+fi
+grep -q "unexpected secret material" "$log" || fail "secret listing was not replaced"
+echo "ok: secret listing is not printed"
 
 # A non-id value is not a team and is not logged.
 secret=supersecretvalue
@@ -177,6 +205,80 @@ if [ -s "$XCODEBUILD_LOG" ]; then
 fi
 test -d "$POST_ROOT/build/release/Eloquent.app/Contents/MacOS" || fail "ci_post did not write the signed app"
 echo "ok: ci_post signs archived app"
+
+# An empty CI_DEVELOPER_ID_SIGNED_APP_PATH is the same codesign fallback.
+: > "$TMP/sign-state"
+log="$TMP/empty-path.log"
+: > "$TMP/empty-codesign.log"
+env -u GITHUB_TOKEN -u GH_TOKEN -u CI_TAG -u CI_GIT_TAG -u CI_GIT_REF \
+	-u CI_DEVELOPMENT_SIGNED_APP_PATH -u APP_STORE_CONNECT_API_KEY_P8 \
+	-u CODESIGN_FORCE_EXIT -u SECURITY_IDENTITIES \
+	CI_ARCHIVE_PATH="$POST_ROOT/Eloquent.xcarchive" \
+	CI_DEVELOPER_ID_SIGNED_APP_PATH= \
+	CI_XCODEBUILD_EXIT_CODE=0 \
+	CI_PRIMARY_REPOSITORY_PATH="$POST_ROOT" \
+	CI_PRODUCT=Eloquent \
+	DEVELOPMENT_TEAM=$TEAM \
+	CODESIGN_LOG="$TMP/empty-codesign.log" \
+	PATH="$TMP/bin:/usr/bin:/bin" \
+	sh "$SCRIPT_DIR/ci_post_xcodebuild.sh" >"$log" 2>&1 || fail "empty Managed path should codesign"
+grep -q "signing the archived app" "$log" || fail "empty Managed path should sign the archive"
+grep -q -- "--force" "$TMP/empty-codesign.log" || fail "empty Managed path did not codesign"
+echo "ok: empty CI_DEVELOPER_ID_SIGNED_APP_PATH codesigns"
+
+# Notarize configured: use the Managed app and do not codesign it.
+MANAGED="$TMP/managed/Eloquent.app"
+make_app "$MANAGED"
+printf 'developer-id-managed\n' > "$MANAGED/Contents/MacOS/marker"
+printf 'archive-product\n' > "$POST_ROOT/Eloquent.xcarchive/Products/Applications/Eloquent.app/Contents/MacOS/marker"
+: > "$TMP/sign-state"
+log="$TMP/managed.log"
+: > "$TMP/managed-codesign.log"
+: > "$XCODEBUILD_LOG"
+env -u GITHUB_TOKEN -u GH_TOKEN -u CI_TAG -u CI_GIT_TAG -u CI_GIT_REF \
+	-u CI_DEVELOPMENT_SIGNED_APP_PATH -u DEVELOPMENT_TEAM \
+	-u APP_STORE_CONNECT_API_KEY_P8 -u CODESIGN_FORCE_EXIT -u SECURITY_IDENTITIES \
+	CI_ARCHIVE_PATH="$POST_ROOT/Eloquent.xcarchive" \
+	CI_DEVELOPER_ID_SIGNED_APP_PATH="$MANAGED" \
+	CI_XCODEBUILD_EXIT_CODE=0 \
+	CI_PRIMARY_REPOSITORY_PATH="$POST_ROOT" \
+	CI_PRODUCT=Eloquent \
+	CODESIGN_LOG="$TMP/managed-codesign.log" \
+	PATH="$TMP/bin:/usr/bin:/bin" \
+	sh "$SCRIPT_DIR/ci_post_xcodebuild.sh" >"$log" 2>&1 || fail "managed app path failed"
+grep -q "using CI_DEVELOPER_ID_SIGNED_APP_PATH" "$log" || fail "ci_post should use the Managed app"
+if grep -q -- "--force" "$TMP/managed-codesign.log"; then
+	fail "Managed app was codesigned"
+fi
+grep -q "developer-id-managed" "$POST_ROOT/build/release/Eloquent.app/Contents/MacOS/marker" || fail "release app is not the Managed export"
+if [ -s "$XCODEBUILD_LOG" ]; then
+	fail "managed path called xcodebuild"
+fi
+echo "ok: ci_post uses CI_DEVELOPER_ID_SIGNED_APP_PATH"
+
+# A set path that is not an app is not the codesign fallback.
+log="$TMP/bad-managed.log"
+: > "$TMP/bad-managed-codesign.log"
+set +e
+env -u GITHUB_TOKEN -u GH_TOKEN -u CI_TAG -u CI_GIT_TAG -u CI_GIT_REF \
+	-u CI_DEVELOPMENT_SIGNED_APP_PATH -u APP_STORE_CONNECT_API_KEY_P8 \
+	CI_ARCHIVE_PATH="$POST_ROOT/Eloquent.xcarchive" \
+	CI_DEVELOPER_ID_SIGNED_APP_PATH="$TMP/missing-managed" \
+	CI_XCODEBUILD_EXIT_CODE=0 \
+	CI_PRIMARY_REPOSITORY_PATH="$POST_ROOT" \
+	CI_PRODUCT=Eloquent \
+	DEVELOPMENT_TEAM=$TEAM \
+	CODESIGN_LOG="$TMP/bad-managed-codesign.log" \
+	PATH="$TMP/bin:/usr/bin:/bin" \
+	sh "$SCRIPT_DIR/ci_post_xcodebuild.sh" >"$log" 2>&1
+code=$?
+set -e
+[ "$code" -ne 0 ] || fail "a missing Managed app should fail"
+grep -q "was not found" "$log" || fail "missing Managed app was not reported"
+if grep -q -- "--force" "$TMP/bad-managed-codesign.log"; then
+	fail "missing Managed app fell through to codesign"
+fi
+echo "ok: set CI_DEVELOPER_ID_SIGNED_APP_PATH must exist"
 
 # Archive product missing: sign the development export instead.
 DEV_APP="$TMP/dev/Eloquent.app"
