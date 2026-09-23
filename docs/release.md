@@ -2,7 +2,7 @@
 
 Public distribution is a **Developer ID** signed, **notarized and stapled** `.app` on a GitHub Release. This repo scaffolds that path. It does not ship a Team ID, a `.p12`, or Apple API keys.
 
-Xcode Cloud’s **Notarize** post-action runs after `ci_post_xcodebuild.sh`, so it is not the GitHub upload and it does not supply `CI_DEVELOPER_ID_SIGNED_APP_PATH` to that script. Keep it: it installs the Developer ID certificate and leaves a notarized app on the build page for a manual download. The zip on GitHub is signed with `codesign`, then notarized and stapled, in `ci_scripts/ci_post_xcodebuild.sh`.
+Xcode Cloud’s **Notarize** post-action is what produces the Developer ID Managed export. When that post-action is on the Archive workflow, Cloud sets `CI_DEVELOPER_ID_SIGNED_APP_PATH` before `ci_post_xcodebuild.sh`. Build 6 used that app for the GitHub zip. Keep Notarize. The post script copies that app, then notarizes, staples, zips, and uploads it. Notarize itself is not the GitHub upload, and the build page still has a notarized app to download by hand. If `CI_DEVELOPER_ID_SIGNED_APP_PATH` is missing or empty, `ci_post` codesigns the archived `.app` instead (local, or a workflow without Notarize).
 
 Until the first `v*` tag produces an artifact, there is no public download. Local `CONFIG=Release make run` remains the way to run a build from a clone ([README Install](../README.md#install)). Homebrew is later, after that first Release exists.
 
@@ -64,7 +64,7 @@ Keep the existing **Build + Test** workflow. Add a second workflow for tags.
    - Xcode: Latest Release (or the version you already use for Test).
    - macOS: Latest Release.
    - Environment variables:
-     - `DEVELOPMENT_TEAM` = your Team ID. `ci_pre_xcodebuild.sh` writes `Config/Release-Signing.xcconfig` from this on Archive only. It does not print the value. `ci_post_xcodebuild.sh` prefers the Developer ID Application identity whose name contains this Team ID. When the keychain has a single Developer ID Application identity and that name does not contain the Team ID (Cloud shows `Developer ID Application: <person>`), that identity is used. The value is not printed. If no identity can be chosen, the log includes `security find-identity -v -p codesigning` with every `(TEAMID)` shown as `([team])`.
+     - `DEVELOPMENT_TEAM` = your Team ID. `ci_pre_xcodebuild.sh` writes `Config/Release-Signing.xcconfig` from this on Archive only. It does not print the value. The Cloud path does not codesign with it: `ci_post` copies `CI_DEVELOPER_ID_SIGNED_APP_PATH`. The codesign fallback (that variable missing or empty) uses it to choose a `Developer ID Application: … (TEAM)` identity and does not print it. If that fallback finds no identity, the log includes a redacted `security find-identity -v -p codesigning` listing (`(TEAMID)` shown as `([team])`).
      - `GITHUB_TOKEN` or `GH_TOKEN` (mark **Secret**) = a GitHub PAT or fine-grained token with **Contents: Read and write** on `kipyin/eloquent`, so the post script can attach the zip. Omit this until you want automatic upload; the script then notarizes, zips, and logs that upload was skipped.
      - `APP_STORE_CONNECT_KEY_ID` (mark **Secret**) = Key ID of an App Store Connect API key (role **Developer** or higher) used by `notarytool`.
      - `APP_STORE_CONNECT_ISSUER_ID` (mark **Secret**) = Issuer ID from App Store Connect → Users and Access → Integrations → App Store Connect API.
@@ -76,19 +76,19 @@ Keep the existing **Build + Test** workflow. Add a second workflow for tags.
 4. **Actions**
    - **+** → **Archive**.
    - Platform: **macOS**. Scheme: **Eloquent**.
-   - **Distribution Preparation: None** (the control may be labelled **Deployment Preparation**) ad-hoc-signs the archive. Cloud runs `xcodebuild` with `CODE_SIGN_IDENTITY=-` and `AD_HOC_CODE_SIGNING_ALLOWED=YES` even when `Config/Release-Signing.xcconfig` says `Developer ID Application`. The log shows **Sign to Run Locally**. Cloud then exports `CI_DEVELOPMENT_SIGNED_APP_PATH` and `CI_APP_STORE_SIGNED_APP_PATH` only.
+   - **Distribution Preparation: None** (the control may be labelled **Deployment Preparation**) ad-hoc-signs the archive. Cloud runs `xcodebuild` with `CODE_SIGN_IDENTITY=-` and `AD_HOC_CODE_SIGNING_ALLOWED=YES` even when `Config/Release-Signing.xcconfig` says `Developer ID Application`. The log shows **Sign to Run Locally**. With the Notarize post-action configured, Cloud still runs a Developer ID Managed export and sets `CI_DEVELOPER_ID_SIGNED_APP_PATH` (Build 6 and Build 12). It also exports `CI_DEVELOPMENT_SIGNED_APP_PATH` and `CI_APP_STORE_SIGNED_APP_PATH`.
    - Leave TestFlight and App Store off this workflow.
    - Optional: a **Test** action before Archive. The existing Build + Test workflow already covers PRs and `main`.
 5. **Post-Actions** (on the Archive action)
-   - **+** → **Notarize**. Keep it. It runs **after** `ci_post_xcodebuild.sh`, so `CI_DEVELOPER_ID_SIGNED_APP_PATH` is not available to the script. Notarize is what makes Cloud install the **Developer ID Application** certificate, and the build page's notarized app is the one to download by hand if you are not using the GitHub zip.
-6. **Signing certificates**: Xcode Cloud → Settings (or the workflow’s signing section) → create or upload **Developer ID Application** for this team. Cloud can create it when the account role allows. `codesign` in `ci_post` fails the build when that identity is missing.
+   - **+** → **Notarize**. Keep it. Notarize runs after `ci_post_xcodebuild.sh` for Apple's notarization pass, and when it is configured Cloud sets `CI_DEVELOPER_ID_SIGNED_APP_PATH` for that script from the Developer ID Managed export. Build 6 uploaded the GitHub zip from that path. The build page's notarized app remains available to download by hand.
+6. **Signing certificates**: Xcode Cloud → Settings (or the workflow’s signing section) → create or upload **Developer ID Application** for this team. Cloud can create a Managed certificate when the account role allows. That export is what sets `CI_DEVELOPER_ID_SIGNED_APP_PATH`. The codesign fallback runs only when that variable is missing or empty, and it fails the build when no matching keychain identity exists.
 7. Save.
 
 **Required environment** (Release workflow; do not commit any of these):
 
 | Variable | Role |
 | --- | --- |
-| `DEVELOPMENT_TEAM` | Team ID. Prefers the Developer ID Application identity whose name contains it. A single identity that does not display it is still used. Not printed. |
+| `DEVELOPMENT_TEAM` | Team ID. Used by the codesign fallback to select `Developer ID Application: … (TEAM)`. The Managed path uses `CI_DEVELOPER_ID_SIGNED_APP_PATH` instead. Not printed. |
 | `APP_STORE_CONNECT_KEY_ID` | Secret. `notarytool` key id. Tag Archives fail closed if missing. |
 | `APP_STORE_CONNECT_ISSUER_ID` | Secret. `notarytool` issuer. Tag Archives fail closed if missing. |
 | `APP_STORE_CONNECT_API_KEY_P8` | Secret. Full `.p8` PEM. Tag Archives fail closed if missing. |
@@ -96,10 +96,10 @@ Keep the existing **Build + Test** workflow. Add a second workflow for tags.
 
 Xcode Cloud's `xcodebuild archive` command line sets `CODE_SIGN_IDENTITY=-` and `AD_HOC_CODE_SIGNING_ALLOWED=YES`. Command-line build settings outrank `Config/Release-Signing.xcconfig` and the Xcode project, so the overlay's `CODE_SIGN_IDENTITY` is ignored. The archived `.app` is **Sign to Run Locally** and has no team. `xcodebuild -exportArchive` then fails: `exportArchive No Team Found in Archive`. Putting `teamID` in an export options plist does not fix an ad-hoc archive. `ci_post` does not call `exportArchive`.
 
-`ci_scripts/ci_post_xcodebuild.sh` runs after `xcodebuild` and **before** Cloud’s Notarize post-action. On a successful Archive (`CI_ARCHIVE_PATH` set, exit code 0):
+`ci_scripts/ci_post_xcodebuild.sh` runs after `xcodebuild`. Cloud sets `CI_DEVELOPER_ID_SIGNED_APP_PATH` for that script when the Notarize post-action is configured, including on Build 6, which uploaded the GitHub zip from it. On a successful Archive (`CI_ARCHIVE_PATH` set, exit code 0):
 
-1. Copy `CI_ARCHIVE_PATH/Products/Applications/Eloquent.app`. If that bundle is missing, copy `CI_DEVELOPMENT_SIGNED_APP_PATH` instead.
-2. `codesign --force --sign` a Developer ID Application identity, with `--options runtime --timestamp` and the app's entitlements. Prefer the identity whose name contains `DEVELOPMENT_TEAM`. If the keychain has one Developer ID Application identity and its name does not contain that Team ID, sign with that identity. The chosen identity name is not printed. Only identities under `Valid identities only` are eligible when `security find-identity` prints that section. If no identity can be chosen, the build fails and the log includes a redacted `security find-identity -v -p codesigning` listing (certificate names stay, team ids are `([team])`).
+1. If `CI_DEVELOPER_ID_SIGNED_APP_PATH` is set and contains `Eloquent.app`, copy that Developer ID Managed app. Do not codesign it again.
+2. If that variable is missing or empty, `codesign --force --sign` the archived app (or `CI_DEVELOPMENT_SIGNED_APP_PATH` if the archive product is missing) with the `Developer ID Application: … (DEVELOPMENT_TEAM)` identity, `--options runtime --timestamp`, and the app's entitlements. The identity name is not printed. If no identity matches, the build fails and the log includes a redacted `security find-identity -v -p codesigning` listing (certificate names stay, team ids are `([team])`).
 3. On a tag-triggered Archive (`CI_TAG`, `CI_GIT_TAG`, or `CI_GIT_REF=refs/tags/…`): `xcrun notarytool submit --wait` with the three ASC secrets, then `xcrun stapler staple` the `.app`. Missing secrets fail the build.
 4. Zip the stapled `.app` (`ditto`; stapler cannot staple a zip).
 5. Create or update the GitHub Release for that tag and upload the zip (`GITHUB_TOKEN` / `GH_TOKEN`). Upload skips when the token is missing.

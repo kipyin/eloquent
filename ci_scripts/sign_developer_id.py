@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
-"""Sign an Xcode Cloud app with Developer ID Application.
+"""Codesign an app with Developer ID Application.
 
-Cloud's archive command passes CODE_SIGN_IDENTITY=- and
-AD_HOC_CODE_SIGNING_ALLOWED=YES, which overrides Release-Signing.xcconfig.
-The .xcarchive is Sign to Run Locally and has no team, so exportArchive fails
-with "No Team Found in Archive". codesign replaces that signature directly.
-Notarize runs after ci_post, so CI_DEVELOPER_ID_SIGNED_APP_PATH is not set yet.
+ci_post calls this only when CI_DEVELOPER_ID_SIGNED_APP_PATH is missing or
+empty. On Xcode Cloud with the Notarize post-action, that variable is the
+Developer ID Managed export and this script does not run.
 """
 
 import argparse
@@ -17,9 +15,10 @@ import sys
 import tempfile
 
 TEAM_RE = re.compile(r"^[A-Za-z0-9]{10}$")
-QUOTED_DEVELOPER_ID_RE = re.compile(r'"(Developer ID Application:[^"]*)"')
+IDENTITY_RE = re.compile(
+    r'"(Developer ID Application:[^"]*\(([A-Za-z0-9]{10})\))"'
+)
 PAREN_TEAM_RE = re.compile(r"\(([A-Za-z0-9]{10})\)")
-VALID_IDENTITIES_MARKER = "Valid identities only"
 
 
 def log(message):
@@ -42,41 +41,10 @@ def run_codesign(args):
     return completed.returncode, stdout, stderr
 
 
-def identity_listing(security_output):
-    marker_at = security_output.find(VALID_IDENTITIES_MARKER)
-    if marker_at == -1:
-        return security_output
-    return security_output[marker_at + len(VALID_IDENTITIES_MARKER) :]
-
-
-def embedded_teams(name):
-    return [match.group(1) for match in PAREN_TEAM_RE.finditer(name)]
-
-
-def developer_id_names(security_output):
-    names = []
-    for match in QUOTED_DEVELOPER_ID_RE.finditer(identity_listing(security_output)):
-        name = match.group(1).strip()
-        if name not in names:
-            names.append(name)
-    return names
-
-
-def choose_developer_id_identity(security_output, team):
-    """Pick the Developer ID Application identity codesign should use.
-
-    Prefer a name that contains DEVELOPMENT_TEAM. One Developer ID
-    Application identity is still used when its common name has no team
-    id, or shows a different team. Cloud often displays that certificate
-    as "Developer ID Application: <person>".
-    """
-    names = developer_id_names(security_output)
-    wanted = team.upper()
-    for name in names:
-        if any(item.upper() == wanted for item in embedded_teams(name)):
-            return name
-    if len(names) == 1:
-        return names[0]
+def developer_id_identity(security_output, team):
+    for match in IDENTITY_RE.finditer(security_output):
+        if match.group(2) == team:
+            return match.group(1)
     return ""
 
 
@@ -102,12 +70,12 @@ def require_identity(team):
     )
     stdout = found.stdout.decode("utf-8", "replace")
     stderr = found.stderr.decode("utf-8", "replace")
-    identity = choose_developer_id_identity(stdout, team)
+    identity = developer_id_identity(stdout, team)
     if not identity:
         log(
             "no Developer ID Application identity for DEVELOPMENT_TEAM "
-            "(value not logged). The Release workflow's Notarize post-action "
-            "installs that certificate. See docs/release.md."
+            "(value not logged). This codesign fallback runs only when "
+            "CI_DEVELOPER_ID_SIGNED_APP_PATH is missing. See docs/release.md."
         )
         log("security find-identity -v -p codesigning:")
         listing = safe_listing(stdout, team)
@@ -118,11 +86,6 @@ def require_identity(team):
         else:
             log("(no output)")
         raise SystemExit(3)
-    if not any(item.upper() == team.upper() for item in embedded_teams(identity)):
-        log(
-            "using the only Developer ID Application identity; "
-            "its name does not contain DEVELOPMENT_TEAM (values not logged)."
-        )
     return identity
 
 

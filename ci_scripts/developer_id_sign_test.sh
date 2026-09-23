@@ -1,6 +1,7 @@
 #!/bin/sh
 # Ad-hoc Xcode Cloud archives cannot Developer ID-export (No Team Found).
-# ci_post must codesign the archived app instead of calling exportArchive.
+# When CI_DEVELOPER_ID_SIGNED_APP_PATH is set, ci_post uses that Managed app.
+# Otherwise it codesigns the archived app instead of calling exportArchive.
 set -eu
 
 SCRIPT_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
@@ -65,28 +66,6 @@ if [ "$1" = "find-identity" ]; then
 	none)
 		printf '%s\n' '  1) AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA "Apple Development: Example (TESTTEAM01)"'
 		;;
-	name-only)
-		printf '%s\n' '  1) BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB "Developer ID Application: Example Person"'
-		;;
-	other-team)
-		printf '%s\n' '  1) CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC "Developer ID Application: Example Person (OTHERTEAM1)"'
-		;;
-	ambiguous)
-		printf '%s\n' '  1) DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD "Developer ID Application: One (OTHERTEAM1)"'
-		printf '%s\n' '  2) EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE "Developer ID Application: Two (OTHERTEAM2)"'
-		;;
-	prefer-match)
-		printf '%s\n' '  1) FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF "Developer ID Application: Other (OTHERTEAM1)"'
-		printf '%s\n' '  2) AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA "Developer ID Application: Example (TESTTEAM01)"'
-		;;
-	valid-section)
-		printf '%s\n' '  Matching identities'
-		printf '%s\n' '  1) DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD "Developer ID Application: Expired (TESTTEAM01)"'
-		printf '%s\n' '     1 identities found'
-		printf '%s\n' '  Valid identities only'
-		printf '%s\n' '  1) BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB "Developer ID Application: Example Person"'
-		printf '%s\n' '     1 valid identities found'
-		;;
 	secret)
 		printf '%s\n' '-----BEGIN PRIVATE KEY-----'
 		printf '%s\n' 'not-a-real-key'
@@ -123,85 +102,7 @@ grep -q -- "--options runtime" "$CODESIGN_LOG" || fail "hardened runtime flag mi
 grep -q -- "--timestamp" "$CODESIGN_LOG" || fail "timestamp missing"
 grep -q -- "--entitlements" "$CODESIGN_LOG" || fail "entitlements were not passed"
 grep -q "signed the app with Developer ID Application" "$log" || fail "missing sign confirmation"
-if grep -q "does not contain DEVELOPMENT_TEAM" "$log"; then
-	fail "exact team match should not use the single-identity fallback"
-fi
 echo "ok: codesign developer id"
-
-# Cloud displays one Developer ID as the person name, with no team id in the string.
-log="$TMP/name-only.log"
-: > "$TMP/sign-state"
-CODESIGN_LOG="$TMP/name-only-codesign.log"
-PATH="$TMP/bin:/usr/bin:/bin" SECURITY_IDENTITIES=name-only DEVELOPMENT_TEAM=$TEAM python3 "$SIGN" \
-	--source "$SRC" --dest "$TMP/name-only/Eloquent.app" >"$TMP/name-only.out" 2>"$log" \
-	|| fail "name-only Developer ID identity should be used"
-assert_log_hides "$log" "$TEAM"
-grep -q "does not contain DEVELOPMENT_TEAM" "$log" || fail "name-only fallback was not reported"
-grep -q -- "--sign Developer ID Application: Example Person" "$CODESIGN_LOG" || fail "did not sign the name-only identity"
-echo "ok: name-only identity"
-
-# One Developer ID whose parenthetical team is not DEVELOPMENT_TEAM.
-OTHER_TEAM=OTHERTEAM1
-log="$TMP/other-team.log"
-: > "$TMP/sign-state"
-CODESIGN_LOG="$TMP/other-team-codesign.log"
-PATH="$TMP/bin:/usr/bin:/bin" SECURITY_IDENTITIES=other-team DEVELOPMENT_TEAM=$TEAM python3 "$SIGN" \
-	--source "$SRC" --dest "$TMP/other-team/Eloquent.app" >"$TMP/other-team.out" 2>"$log" \
-	|| fail "single Developer ID identity should be used when the displayed team differs"
-assert_log_hides "$log" "$TEAM"
-assert_log_hides "$log" "$OTHER_TEAM"
-grep -q -- "--sign Developer ID Application: Example Person (OTHERTEAM1)" "$CODESIGN_LOG" || fail "did not sign the only Developer ID identity"
-echo "ok: single identity with a different team display"
-
-# Ignore identities listed only above "Valid identities only".
-log="$TMP/valid.log"
-: > "$TMP/sign-state"
-CODESIGN_LOG="$TMP/valid-codesign.log"
-PATH="$TMP/bin:/usr/bin:/bin" SECURITY_IDENTITIES=valid-section DEVELOPMENT_TEAM=$TEAM python3 "$SIGN" \
-	--source "$SRC" --dest "$TMP/valid/Eloquent.app" >"$TMP/valid.out" 2>"$log" \
-	|| fail "valid-section Developer ID identity should be used"
-assert_log_hides "$log" "$TEAM"
-grep -q -- "--sign Developer ID Application: Example Person" "$CODESIGN_LOG" || fail "signed an identity from outside Valid identities only"
-if grep -q "Expired" "$CODESIGN_LOG"; then
-	fail "signed the expired identity"
-fi
-echo "ok: valid identities only"
-
-# Several Developer ID identities and none contain DEVELOPMENT_TEAM: do not guess.
-log="$TMP/ambiguous.log"
-CODESIGN_LOG="$TMP/ambiguous-codesign.log"
-: > "$CODESIGN_LOG"
-set +e
-PATH="$TMP/bin:/usr/bin:/bin" SECURITY_IDENTITIES=ambiguous DEVELOPMENT_TEAM=$TEAM python3 "$SIGN" \
-	--source "$SRC" --dest "$TMP/ambiguous/Eloquent.app" >"$TMP/ambiguous.out" 2>"$log"
-code=$?
-set -e
-[ "$code" -eq 3 ] || fail "expected exit 3 for ambiguous identities, got $code"
-assert_log_hides "$log" "$TEAM"
-assert_log_hides "$log" "$OTHER_TEAM"
-assert_log_hides "$log" "OTHERTEAM2"
-grep -q "no Developer ID Application identity" "$log" || fail "ambiguous identities were not reported"
-grep -q "security find-identity -v -p codesigning" "$log" || fail "ambiguous failure omitted the identity listing"
-grep -q '(\[team\])' "$log" || fail "team id in the identity listing was not masked"
-if grep -q -- "--force" "$CODESIGN_LOG"; then
-	fail "ambiguous identities should not codesign"
-fi
-echo "ok: ambiguous identities fail"
-
-# When several identities exist, the one that contains DEVELOPMENT_TEAM wins.
-log="$TMP/prefer.log"
-: > "$TMP/sign-state"
-CODESIGN_LOG="$TMP/prefer-codesign.log"
-PATH="$TMP/bin:/usr/bin:/bin" SECURITY_IDENTITIES=prefer-match DEVELOPMENT_TEAM=$TEAM python3 "$SIGN" \
-	--source "$SRC" --dest "$TMP/prefer/Eloquent.app" >"$TMP/prefer.out" 2>"$log" \
-	|| fail "matching identity should win over another Developer ID"
-assert_log_hides "$log" "$TEAM"
-assert_log_hides "$log" "$OTHER_TEAM"
-grep -q -- "--sign Developer ID Application: Example (TESTTEAM01)" "$CODESIGN_LOG" || fail "did not prefer the matching team"
-if grep -q "does not contain DEVELOPMENT_TEAM" "$log"; then
-	fail "a team match should not use the single-identity fallback"
-fi
-echo "ok: prefer matching team"
 
 # No matching identity: fail, and do not print the team. Print a redacted listing.
 log="$TMP/noid.log"
@@ -304,6 +205,80 @@ if [ -s "$XCODEBUILD_LOG" ]; then
 fi
 test -d "$POST_ROOT/build/release/Eloquent.app/Contents/MacOS" || fail "ci_post did not write the signed app"
 echo "ok: ci_post signs archived app"
+
+# An empty CI_DEVELOPER_ID_SIGNED_APP_PATH is the same codesign fallback.
+: > "$TMP/sign-state"
+log="$TMP/empty-path.log"
+: > "$TMP/empty-codesign.log"
+env -u GITHUB_TOKEN -u GH_TOKEN -u CI_TAG -u CI_GIT_TAG -u CI_GIT_REF \
+	-u CI_DEVELOPMENT_SIGNED_APP_PATH -u APP_STORE_CONNECT_API_KEY_P8 \
+	-u CODESIGN_FORCE_EXIT -u SECURITY_IDENTITIES \
+	CI_ARCHIVE_PATH="$POST_ROOT/Eloquent.xcarchive" \
+	CI_DEVELOPER_ID_SIGNED_APP_PATH= \
+	CI_XCODEBUILD_EXIT_CODE=0 \
+	CI_PRIMARY_REPOSITORY_PATH="$POST_ROOT" \
+	CI_PRODUCT=Eloquent \
+	DEVELOPMENT_TEAM=$TEAM \
+	CODESIGN_LOG="$TMP/empty-codesign.log" \
+	PATH="$TMP/bin:/usr/bin:/bin" \
+	sh "$SCRIPT_DIR/ci_post_xcodebuild.sh" >"$log" 2>&1 || fail "empty Managed path should codesign"
+grep -q "signing the archived app" "$log" || fail "empty Managed path should sign the archive"
+grep -q -- "--force" "$TMP/empty-codesign.log" || fail "empty Managed path did not codesign"
+echo "ok: empty CI_DEVELOPER_ID_SIGNED_APP_PATH codesigns"
+
+# Notarize configured: use the Managed app and do not codesign it.
+MANAGED="$TMP/managed/Eloquent.app"
+make_app "$MANAGED"
+printf 'developer-id-managed\n' > "$MANAGED/Contents/MacOS/marker"
+printf 'archive-product\n' > "$POST_ROOT/Eloquent.xcarchive/Products/Applications/Eloquent.app/Contents/MacOS/marker"
+: > "$TMP/sign-state"
+log="$TMP/managed.log"
+: > "$TMP/managed-codesign.log"
+: > "$XCODEBUILD_LOG"
+env -u GITHUB_TOKEN -u GH_TOKEN -u CI_TAG -u CI_GIT_TAG -u CI_GIT_REF \
+	-u CI_DEVELOPMENT_SIGNED_APP_PATH -u DEVELOPMENT_TEAM \
+	-u APP_STORE_CONNECT_API_KEY_P8 -u CODESIGN_FORCE_EXIT -u SECURITY_IDENTITIES \
+	CI_ARCHIVE_PATH="$POST_ROOT/Eloquent.xcarchive" \
+	CI_DEVELOPER_ID_SIGNED_APP_PATH="$MANAGED" \
+	CI_XCODEBUILD_EXIT_CODE=0 \
+	CI_PRIMARY_REPOSITORY_PATH="$POST_ROOT" \
+	CI_PRODUCT=Eloquent \
+	CODESIGN_LOG="$TMP/managed-codesign.log" \
+	PATH="$TMP/bin:/usr/bin:/bin" \
+	sh "$SCRIPT_DIR/ci_post_xcodebuild.sh" >"$log" 2>&1 || fail "managed app path failed"
+grep -q "using CI_DEVELOPER_ID_SIGNED_APP_PATH" "$log" || fail "ci_post should use the Managed app"
+if grep -q -- "--force" "$TMP/managed-codesign.log"; then
+	fail "Managed app was codesigned"
+fi
+grep -q "developer-id-managed" "$POST_ROOT/build/release/Eloquent.app/Contents/MacOS/marker" || fail "release app is not the Managed export"
+if [ -s "$XCODEBUILD_LOG" ]; then
+	fail "managed path called xcodebuild"
+fi
+echo "ok: ci_post uses CI_DEVELOPER_ID_SIGNED_APP_PATH"
+
+# A set path that is not an app is not the codesign fallback.
+log="$TMP/bad-managed.log"
+: > "$TMP/bad-managed-codesign.log"
+set +e
+env -u GITHUB_TOKEN -u GH_TOKEN -u CI_TAG -u CI_GIT_TAG -u CI_GIT_REF \
+	-u CI_DEVELOPMENT_SIGNED_APP_PATH -u APP_STORE_CONNECT_API_KEY_P8 \
+	CI_ARCHIVE_PATH="$POST_ROOT/Eloquent.xcarchive" \
+	CI_DEVELOPER_ID_SIGNED_APP_PATH="$TMP/missing-managed" \
+	CI_XCODEBUILD_EXIT_CODE=0 \
+	CI_PRIMARY_REPOSITORY_PATH="$POST_ROOT" \
+	CI_PRODUCT=Eloquent \
+	DEVELOPMENT_TEAM=$TEAM \
+	CODESIGN_LOG="$TMP/bad-managed-codesign.log" \
+	PATH="$TMP/bin:/usr/bin:/bin" \
+	sh "$SCRIPT_DIR/ci_post_xcodebuild.sh" >"$log" 2>&1
+code=$?
+set -e
+[ "$code" -ne 0 ] || fail "a missing Managed app should fail"
+grep -q "was not found" "$log" || fail "missing Managed app was not reported"
+if grep -q -- "--force" "$TMP/bad-managed-codesign.log"; then
+	fail "missing Managed app fell through to codesign"
+fi
+echo "ok: set CI_DEVELOPER_ID_SIGNED_APP_PATH must exist"
 
 # Archive product missing: sign the development export instead.
 DEV_APP="$TMP/dev/Eloquent.app"
