@@ -61,11 +61,40 @@ EOF
 	cat > "$bin/security" <<'EOF'
 #!/bin/sh
 if [ "$1" = "find-identity" ]; then
-	if [ "${SECURITY_IDENTITIES:-developer-id}" = "none" ]; then
+	case "${SECURITY_IDENTITIES:-developer-id}" in
+	none)
 		printf '%s\n' '  1) AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA "Apple Development: Example (TESTTEAM01)"'
-	else
+		;;
+	name-only)
+		printf '%s\n' '  1) BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB "Developer ID Application: Example Person"'
+		;;
+	other-team)
+		printf '%s\n' '  1) CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC "Developer ID Application: Example Person (OTHERTEAM1)"'
+		;;
+	ambiguous)
+		printf '%s\n' '  1) DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD "Developer ID Application: One (OTHERTEAM1)"'
+		printf '%s\n' '  2) EEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEEE "Developer ID Application: Two (OTHERTEAM2)"'
+		;;
+	prefer-match)
+		printf '%s\n' '  1) FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF "Developer ID Application: Other (OTHERTEAM1)"'
+		printf '%s\n' '  2) AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA "Developer ID Application: Example (TESTTEAM01)"'
+		;;
+	valid-section)
+		printf '%s\n' '  Matching identities'
+		printf '%s\n' '  1) DDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDDD "Developer ID Application: Expired (TESTTEAM01)"'
+		printf '%s\n' '     1 identities found'
+		printf '%s\n' '  Valid identities only'
+		printf '%s\n' '  1) BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB "Developer ID Application: Example Person"'
+		printf '%s\n' '     1 valid identities found'
+		;;
+	secret)
+		printf '%s\n' '-----BEGIN PRIVATE KEY-----'
+		printf '%s\n' 'not-a-real-key'
+		;;
+	*)
 		printf '%s\n' '  1) AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA "Developer ID Application: Example (TESTTEAM01)"'
-	fi
+		;;
+	esac
 	exit 0
 fi
 exit 1
@@ -94,15 +123,113 @@ grep -q -- "--options runtime" "$CODESIGN_LOG" || fail "hardened runtime flag mi
 grep -q -- "--timestamp" "$CODESIGN_LOG" || fail "timestamp missing"
 grep -q -- "--entitlements" "$CODESIGN_LOG" || fail "entitlements were not passed"
 grep -q "signed the app with Developer ID Application" "$log" || fail "missing sign confirmation"
+if grep -q "does not contain DEVELOPMENT_TEAM" "$log"; then
+	fail "exact team match should not use the single-identity fallback"
+fi
 echo "ok: codesign developer id"
 
-# No matching identity: fail, and do not print the team.
+# Cloud displays one Developer ID as the person name, with no team id in the string.
+log="$TMP/name-only.log"
+: > "$TMP/sign-state"
+CODESIGN_LOG="$TMP/name-only-codesign.log"
+PATH="$TMP/bin:/usr/bin:/bin" SECURITY_IDENTITIES=name-only DEVELOPMENT_TEAM=$TEAM python3 "$SIGN" \
+	--source "$SRC" --dest "$TMP/name-only/Eloquent.app" >"$TMP/name-only.out" 2>"$log" \
+	|| fail "name-only Developer ID identity should be used"
+assert_log_hides "$log" "$TEAM"
+grep -q "does not contain DEVELOPMENT_TEAM" "$log" || fail "name-only fallback was not reported"
+grep -q -- "--sign Developer ID Application: Example Person" "$CODESIGN_LOG" || fail "did not sign the name-only identity"
+echo "ok: name-only identity"
+
+# One Developer ID whose parenthetical team is not DEVELOPMENT_TEAM.
+OTHER_TEAM=OTHERTEAM1
+log="$TMP/other-team.log"
+: > "$TMP/sign-state"
+CODESIGN_LOG="$TMP/other-team-codesign.log"
+PATH="$TMP/bin:/usr/bin:/bin" SECURITY_IDENTITIES=other-team DEVELOPMENT_TEAM=$TEAM python3 "$SIGN" \
+	--source "$SRC" --dest "$TMP/other-team/Eloquent.app" >"$TMP/other-team.out" 2>"$log" \
+	|| fail "single Developer ID identity should be used when the displayed team differs"
+assert_log_hides "$log" "$TEAM"
+assert_log_hides "$log" "$OTHER_TEAM"
+grep -q -- "--sign Developer ID Application: Example Person (OTHERTEAM1)" "$CODESIGN_LOG" || fail "did not sign the only Developer ID identity"
+echo "ok: single identity with a different team display"
+
+# Ignore identities listed only above "Valid identities only".
+log="$TMP/valid.log"
+: > "$TMP/sign-state"
+CODESIGN_LOG="$TMP/valid-codesign.log"
+PATH="$TMP/bin:/usr/bin:/bin" SECURITY_IDENTITIES=valid-section DEVELOPMENT_TEAM=$TEAM python3 "$SIGN" \
+	--source "$SRC" --dest "$TMP/valid/Eloquent.app" >"$TMP/valid.out" 2>"$log" \
+	|| fail "valid-section Developer ID identity should be used"
+assert_log_hides "$log" "$TEAM"
+grep -q -- "--sign Developer ID Application: Example Person" "$CODESIGN_LOG" || fail "signed an identity from outside Valid identities only"
+if grep -q "Expired" "$CODESIGN_LOG"; then
+	fail "signed the expired identity"
+fi
+echo "ok: valid identities only"
+
+# Several Developer ID identities and none contain DEVELOPMENT_TEAM: do not guess.
+log="$TMP/ambiguous.log"
+CODESIGN_LOG="$TMP/ambiguous-codesign.log"
+: > "$CODESIGN_LOG"
+set +e
+PATH="$TMP/bin:/usr/bin:/bin" SECURITY_IDENTITIES=ambiguous DEVELOPMENT_TEAM=$TEAM python3 "$SIGN" \
+	--source "$SRC" --dest "$TMP/ambiguous/Eloquent.app" >"$TMP/ambiguous.out" 2>"$log"
+code=$?
+set -e
+[ "$code" -eq 3 ] || fail "expected exit 3 for ambiguous identities, got $code"
+assert_log_hides "$log" "$TEAM"
+assert_log_hides "$log" "$OTHER_TEAM"
+assert_log_hides "$log" "OTHERTEAM2"
+grep -q "no Developer ID Application identity" "$log" || fail "ambiguous identities were not reported"
+grep -q "security find-identity -v -p codesigning" "$log" || fail "ambiguous failure omitted the identity listing"
+grep -q '(\[team\])' "$log" || fail "team id in the identity listing was not masked"
+if grep -q -- "--force" "$CODESIGN_LOG"; then
+	fail "ambiguous identities should not codesign"
+fi
+echo "ok: ambiguous identities fail"
+
+# When several identities exist, the one that contains DEVELOPMENT_TEAM wins.
+log="$TMP/prefer.log"
+: > "$TMP/sign-state"
+CODESIGN_LOG="$TMP/prefer-codesign.log"
+PATH="$TMP/bin:/usr/bin:/bin" SECURITY_IDENTITIES=prefer-match DEVELOPMENT_TEAM=$TEAM python3 "$SIGN" \
+	--source "$SRC" --dest "$TMP/prefer/Eloquent.app" >"$TMP/prefer.out" 2>"$log" \
+	|| fail "matching identity should win over another Developer ID"
+assert_log_hides "$log" "$TEAM"
+assert_log_hides "$log" "$OTHER_TEAM"
+grep -q -- "--sign Developer ID Application: Example (TESTTEAM01)" "$CODESIGN_LOG" || fail "did not prefer the matching team"
+if grep -q "does not contain DEVELOPMENT_TEAM" "$log"; then
+	fail "a team match should not use the single-identity fallback"
+fi
+echo "ok: prefer matching team"
+
+# No matching identity: fail, and do not print the team. Print a redacted listing.
 log="$TMP/noid.log"
+set +e
 PATH="$TMP/bin:/usr/bin:/bin" SECURITY_IDENTITIES=none DEVELOPMENT_TEAM=$TEAM python3 "$SIGN" \
-	--source "$SRC" --dest "$TMP/noid/Eloquent.app" >"$TMP/noid.out" 2>"$log" && fail "missing identity should fail"
+	--source "$SRC" --dest "$TMP/noid/Eloquent.app" >"$TMP/noid.out" 2>"$log"
+code=$?
+set -e
+[ "$code" -eq 3 ] || fail "expected exit 3 for a missing identity, got $code"
 assert_log_hides "$log" "$TEAM"
 grep -q "no Developer ID Application identity" "$log" || fail "missing identity was not reported"
+grep -q "security find-identity -v -p codesigning" "$log" || fail "missing identity omitted the identity listing"
+grep -q "Apple Development: Example (\[team\])" "$log" || fail "redacted listing missing"
 echo "ok: missing identity fails"
+
+# A listing that looks like a PEM is not printed.
+log="$TMP/secret.log"
+set +e
+PATH="$TMP/bin:/usr/bin:/bin" SECURITY_IDENTITIES=secret DEVELOPMENT_TEAM=$TEAM python3 "$SIGN" \
+	--source "$SRC" --dest "$TMP/secret/Eloquent.app" >"$TMP/secret.out" 2>"$log"
+code=$?
+set -e
+[ "$code" -eq 3 ] || fail "expected exit 3 when the listing is unusable, got $code"
+if grep -q "BEGIN PRIVATE KEY" "$log" || grep -q "not-a-real-key" "$log"; then
+	fail "identity listing leaked key material"
+fi
+grep -q "unexpected secret material" "$log" || fail "secret listing was not replaced"
+echo "ok: secret listing is not printed"
 
 # A non-id value is not a team and is not logged.
 secret=supersecretvalue

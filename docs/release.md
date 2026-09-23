@@ -64,7 +64,7 @@ Keep the existing **Build + Test** workflow. Add a second workflow for tags.
    - Xcode: Latest Release (or the version you already use for Test).
    - macOS: Latest Release.
    - Environment variables:
-     - `DEVELOPMENT_TEAM` = your Team ID. `ci_pre_xcodebuild.sh` writes `Config/Release-Signing.xcconfig` from this on Archive only. It does not print the value. `ci_post_xcodebuild.sh` uses it to choose the Developer ID Application identity. The value is not printed.
+     - `DEVELOPMENT_TEAM` = your Team ID. `ci_pre_xcodebuild.sh` writes `Config/Release-Signing.xcconfig` from this on Archive only. It does not print the value. `ci_post_xcodebuild.sh` prefers the Developer ID Application identity whose name contains this Team ID. When the keychain has a single Developer ID Application identity and that name does not contain the Team ID (Cloud shows `Developer ID Application: <person>`), that identity is used. The value is not printed. If no identity can be chosen, the log includes `security find-identity -v -p codesigning` with every `(TEAMID)` shown as `([team])`.
      - `GITHUB_TOKEN` or `GH_TOKEN` (mark **Secret**) = a GitHub PAT or fine-grained token with **Contents: Read and write** on `kipyin/eloquent`, so the post script can attach the zip. Omit this until you want automatic upload; the script then notarizes, zips, and logs that upload was skipped.
      - `APP_STORE_CONNECT_KEY_ID` (mark **Secret**) = Key ID of an App Store Connect API key (role **Developer** or higher) used by `notarytool`.
      - `APP_STORE_CONNECT_ISSUER_ID` (mark **Secret**) = Issuer ID from App Store Connect → Users and Access → Integrations → App Store Connect API.
@@ -88,7 +88,7 @@ Keep the existing **Build + Test** workflow. Add a second workflow for tags.
 
 | Variable | Role |
 | --- | --- |
-| `DEVELOPMENT_TEAM` | Team ID. Selects the Developer ID Application identity. Not printed. |
+| `DEVELOPMENT_TEAM` | Team ID. Prefers the Developer ID Application identity whose name contains it. A single identity that does not display it is still used. Not printed. |
 | `APP_STORE_CONNECT_KEY_ID` | Secret. `notarytool` key id. Tag Archives fail closed if missing. |
 | `APP_STORE_CONNECT_ISSUER_ID` | Secret. `notarytool` issuer. Tag Archives fail closed if missing. |
 | `APP_STORE_CONNECT_API_KEY_P8` | Secret. Full `.p8` PEM. Tag Archives fail closed if missing. |
@@ -99,7 +99,7 @@ Xcode Cloud's `xcodebuild archive` command line sets `CODE_SIGN_IDENTITY=-` and 
 `ci_scripts/ci_post_xcodebuild.sh` runs after `xcodebuild` and **before** Cloud’s Notarize post-action. On a successful Archive (`CI_ARCHIVE_PATH` set, exit code 0):
 
 1. Copy `CI_ARCHIVE_PATH/Products/Applications/Eloquent.app`. If that bundle is missing, copy `CI_DEVELOPMENT_SIGNED_APP_PATH` instead.
-2. `codesign --force --sign` the Developer ID Application identity for `DEVELOPMENT_TEAM`, with `--options runtime --timestamp` and the app's entitlements. The identity name is not printed.
+2. `codesign --force --sign` a Developer ID Application identity, with `--options runtime --timestamp` and the app's entitlements. Prefer the identity whose name contains `DEVELOPMENT_TEAM`. If the keychain has one Developer ID Application identity and its name does not contain that Team ID, sign with that identity. The chosen identity name is not printed. Only identities under `Valid identities only` are eligible when `security find-identity` prints that section. If no identity can be chosen, the build fails and the log includes a redacted `security find-identity -v -p codesigning` listing (certificate names stay, team ids are `([team])`).
 3. On a tag-triggered Archive (`CI_TAG`, `CI_GIT_TAG`, or `CI_GIT_REF=refs/tags/…`): `xcrun notarytool submit --wait` with the three ASC secrets, then `xcrun stapler staple` the `.app`. Missing secrets fail the build.
 4. Zip the stapled `.app` (`ditto`; stapler cannot staple a zip).
 5. Create or update the GitHub Release for that tag and upload the zip (`GITHUB_TOKEN` / `GH_TOKEN`). Upload skips when the token is missing.

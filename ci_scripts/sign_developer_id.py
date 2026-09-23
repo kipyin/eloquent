@@ -17,9 +17,9 @@ import sys
 import tempfile
 
 TEAM_RE = re.compile(r"^[A-Za-z0-9]{10}$")
-IDENTITY_RE = re.compile(
-    r'"(Developer ID Application:[^"]*\(([A-Za-z0-9]{10})\))"'
-)
+QUOTED_DEVELOPER_ID_RE = re.compile(r'"(Developer ID Application:[^"]*)"')
+PAREN_TEAM_RE = re.compile(r"\(([A-Za-z0-9]{10})\)")
+VALID_IDENTITIES_MARKER = "Valid identities only"
 
 
 def log(message):
@@ -27,9 +27,12 @@ def log(message):
 
 
 def redact(text, team):
-    if not text or not team:
+    if not text:
         return text
-    return text.replace(team, "[team]")
+    redacted = PAREN_TEAM_RE.sub("([team])", text)
+    if team:
+        redacted = re.sub(re.escape(team), "[team]", redacted, flags=re.IGNORECASE)
+    return redacted
 
 
 def run_codesign(args):
@@ -39,11 +42,50 @@ def run_codesign(args):
     return completed.returncode, stdout, stderr
 
 
-def developer_id_identity(security_output, team):
-    for match in IDENTITY_RE.finditer(security_output):
-        if match.group(2) == team:
-            return match.group(1)
+def identity_listing(security_output):
+    marker_at = security_output.find(VALID_IDENTITIES_MARKER)
+    if marker_at == -1:
+        return security_output
+    return security_output[marker_at + len(VALID_IDENTITIES_MARKER) :]
+
+
+def embedded_teams(name):
+    return [match.group(1) for match in PAREN_TEAM_RE.finditer(name)]
+
+
+def developer_id_names(security_output):
+    names = []
+    for match in QUOTED_DEVELOPER_ID_RE.finditer(identity_listing(security_output)):
+        name = match.group(1).strip()
+        if name not in names:
+            names.append(name)
+    return names
+
+
+def choose_developer_id_identity(security_output, team):
+    """Pick the Developer ID Application identity codesign should use.
+
+    Prefer a name that contains DEVELOPMENT_TEAM. One Developer ID
+    Application identity is still used when its common name has no team
+    id, or shows a different team. Cloud often displays that certificate
+    as "Developer ID Application: <person>".
+    """
+    names = developer_id_names(security_output)
+    wanted = team.upper()
+    for name in names:
+        if any(item.upper() == wanted for item in embedded_teams(name)):
+            return name
+    if len(names) == 1:
+        return names[0]
     return ""
+
+
+def safe_listing(text, team):
+    if not text or not text.strip():
+        return ""
+    if "PRIVATE KEY" in text or "BEGIN " in text:
+        return "[redacted: unexpected secret material]"
+    return redact(text, team)
 
 
 def is_developer_id(details):
@@ -58,14 +100,29 @@ def require_identity(team):
         check=False,
         capture_output=True,
     )
-    identity = developer_id_identity(found.stdout.decode("utf-8", "replace"), team)
+    stdout = found.stdout.decode("utf-8", "replace")
+    stderr = found.stderr.decode("utf-8", "replace")
+    identity = choose_developer_id_identity(stdout, team)
     if not identity:
         log(
             "no Developer ID Application identity for DEVELOPMENT_TEAM "
             "(value not logged). The Release workflow's Notarize post-action "
             "installs that certificate. See docs/release.md."
         )
+        log("security find-identity -v -p codesigning:")
+        listing = safe_listing(stdout, team)
+        if not listing.strip():
+            listing = safe_listing(stderr, team)
+        if listing.strip():
+            print(listing.rstrip(), file=sys.stderr)
+        else:
+            log("(no output)")
         raise SystemExit(3)
+    if not any(item.upper() == team.upper() for item in embedded_teams(identity)):
+        log(
+            "using the only Developer ID Application identity; "
+            "its name does not contain DEVELOPMENT_TEAM (values not logged)."
+        )
     return identity
 
 
