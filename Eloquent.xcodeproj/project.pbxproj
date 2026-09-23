@@ -531,7 +531,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 0.1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.kipyin.eloquent";
 				PRODUCT_NAME = Eloquent;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -559,7 +559,7 @@
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 0.1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.kipyin.eloquent";
 				PRODUCT_NAME = Eloquent;
 				SWIFT_EMIT_LOC_STRINGS = YES;
@@ -584,7 +584,7 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 0.1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.kipyin.eloquent.tests";
 				PRODUCT_NAME = EloquentTests;
 				SWIFT_VERSION = 5.0;
@@ -608,7 +608,7 @@
 					"@loader_path/../Frameworks",
 				);
 				MACOSX_DEPLOYMENT_TARGET = 14.0;
-				MARKETING_VERSION = 1.0.0;
+				MARKETING_VERSION = 0.1.5;
 				PRODUCT_BUNDLE_IDENTIFIER = "com.kipyin.eloquent.tests";
 				PRODUCT_NAME = EloquentTests;
 				SWIFT_VERSION = 5.0;

@@ -36,7 +36,9 @@ targets:
         SUPPORTED_PLATFORMS: macosx
         COMBINE_HIDPI_IMAGES: YES
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
-        MARKETING_VERSION: "1.0.0"
+        # Public SemVer, no leading v. Lockstep with git tags. See docs/release.md.
+        MARKETING_VERSION: "0.1.5"
+        # Build number. Independent of MARKETING_VERSION. Simple integer.
         CURRENT_PROJECT_VERSION: 1
       configs:
         debug:
@@ -74,6 +76,8 @@ targets:
         SWIFT_VERSION: "5.0"
         MACOSX_DEPLOYMENT_TARGET: "14.0"
         LD_RUNPATH_SEARCH_PATHS: "$(inherited) @executable_path/../Frameworks @loader_path/../Frameworks"
+        MARKETING_VERSION: "0.1.5"
+        CURRENT_PROJECT_VERSION: 1
 schemes:
   Eloquent:
     build:
