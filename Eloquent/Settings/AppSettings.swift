@@ -119,8 +119,6 @@ protocol SettingsProviding: AnyObject {
 final class AppSettings: ObservableObject, SettingsProviding {
     static let shared = AppSettings()
 
-    typealias Defaults = TTSDefaults
-
     private enum Keys {
         static let engine = "engine"
         static let endpoint = "endpoint"
@@ -189,19 +187,19 @@ final class AppSettings: ObservableObject, SettingsProviding {
         self.defaults = defaults
         self.secrets = secrets
         engine = Self.storedEngine(defaults.string(forKey: Keys.engine))
-        endpoint = Self.nonEmpty(defaults.string(forKey: Keys.endpoint), fallback: Defaults.endpoint)
-        model = Self.nonEmpty(defaults.string(forKey: Keys.model), fallback: Defaults.model)
-        voice = Self.nonEmpty(defaults.string(forKey: Keys.voice), fallback: Defaults.voice)
+        endpoint = Self.nonEmpty(defaults.string(forKey: Keys.endpoint), fallback: TTSDefaults.endpoint)
+        model = Self.nonEmpty(defaults.string(forKey: Keys.model), fallback: TTSDefaults.model)
+        voice = Self.nonEmpty(defaults.string(forKey: Keys.voice), fallback: TTSDefaults.voice)
         if let storedSpeed = defaults.object(forKey: Keys.speed) as? Double {
             speed = TTSDefaults.clampSpeed(storedSpeed)
         } else {
-            speed = Defaults.speed
+            speed = TTSDefaults.speed
         }
         if let raw = defaults.string(forKey: Keys.paragraphSplit),
            let stored = ParagraphSplitMode(rawValue: raw) {
             paragraphSplit = stored
         } else {
-            paragraphSplit = Defaults.paragraphSplit
+            paragraphSplit = TTSDefaults.paragraphSplit
         }
         speakHotkey = HotkeyBinding.fromStored(
             keyCode: defaults.object(forKey: Keys.speakHotkeyKeyCode) as? Int,
@@ -211,7 +209,7 @@ final class AppSettings: ObservableObject, SettingsProviding {
            let stored = SpeedApplyMode(rawValue: raw) {
             speedApply = stored
         } else {
-            speedApply = Defaults.speedApply
+            speedApply = TTSDefaults.speedApply
         }
         apiKey = secrets.loadAPIKey()
     }
@@ -230,15 +228,15 @@ final class AppSettings: ObservableObject, SettingsProviding {
     }
 
     func resetToDefaults() {
-        engine = Defaults.engine
-        endpoint = Defaults.endpoint
+        engine = TTSDefaults.engine
+        endpoint = TTSDefaults.endpoint
         apiKey = ""
-        model = Defaults.model
-        voice = Defaults.voice
-        speed = Defaults.speed
-        paragraphSplit = Defaults.paragraphSplit
+        model = TTSDefaults.model
+        voice = TTSDefaults.voice
+        speed = TTSDefaults.speed
+        paragraphSplit = TTSDefaults.paragraphSplit
         speakHotkey = .optionEscape
-        speedApply = Defaults.speedApply
+        speedApply = TTSDefaults.speedApply
     }
 
     private func applyEngineSwitch(from old: Engine, to new: Engine) {
