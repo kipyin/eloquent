@@ -1,11 +1,5 @@
-import Foundation
-
 struct HotkeyModifiers: OptionSet, Hashable, Sendable {
     let rawValue: UInt8
-
-    init(rawValue: UInt8) {
-        self.rawValue = rawValue
-    }
 
     static let command = HotkeyModifiers(rawValue: 1 << 0)
     static let option = HotkeyModifiers(rawValue: 1 << 1)
@@ -36,11 +30,6 @@ struct HotkeyBinding: Hashable, Sendable {
 
     var keyCode: UInt16
     var modifiers: HotkeyModifiers
-
-    init(keyCode: UInt16, modifiers: HotkeyModifiers) {
-        self.keyCode = keyCode
-        self.modifiers = modifiers
-    }
 
     static let optionEscape = HotkeyBinding(keyCode: escapeKeyCode, modifiers: .option)
 
