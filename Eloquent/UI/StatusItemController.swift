@@ -90,7 +90,7 @@ final class StatusItemController: NSObject {
             action: #selector(speakMenuItem),
             keyEquivalent: hotkey.menuKeyEquivalent
         )
-        speakItem.keyEquivalentModifierMask = hotkey.menuModifierFlags
+        speakItem.keyEquivalentModifierMask = hotkey.modifiers.nsEventFlags
         speakItem.target = self
         menu.addItem(speakItem)
 
