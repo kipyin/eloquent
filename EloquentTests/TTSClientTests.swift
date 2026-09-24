@@ -44,13 +44,13 @@ final class TTSClientTests: XCTestCase {
         }
     }
 
-    func testSpeechURLStripsTrailingSlashAndAppendsAudioSpeech() async throws {
+    func testSpeechURLStripsTrailingSlashesAndAppendsAudioSpeech() async throws {
         let transport = FakeHTTPTransport()
         let client = TTSClient(transport: transport)
 
         _ = try await client.synthesize(
             text: "Hello",
-            settings: makeSnapshot(endpoint: "https://api.example.com/v1/")
+            settings: makeSnapshot(endpoint: "https://api.example.com/v1//")
         )
 
         XCTAssertEqual(transport.lastRequest?.url?.absoluteString, "https://api.example.com/v1/audio/speech")

@@ -60,10 +60,7 @@ struct TTSClient: TTSSynthesizing {
     }
 
     private static func speechURL(from endpoint: String, engine: Engine) -> URL? {
-        var base = endpoint.trimmingCharacters(in: .whitespacesAndNewlines)
-        while base.hasSuffix("/") {
-            base.removeLast()
-        }
+        let base = Engine.normalizedEndpoint(endpoint)
         guard !base.isEmpty else {
             return nil
         }
