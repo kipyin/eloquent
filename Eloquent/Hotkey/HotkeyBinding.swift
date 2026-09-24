@@ -72,7 +72,7 @@ struct HotkeyBinding: Hashable, Sendable {
     }
 
     var words: String {
-        (modifierWords + [keyWords]).joined(separator: "+")
+        (modifierWords + [keyName]).joined(separator: "+")
     }
 
     var symbolLabel: String {
@@ -109,12 +109,8 @@ struct HotkeyBinding: Hashable, Sendable {
         return symbols
     }
 
-    private var keyWords: String {
-        keyName
-    }
-
     private var keySymbol: String {
-        Self.keySymbols[keyCode] ?? keyWords
+        Self.keySymbols[keyCode] ?? keyName
     }
 
     private static let keyNames: [UInt16: String] = [
