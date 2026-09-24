@@ -27,6 +27,14 @@ enum Engine: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    static func normalizedEndpoint(_ endpoint: String) -> String {
+        var base = endpoint.trimmingCharacters(in: .whitespacesAndNewlines)
+        while base.hasSuffix("/") {
+            base.removeLast()
+        }
+        return base
+    }
+
     var defaultVoice: String {
         switch self {
         case .openai:
@@ -236,17 +244,9 @@ final class AppSettings: ObservableObject, SettingsProviding {
     private func applyEngineSwitch(from old: Engine, to new: Engine) {
         guard old != new else { return }
         voice = new.defaultVoice
-        if Self.normalizedEndpoint(endpoint) == old.officialEndpoint {
+        if Engine.normalizedEndpoint(endpoint) == old.officialEndpoint {
             endpoint = new.officialEndpoint
         }
-    }
-
-    private static func normalizedEndpoint(_ endpoint: String) -> String {
-        var base = endpoint.trimmingCharacters(in: .whitespacesAndNewlines)
-        while base.hasSuffix("/") {
-            base.removeLast()
-        }
-        return base
     }
 
     private static func storedEngine(_ value: String?) -> Engine {
