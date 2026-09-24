@@ -47,7 +47,8 @@ targets:
         release:
           # Team and Developer ID identity come from Release-Signing.xcconfig.
           # Cloud's command-line CODE_SIGN_IDENTITY=- still overrides that file.
-          # ci_post re-signs the archived app. See docs/release.md.
+          # ci_post copies CI_DEVELOPER_ID_SIGNED_APP_PATH when Notarize sets it,
+          # and codesigns only when that variable is missing or empty.
           ENABLE_HARDENED_RUNTIME: YES
   EloquentTests:
     type: bundle.unit-test

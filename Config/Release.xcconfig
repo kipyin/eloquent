@@ -5,8 +5,9 @@
 // Xcode Cloud Archive: ci_pre_xcodebuild.sh writes Release-Signing.xcconfig
 // from DEVELOPMENT_TEAM when that env var is set. Do not put a Team ID here.
 // Cloud also passes CODE_SIGN_IDENTITY=- on the xcodebuild command line, which
-// overrides any identity in that overlay. ci_post re-signs the archived app
-// with Developer ID Application. See docs/release.md.
+// overrides any identity in that overlay. When Notarize is configured, ci_post
+// copies CI_DEVELOPER_ID_SIGNED_APP_PATH and does not codesign it. It codesigns
+// only when that variable is missing or empty. See docs/release.md.
 
 ENABLE_HARDENED_RUNTIME = YES
 CODE_SIGN_STYLE = Automatic
