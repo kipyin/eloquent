@@ -1,6 +1,5 @@
 import AppKit
 import Combine
-import Foundation
 
 @MainActor
 final class SpeakHotkeyController: ObservableObject {
