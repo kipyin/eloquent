@@ -39,18 +39,6 @@ extension HotkeyBinding {
         keyCode == event.keyCode && modifiers == HotkeyModifiers(eventFlags: event.modifierFlags)
     }
 
-    var carbonKeyCode: UInt32 {
-        UInt32(keyCode)
-    }
-
-    var carbonModifiers: UInt32 {
-        modifiers.carbon
-    }
-
-    var menuModifierFlags: NSEvent.ModifierFlags {
-        modifiers.nsEventFlags
-    }
-
     var menuKeyEquivalent: String {
         switch keyCode {
         case 36: return "\r"

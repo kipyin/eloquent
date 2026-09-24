@@ -140,8 +140,8 @@ final class GlobalHotKey {
     private func register(_ binding: HotkeyBinding) -> Bool {
         let identifier = EventHotKeyID(signature: Self.signature, id: Self.hotKeyIDValue)
         let registerStatus = RegisterEventHotKey(
-            binding.carbonKeyCode,
-            binding.carbonModifiers,
+            UInt32(binding.keyCode),
+            binding.modifiers.carbon,
             identifier,
             GetEventDispatcherTarget(),
             0,
