@@ -17,8 +17,7 @@ struct SelectionReader: SelectionReading {
               let raw: String = copyAttribute(kAXSelectedTextAttribute, of: focusedElement) else {
             return nil
         }
-        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
+        return raw.nonEmptyTrimmed
     }
 
     private func copyAttribute<T>(_ name: String, of element: AXUIElement) -> T? {

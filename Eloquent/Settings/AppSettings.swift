@@ -28,7 +28,7 @@ enum Engine: String, CaseIterable, Identifiable, Sendable {
     }
 
     static func normalizedEndpoint(_ endpoint: String) -> String {
-        var base = endpoint.trimmingCharacters(in: .whitespacesAndNewlines)
+        var base = endpoint.nonEmptyTrimmed ?? ""
         while base.hasSuffix("/") {
             base.removeLast()
         }
@@ -187,12 +187,12 @@ final class AppSettings: ObservableObject, SettingsProviding {
         self.defaults = defaults
         self.secrets = secrets
         engine = Self.storedEnum(
-            defaults.string(forKey: Keys.engine)?.trimmingCharacters(in: .whitespacesAndNewlines),
+            defaults.string(forKey: Keys.engine)?.nonEmptyTrimmed,
             fallback: .openai
         )
-        endpoint = Self.nonEmpty(defaults.string(forKey: Keys.endpoint), fallback: TTSDefaults.endpoint)
-        model = Self.nonEmpty(defaults.string(forKey: Keys.model), fallback: TTSDefaults.model)
-        voice = Self.nonEmpty(defaults.string(forKey: Keys.voice), fallback: TTSDefaults.voice)
+        endpoint = defaults.string(forKey: Keys.endpoint)?.nonEmptyTrimmed ?? TTSDefaults.endpoint
+        model = defaults.string(forKey: Keys.model)?.nonEmptyTrimmed ?? TTSDefaults.model
+        voice = defaults.string(forKey: Keys.voice)?.nonEmptyTrimmed ?? TTSDefaults.voice
         if let storedSpeed = defaults.object(forKey: Keys.speed) as? Double {
             speed = TTSDefaults.clampSpeed(storedSpeed)
         } else {
@@ -216,10 +216,10 @@ final class AppSettings: ObservableObject, SettingsProviding {
     func snapshot() -> SettingsSnapshot {
         SettingsSnapshot(
             engine: engine,
-            endpoint: endpoint.trimmingCharacters(in: .whitespacesAndNewlines),
-            apiKey: apiKey.trimmingCharacters(in: .whitespacesAndNewlines),
-            model: model.trimmingCharacters(in: .whitespacesAndNewlines),
-            voice: voice.trimmingCharacters(in: .whitespacesAndNewlines),
+            endpoint: endpoint.nonEmptyTrimmed ?? "",
+            apiKey: apiKey.nonEmptyTrimmed ?? "",
+            model: model.nonEmptyTrimmed ?? "",
+            voice: voice.nonEmptyTrimmed ?? "",
             speed: speed,
             paragraphSplit: paragraphSplit,
             speedApply: speedApply
@@ -254,10 +254,5 @@ final class AppSettings: ObservableObject, SettingsProviding {
             return fallback
         }
         return stored
-    }
-
-    private static func nonEmpty(_ value: String?, fallback: String) -> String {
-        let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return trimmed.isEmpty ? fallback : trimmed
     }
 }
