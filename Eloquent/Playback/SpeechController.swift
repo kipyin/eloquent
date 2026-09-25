@@ -151,11 +151,7 @@ final class SpeechController: ObservableObject {
     }
 
     func stop() {
-        cancelWork()
-        player.stop()
-        paragraphs = []
-        index = 0
-        spokenSpeed = nil
+        clearSession()
         state = .idle
     }
 
@@ -281,12 +277,16 @@ final class SpeechController: ObservableObject {
         generation = UUID()
     }
 
-    private func presentTransientError(_ message: String) {
+    private func clearSession() {
         cancelWork()
         player.stop()
         paragraphs = []
         index = 0
         spokenSpeed = nil
+    }
+
+    private func presentTransientError(_ message: String) {
+        clearSession()
         state = .failed(message)
         transientErrorTask = Task { @MainActor [weak self] in
             try? await Task.sleep(nanoseconds: 2_400_000_000)
