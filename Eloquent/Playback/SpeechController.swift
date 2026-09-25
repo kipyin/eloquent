@@ -42,20 +42,23 @@ final class SpeechController: ObservableObject {
     }
 
     var canGoPrevious: Bool {
-        switch state {
-        case .idle:
-            return false
-        case .loading, .playing, .paused, .failed:
-            return index > 0
-        }
+        !isIdle && index > 0
     }
 
     var canGoNext: Bool {
+        !isIdle && index + 1 < paragraphs.count
+    }
+
+    var canStop: Bool {
+        !isIdle
+    }
+
+    private var isIdle: Bool {
         switch state {
         case .idle:
-            return false
+            return true
         case .loading, .playing, .paused, .failed:
-            return index + 1 < paragraphs.count
+            return false
         }
     }
 
@@ -65,15 +68,6 @@ final class SpeechController: ObservableObject {
             return true
         case .idle, .loading, .failed:
             return false
-        }
-    }
-
-    var canStop: Bool {
-        switch state {
-        case .idle:
-            return false
-        case .loading, .playing, .paused, .failed:
-            return true
         }
     }
 
