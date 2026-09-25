@@ -11,14 +11,9 @@ struct KeychainStore: APIKeyStoring {
     private static let account = "api-key"
 
     func loadAPIKey() -> String {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: Self.service,
-            kSecAttrAccount as String: Self.account,
-            kSecReturnData as String: true,
-            kSecMatchLimit as String: kSecMatchLimitOne,
-            kSecUseAuthenticationUI as String: kSecUseAuthenticationUIFail
-        ]
+        var query = Self.itemQuery
+        query[kSecReturnData as String] = true
+        query[kSecMatchLimit as String] = kSecMatchLimitOne
 
         var item: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &item)
@@ -29,12 +24,7 @@ struct KeychainStore: APIKeyStoring {
     }
 
     func saveAPIKey(_ secret: String) {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: Self.service,
-            kSecAttrAccount as String: Self.account,
-            kSecUseAuthenticationUI as String: kSecUseAuthenticationUIFail
-        ]
+        let query = Self.itemQuery
 
         if secret.isEmpty {
             SecItemDelete(query as CFDictionary)
@@ -53,4 +43,11 @@ struct KeychainStore: APIKeyStoring {
         addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
         SecItemAdd(addQuery as CFDictionary, nil)
     }
+
+    private static let itemQuery: [String: Any] = [
+        kSecClass as String: kSecClassGenericPassword,
+        kSecAttrService as String: service,
+        kSecAttrAccount as String: account,
+        kSecUseAuthenticationUI as String: kSecUseAuthenticationUIFail
+    ]
 }
