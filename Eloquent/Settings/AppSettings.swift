@@ -186,7 +186,10 @@ final class AppSettings: ObservableObject, SettingsProviding {
     init(defaults: UserDefaults = .standard, secrets: any APIKeyStoring = KeychainStore()) {
         self.defaults = defaults
         self.secrets = secrets
-        engine = Self.storedEngine(defaults.string(forKey: Keys.engine))
+        engine = Self.storedEnum(
+            defaults.string(forKey: Keys.engine)?.trimmingCharacters(in: .whitespacesAndNewlines),
+            fallback: .openai
+        )
         endpoint = Self.nonEmpty(defaults.string(forKey: Keys.endpoint), fallback: TTSDefaults.endpoint)
         model = Self.nonEmpty(defaults.string(forKey: Keys.model), fallback: TTSDefaults.model)
         voice = Self.nonEmpty(defaults.string(forKey: Keys.voice), fallback: TTSDefaults.voice)
@@ -195,22 +198,18 @@ final class AppSettings: ObservableObject, SettingsProviding {
         } else {
             speed = TTSDefaults.speed
         }
-        if let raw = defaults.string(forKey: Keys.paragraphSplit),
-           let stored = ParagraphSplitMode(rawValue: raw) {
-            paragraphSplit = stored
-        } else {
-            paragraphSplit = TTSDefaults.paragraphSplit
-        }
+        paragraphSplit = Self.storedEnum(
+            defaults.string(forKey: Keys.paragraphSplit),
+            fallback: TTSDefaults.paragraphSplit
+        )
         speakHotkey = HotkeyBinding.fromStored(
             keyCode: defaults.object(forKey: Keys.speakHotkeyKeyCode) as? Int,
             modifiers: defaults.object(forKey: Keys.speakHotkeyModifiers) as? Int
         )
-        if let raw = defaults.string(forKey: Keys.speedApply),
-           let stored = SpeedApplyMode(rawValue: raw) {
-            speedApply = stored
-        } else {
-            speedApply = TTSDefaults.speedApply
-        }
+        speedApply = Self.storedEnum(
+            defaults.string(forKey: Keys.speedApply),
+            fallback: TTSDefaults.speedApply
+        )
         apiKey = secrets.loadAPIKey()
     }
 
@@ -247,9 +246,14 @@ final class AppSettings: ObservableObject, SettingsProviding {
         }
     }
 
-    private static func storedEngine(_ value: String?) -> Engine {
-        let trimmed = value?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return Engine(rawValue: trimmed) ?? .openai
+    private static func storedEnum<T: RawRepresentable>(
+        _ value: String?,
+        fallback: T
+    ) -> T where T.RawValue == String {
+        guard let value, let stored = T(rawValue: value) else {
+            return fallback
+        }
+        return stored
     }
 
     private static func nonEmpty(_ value: String?, fallback: String) -> String {
