@@ -18,12 +18,19 @@ final class AccessibilityPermission: ObservableObject {
         isTrusted = AXIsProcessTrusted()
     }
 
-    func promptIfNeeded() {
+    private func refreshAndAllowsPrompt() -> Bool {
         refresh()
         guard !AppProcess.isRunningTests else {
-            return
+            return false
         }
         guard !isTrusted else {
+            return false
+        }
+        return true
+    }
+
+    func promptIfNeeded() {
+        guard refreshAndAllowsPrompt() else {
             return
         }
         guard !UserDefaults.standard.bool(forKey: Self.promptedKey) else {
@@ -34,11 +41,7 @@ final class AccessibilityPermission: ObservableObject {
     }
 
     func prompt() {
-        refresh()
-        guard !AppProcess.isRunningTests else {
-            return
-        }
-        guard !isTrusted else {
+        guard refreshAndAllowsPrompt() else {
             return
         }
 
