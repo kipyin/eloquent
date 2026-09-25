@@ -39,12 +39,10 @@ enum ParagraphSplitMode: String, CaseIterable, Identifiable, Sendable {
 
 enum ParagraphSplitter {
     static func split(_ text: String, mode: ParagraphSplitMode) -> [String] {
-        let normalized = text
+        guard let normalized = text
             .replacingOccurrences(of: "\r\n", with: "\n")
             .replacingOccurrences(of: "\r", with: "\n")
-            .trimmingCharacters(in: .whitespacesAndNewlines)
-
-        guard !normalized.isEmpty else {
+            .nonEmptyTrimmed else {
             return []
         }
 
@@ -66,14 +64,12 @@ enum ParagraphSplitter {
 
     private static func splitOnBlankLines(_ text: String) -> [String] {
         text.split(separator: /\n[ \t]*\n+/, omittingEmptySubsequences: true)
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
+            .compactMap { $0.nonEmptyTrimmed }
     }
 
     private static func splitOnNewlines(_ text: String) -> [String] {
         text.split(separator: "\n", omittingEmptySubsequences: true)
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
+            .compactMap { $0.nonEmptyTrimmed }
     }
 
     private static func splitOnSentences(_ text: String) -> [String] {
@@ -94,8 +90,7 @@ enum ParagraphSplitter {
                     cursor += 1
                 }
 
-                let trimmed = current.trimmingCharacters(in: .whitespacesAndNewlines)
-                if !trimmed.isEmpty {
+                if let trimmed = current.nonEmptyTrimmed {
                     sentences.append(trimmed)
                 }
                 current = ""
@@ -110,8 +105,7 @@ enum ParagraphSplitter {
             index += 1
         }
 
-        let tail = current.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !tail.isEmpty {
+        if let tail = current.nonEmptyTrimmed {
             sentences.append(tail)
         }
         return sentences
@@ -128,5 +122,12 @@ enum ParagraphSplitter {
 
     private static func nonempty(_ parts: [String], fallback: String) -> [String] {
         parts.isEmpty ? [fallback] : parts
+    }
+}
+
+extension StringProtocol {
+    var nonEmptyTrimmed: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }

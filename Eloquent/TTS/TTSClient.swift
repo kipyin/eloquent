@@ -20,12 +20,10 @@ struct TTSClient: TTSSynthesizing {
     }
 
     func synthesize(text: String, settings: SettingsSnapshot) async throws -> Data {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !trimmed.isEmpty else {
+        guard let trimmed = text.nonEmptyTrimmed else {
             throw TTSError.emptyInput
         }
-        let endpoint = settings.endpoint.trimmingCharacters(in: .whitespacesAndNewlines)
-        guard !endpoint.isEmpty else {
+        guard let endpoint = settings.endpoint.nonEmptyTrimmed else {
             throw TTSError.missingEndpoint
         }
         guard let url = Self.speechURL(from: endpoint, engine: settings.engine) else {
@@ -106,8 +104,7 @@ struct TTSClient: TTSSynthesizing {
                 return message
             }
         }
-        let raw = String(data: data, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-        return raw.isEmpty ? "TTS request failed." : raw
+        return String(data: data, encoding: .utf8)?.nonEmptyTrimmed ?? "TTS request failed."
     }
 }
 
