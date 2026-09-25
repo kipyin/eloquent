@@ -1,0 +1,143 @@
+name: Homebrew cask
+
+# Bumps kipyin/homebrew-tap Casks/eloquent.rb to the published Release zip.
+# Requires repo secret HOMEBREW_TAP_TOKEN: a PAT (or fine-grained token) with
+# contents:write on kipyin/homebrew-tap. Default GITHUB_TOKEN cannot push
+# to another repository. Same secret as kipyin/gitee-cli.
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag to bump (for example v0.1.5). Empty uses the latest published release."
+        required: false
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  homebrew:
+    name: Bump Homebrew cask
+    runs-on: ubuntu-latest
+    steps:
+      - name: Require HOMEBREW_TAP_TOKEN
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "${HOMEBREW_TAP_TOKEN:-}" ]; then
+            echo "::error::HOMEBREW_TAP_TOKEN secret is not set (needs contents:write on kipyin/homebrew-tap)"
+            exit 1
+          fi
+
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Resolve release tag
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          EVENT_NAME: ${{ github.event_name }}
+          RELEASE_TAG: ${{ github.event.release.tag_name }}
+          INPUT_TAG: ${{ inputs.tag }}
+        run: |
+          set -euo pipefail
+          if [ "$EVENT_NAME" = "release" ]; then
+            TAG="${RELEASE_TAG}"
+          elif [ -n "${INPUT_TAG}" ]; then
+            TAG="${INPUT_TAG}"
+          else
+            TAG="$(gh release view --repo "$REPO" --json tagName --jq .tagName)"
+          fi
+          if [ -z "${TAG}" ]; then
+            echo "::error::Could not resolve a release tag"
+            exit 1
+          fi
+          if [[ ! "$TAG" =~ ^v[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.]+)?$ ]]; then
+            echo "::error::Release tag '${TAG}' must look like v0.1.5"
+            exit 1
+          fi
+          VERSION="${TAG#v}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+          echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      # Xcode Cloud publishes the release, then uploads Eloquent-vX.Y.Z.zip.
+      # The published event can start this job before that asset exists.
+      - name: Download Eloquent zip
+        id: asset
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          TAG: ${{ steps.release.outputs.tag }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          set -euo pipefail
+          ASSET="Eloquent-v${VERSION}.zip"
+          mkdir -p dist
+          ok=0
+          for attempt in $(seq 1 12); do
+            if gh release download "$TAG" \
+              --repo "$REPO" \
+              --dir dist \
+              --pattern "$ASSET" \
+              --clobber \
+              && [ -s "dist/${ASSET}" ]; then
+              ok=1
+              break
+            fi
+            echo "Asset ${ASSET} not on ${TAG} yet (attempt ${attempt}/12)."
+            sleep 10
+          done
+          if [ "$ok" -ne 1 ]; then
+            echo "::error::Release ${TAG} is missing asset ${ASSET}"
+            echo "Assets on ${TAG}:"
+            gh release view "$TAG" --repo "$REPO" --json assets --jq '.assets[].name' || true
+            exit 1
+          fi
+          echo "sha=$(sha256sum "dist/${ASSET}" | awk '{print $1}')" >> "$GITHUB_OUTPUT"
+
+      - name: Update Casks/eloquent.rb
+        env:
+          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          VERSION: ${{ steps.release.outputs.version }}
+          SHA: ${{ steps.asset.outputs.sha }}
+        run: |
+          set -euo pipefail
+          if [ -z "${SHA}" ] || [ -z "${VERSION}" ]; then
+            echo "::error::missing version or sha256 from earlier steps"
+            exit 1
+          fi
+
+          git clone --depth 1 \
+            "https://x-access-token:${HOMEBREW_TAP_TOKEN}@github.com/kipyin/homebrew-tap.git" \
+            tap
+
+          CASK="tap/Casks/eloquent.rb"
+          if [ ! -f "$CASK" ]; then
+            echo "::error::kipyin/homebrew-tap is missing Casks/eloquent.rb"
+            exit 1
+          fi
+
+          if grep -F -q "version \"${VERSION}\"" "$CASK" \
+            && grep -F -q "sha256 \"${SHA}\"" "$CASK"; then
+            echo "Cask already at ${VERSION} (${SHA}); nothing to do."
+            exit 0
+          fi
+
+          python3 .github/scripts/bump-homebrew-cask.py "$CASK" "$VERSION" "$SHA"
+
+          cd tap
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add Casks/eloquent.rb
+          if git diff --cached --quiet; then
+            echo "Cask already at ${VERSION}; nothing to do."
+            exit 0
+          fi
+          git commit -m "bump eloquent to ${VERSION}"
+          git push origin HEAD
+          echo "Bumped kipyin/homebrew-tap to eloquent ${VERSION}"

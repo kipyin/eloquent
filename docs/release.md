@@ -4,7 +4,7 @@ Public distribution is a **Developer ID** signed, **notarized and stapled** `.ap
 
 Xcode Cloud’s **Notarize** post-action is what produces the Developer ID Managed export. When that post-action is on the Archive workflow, Cloud sets `CI_DEVELOPER_ID_SIGNED_APP_PATH` before `ci_post_xcodebuild.sh`. Build 6 used that app for the GitHub zip. Keep Notarize. The post script copies that app, then notarizes, staples, zips, and uploads it. Notarize itself is not the GitHub upload, and the build page still has a notarized app to download by hand. If `CI_DEVELOPER_ID_SIGNED_APP_PATH` is missing or empty, `ci_post` codesigns the archived `.app` instead (local, or a workflow without Notarize).
 
-Published GitHub Releases use SemVer tags `vX.Y.Z` (latest `v0.1.5`, asset `Eloquent-v0.1.5.zip`). Local `CONFIG=Release make run` remains the way to run a build from a clone ([README Install](../README.md#install)). Homebrew is later.
+Published GitHub Releases use SemVer tags `vX.Y.Z` (latest `v0.1.5`, asset `Eloquent-v0.1.5.zip`). Local `CONFIG=Release make run` remains the way to run a build from a clone ([README Install](../README.md#install)). Publishing the release bumps the Homebrew cask ([Homebrew](#6-homebrew)).
 
 ## Checklist
 
@@ -133,9 +133,15 @@ The marketing version on `main` is `0.1.5`, matching tag `v0.1.5` and asset `Elo
 
 There is no DMG yet. The zip is the artifact. A disk image can wait until this path is boring.
 
-### 6. Homebrew (later)
+### 6. Homebrew
 
-After a notarized GitHub Release exists, add a **personal tap** (a cask that fetches that Release asset). Do not publish a `brew install` line in the README until that tap is real.
+`kipyin/homebrew-tap` already has `Casks/eloquent.rb`. It points at `Eloquent-v#{version}.zip` on the GitHub Release.
+
+`.github/workflows/homebrew-cask.yml` runs when a Release is published (and on `workflow_dispatch`). It downloads `Eloquent-vX.Y.Z.zip`, hashes it, and pushes the new `version` and `sha256` to the tap as `github-actions[bot]`. If the cask is already at that version and digest, it does nothing.
+
+The workflow needs the repo secret `HOMEBREW_TAP_TOKEN`: a PAT or fine-grained token with **contents:write** on `kipyin/homebrew-tap`. The default `GITHUB_TOKEN` cannot push to another repository. This is the same secret `kipyin/gitee-cli` uses. Do not commit the token.
+
+Xcode Cloud creates the release, then uploads the zip. The workflow waits briefly for `Eloquent-vX.Y.Z.zip` and fails if that asset is still missing. Re-run the workflow with the tag input if the upload landed later.
 
 ## Local commands
 
