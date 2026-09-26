@@ -3,7 +3,7 @@ import XCTest
 @MainActor
 final class AppSettingsTests: XCTestCase {
     func testPublicDefaultsWhenStoreIsEmpty() {
-        let (settings, _, secrets) = makeSettings()
+        let (settings, _, store) = makeSettings()
 
         XCTAssertEqual(settings.engine, .openai)
         XCTAssertEqual(settings.endpoint, "")
@@ -14,7 +14,7 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertEqual(settings.speakHotkey, .optionEscape)
         XCTAssertEqual(settings.speedApply, .nextParagraph)
         XCTAssertEqual(settings.apiKey, "")
-        XCTAssertEqual(secrets.value, "")
+        XCTAssertNil(store.value)
     }
 
     func testBlankStoredStringsFallBackExceptEmptyEndpoint() throws {
@@ -26,7 +26,7 @@ final class AppSettingsTests: XCTestCase {
         defaults.set("  ", forKey: "model")
         defaults.set("  ", forKey: "voice")
 
-        let settings = AppSettings(defaults: defaults, secrets: MemoryAPIKeyStore())
+        let settings = AppSettings(defaults: defaults, legacyStore: MemoryAPIKeyStore())
 
         XCTAssertEqual(settings.engine, .openai)
         XCTAssertEqual(settings.endpoint, "")
@@ -44,7 +44,7 @@ final class AppSettingsTests: XCTestCase {
         defaults.set("nova", forKey: "voice")
         defaults.set("https://proxy.example.com/v1", forKey: "endpoint")
 
-        let settings = AppSettings(defaults: defaults, secrets: MemoryAPIKeyStore())
+        let settings = AppSettings(defaults: defaults, legacyStore: MemoryAPIKeyStore())
 
         XCTAssertEqual(settings.engine, .openai)
         XCTAssertEqual(settings.voice, "nova")
@@ -60,7 +60,7 @@ final class AppSettingsTests: XCTestCase {
 
         XCTAssertEqual(defaults.string(forKey: "engine"), "grok")
 
-        let reloaded = AppSettings(defaults: defaults, secrets: MemoryAPIKeyStore())
+        let reloaded = AppSettings(defaults: defaults, legacyStore: MemoryAPIKeyStore())
         XCTAssertEqual(reloaded.engine, .grok)
     }
 
@@ -128,13 +128,100 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertEqual(settings.speed, 0.7, accuracy: 0.0001)
     }
 
-    func testAPIKeyPersistsToSecretStoreNotDefaults() {
-        let (settings, defaults, secrets) = makeSettings()
+    func testAPIKeyPersistsWithUserSettings() {
+        let (settings, defaults, _) = makeSettings()
         settings.apiKey = "sk-secret"
 
-        XCTAssertEqual(secrets.value, "sk-secret")
+        XCTAssertEqual(defaults.string(forKey: "apiKey"), "sk-secret")
+
+        let reloaded = AppSettings(defaults: defaults, legacyStore: MemoryAPIKeyStore())
+        XCTAssertEqual(reloaded.apiKey, "sk-secret")
+    }
+
+    func testLaunchMigrationCopiesKeychainKeyIntoSettingsAndDeletesItem() {
+        let defaults = makeDefaults()
+        let store = MemoryAPIKeyStore()
+        store.value = "sk-legacy"
+
+        let settings = AppSettings(defaults: defaults, legacyStore: store)
+
+        XCTAssertEqual(settings.apiKey, "sk-legacy")
+        XCTAssertEqual(defaults.string(forKey: "apiKey"), "sk-legacy")
+        XCTAssertEqual(store.deleteCount, 1)
+    }
+
+    func testFailedKeychainDeleteDoesNotRerunMigration() {
+        // MemoryAPIKeyStore keeps `value` on delete, modelling a failed delete:
+        // the item stays in the Keychain.
+        let defaults = makeDefaults()
+        let store = MemoryAPIKeyStore()
+        store.value = "sk-legacy"
+
+        _ = AppSettings(defaults: defaults, legacyStore: store)
+        XCTAssertEqual(store.deleteCount, 1)
+        XCTAssertNotNil(store.value)
+
+        let reloaded = AppSettings(defaults: defaults, legacyStore: store)
+        XCTAssertEqual(reloaded.apiKey, "sk-legacy")
+        XCTAssertEqual(store.loadCount, 1)
+        XCTAssertEqual(store.deleteCount, 1)
+    }
+
+    func testDeniedKeychainReadLeavesKeyEmptyAndRetriesNextLaunch() {
+        let defaults = makeDefaults()
+        let store = MemoryAPIKeyStore()
+
+        let settings = AppSettings(defaults: defaults, legacyStore: store)
+
+        XCTAssertEqual(settings.apiKey, "")
         XCTAssertNil(defaults.string(forKey: "apiKey"))
-        XCTAssertNil(defaults.string(forKey: "api-key"))
+        XCTAssertEqual(store.deleteCount, 0)
+
+        store.value = "sk-legacy"
+        let retried = AppSettings(defaults: defaults, legacyStore: store)
+        XCTAssertEqual(retried.apiKey, "sk-legacy")
+        XCTAssertEqual(store.loadCount, 2)
+    }
+
+    func testUserSavedKeyIsNotReplacedByKeychainValue() {
+        let (settings, defaults, _) = makeSettings()
+        settings.apiKey = "sk-user"
+
+        let store = MemoryAPIKeyStore()
+        store.value = "sk-legacy"
+        let reloaded = AppSettings(defaults: defaults, legacyStore: store)
+
+        XCTAssertEqual(reloaded.apiKey, "sk-user")
+        XCTAssertEqual(store.loadCount, 0)
+        XCTAssertEqual(store.deleteCount, 0)
+    }
+
+    func testClearedKeyStaysEmptyAndSkipsMigration() {
+        let (settings, defaults, _) = makeSettings()
+        settings.apiKey = "sk-user"
+        settings.apiKey = ""
+
+        let store = MemoryAPIKeyStore()
+        store.value = "sk-legacy"
+        let reloaded = AppSettings(defaults: defaults, legacyStore: store)
+
+        XCTAssertEqual(reloaded.apiKey, "")
+        XCTAssertEqual(store.loadCount, 0)
+        XCTAssertEqual(store.deleteCount, 0)
+    }
+
+    func testResetDefaultsStaysEmptyAndSkipsMigration() {
+        let (settings, defaults, _) = makeSettings()
+        settings.apiKey = "sk-secret"
+        settings.resetToDefaults()
+
+        let store = MemoryAPIKeyStore()
+        store.value = "sk-legacy"
+        let reloaded = AppSettings(defaults: defaults, legacyStore: store)
+
+        XCTAssertEqual(reloaded.apiKey, "")
+        XCTAssertEqual(store.loadCount, 0)
+        XCTAssertEqual(store.deleteCount, 0)
     }
 
     func testParagraphSplitPersistsRawValue() {
@@ -143,7 +230,7 @@ final class AppSettingsTests: XCTestCase {
 
         XCTAssertEqual(defaults.string(forKey: "paragraphSplit"), "sentences")
 
-        let reloaded = AppSettings(defaults: defaults, secrets: MemoryAPIKeyStore())
+        let reloaded = AppSettings(defaults: defaults, legacyStore: MemoryAPIKeyStore())
         XCTAssertEqual(reloaded.paragraphSplit, .sentences)
     }
 
@@ -153,12 +240,12 @@ final class AppSettingsTests: XCTestCase {
 
         XCTAssertEqual(defaults.string(forKey: "speedApply"), "respeakCurrent")
 
-        let reloaded = AppSettings(defaults: defaults, secrets: MemoryAPIKeyStore())
+        let reloaded = AppSettings(defaults: defaults, legacyStore: MemoryAPIKeyStore())
         XCTAssertEqual(reloaded.speedApply, .respeakCurrent)
     }
 
-    func testResetToDefaultsClearsSecret() {
-        let (settings, _, secrets) = makeSettings()
+    func testResetToDefaultsClearsAPIKey() {
+        let (settings, defaults, _) = makeSettings()
         settings.endpoint = "https://api.example.com/v1"
         settings.apiKey = "sk-secret"
         settings.model = "other"
@@ -173,7 +260,7 @@ final class AppSettingsTests: XCTestCase {
         XCTAssertEqual(settings.engine, .openai)
         XCTAssertEqual(settings.endpoint, "")
         XCTAssertEqual(settings.apiKey, "")
-        XCTAssertEqual(secrets.value, "")
+        XCTAssertEqual(defaults.string(forKey: "apiKey"), "")
         XCTAssertEqual(settings.model, "tts-1")
         XCTAssertEqual(settings.voice, "alloy")
         XCTAssertEqual(settings.speed, 1.1, accuracy: 0.0001)
@@ -186,7 +273,7 @@ final class AppSettingsTests: XCTestCase {
         let (settings, defaults, _) = makeSettings()
         settings.speakHotkey = HotkeyBinding(keyCode: 0, modifiers: [.command, .option])
 
-        let reloaded = AppSettings(defaults: defaults, secrets: MemoryAPIKeyStore())
+        let reloaded = AppSettings(defaults: defaults, legacyStore: MemoryAPIKeyStore())
         XCTAssertEqual(reloaded.speakHotkey, HotkeyBinding(keyCode: 0, modifiers: [.command, .option]))
     }
 
@@ -197,18 +284,23 @@ final class AppSettingsTests: XCTestCase {
         defaults.set(-1, forKey: "speakHotkeyKeyCode")
         defaults.set(0, forKey: "speakHotkeyModifiers")
 
-        let settings = AppSettings(defaults: defaults, secrets: MemoryAPIKeyStore())
+        let settings = AppSettings(defaults: defaults, legacyStore: MemoryAPIKeyStore())
         XCTAssertEqual(settings.speakHotkey, .optionEscape)
 
         defaults.removePersistentDomain(forName: suiteName)
     }
 
     private func makeSettings() -> (AppSettings, UserDefaults, MemoryAPIKeyStore) {
+        let defaults = makeDefaults()
+        let store = MemoryAPIKeyStore()
+        let settings = AppSettings(defaults: defaults, legacyStore: store)
+        return (settings, defaults, store)
+    }
+
+    private func makeDefaults() -> UserDefaults {
         let suiteName = "com.kipyin.eloquent.tests.\(UUID().uuidString)"
         let defaults = UserDefaults(suiteName: suiteName)!
         defaults.removePersistentDomain(forName: suiteName)
-        let secrets = MemoryAPIKeyStore()
-        let settings = AppSettings(defaults: defaults, secrets: secrets)
-        return (settings, defaults, secrets)
+        return defaults
     }
 }

@@ -45,5 +45,5 @@ macOS permission required so the speak hotkey works in every app and so Eloquent
 Optional Login Item via `SMAppService`. Off by default. Not registered on first launch.
 
 **API key**:
-User-entered secret for the TTS provider. One key, shared by every Engine.
+User-entered TTS provider secret. One key, shared by every Engine. Persists with the other user settings; a key left in the login Keychain by an older version is copied over once on launch, then deleted there. Masked in Settings; kept out of logs and error text.
 _Avoid_: Keychain item, token

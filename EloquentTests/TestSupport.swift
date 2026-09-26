@@ -22,15 +22,18 @@ func makeSnapshot(
     )
 }
 
-final class MemoryAPIKeyStore: APIKeyStoring {
-    var value = ""
+final class MemoryAPIKeyStore: LegacyAPIKeyStoring {
+    var value: String?
+    private(set) var loadCount = 0
+    private(set) var deleteCount = 0
 
-    func loadAPIKey() -> String {
-        value
+    func loadAPIKey() -> String? {
+        loadCount += 1
+        return value
     }
 
-    func saveAPIKey(_ secret: String) {
-        value = secret
+    func deleteAPIKey() {
+        deleteCount += 1
     }
 }
 

@@ -1,16 +1,17 @@
 import Foundation
 import Security
 
-protocol APIKeyStoring {
-    func loadAPIKey() -> String
-    func saveAPIKey(_ secret: String)
+// The login Keychain's old API key item, read once for launch migration (ADR 0002).
+protocol LegacyAPIKeyStoring {
+    func loadAPIKey() -> String?
+    func deleteAPIKey()
 }
 
-struct KeychainStore: APIKeyStoring {
+struct KeychainStore: LegacyAPIKeyStoring {
     private static let service = "com.kipyin.eloquent"
     private static let account = "api-key"
 
-    func loadAPIKey() -> String {
+    func loadAPIKey() -> String? {
         var query = Self.itemQuery
         query[kSecReturnData as String] = true
         query[kSecMatchLimit as String] = kSecMatchLimitOne
@@ -18,30 +19,13 @@ struct KeychainStore: APIKeyStoring {
         var item: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &item)
         guard status == errSecSuccess, let data = item as? Data else {
-            return ""
+            return nil
         }
-        return String(data: data, encoding: .utf8) ?? ""
+        return String(data: data, encoding: .utf8)
     }
 
-    func saveAPIKey(_ secret: String) {
-        let query = Self.itemQuery
-
-        if secret.isEmpty {
-            SecItemDelete(query as CFDictionary)
-            return
-        }
-
-        let data = Data(secret.utf8)
-        let attributes: [String: Any] = [kSecValueData as String: data]
-        let updateStatus = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
-        guard updateStatus == errSecItemNotFound else {
-            return
-        }
-
-        var addQuery = query
-        addQuery[kSecValueData as String] = data
-        addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-        SecItemAdd(addQuery as CFDictionary, nil)
+    func deleteAPIKey() {
+        SecItemDelete(Self.itemQuery as CFDictionary)
     }
 
     private static let itemQuery: [String: Any] = [
