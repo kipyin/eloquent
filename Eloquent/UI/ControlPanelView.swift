@@ -57,7 +57,7 @@ struct ControlPanelView: View {
                         speech.applySpeedChange()
                     }
                 }
-                Text(speedLabel)
+                Text(TTSDefaults.speedLabel(for: settings.speed))
                     .monospacedDigit()
                     .frame(width: 44, alignment: .trailing)
             }
@@ -105,10 +105,6 @@ struct ControlPanelView: View {
                 .lineLimit(2)
                 .fixedSize(horizontal: false, vertical: true)
         }
-    }
-
-    private var speedLabel: String {
-        String(format: "%.1f×", settings.speed)
     }
 
     private func controlButton(
