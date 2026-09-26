@@ -130,11 +130,17 @@ struct SettingsView: View {
             Section("Hotkey") {
                 SpeakHotkeyRecorder(settings: settings, controller: speakHotkey)
                 LabeledContent("Accessibility") {
-                    Text(accessibility.isTrusted ? "Granted" : "Not granted")
+                    Text(accessibility.isTrusted ? "Granted" : "Not granted — macOS does not trust Eloquent yet")
                         .foregroundStyle(accessibility.isTrusted ? Color.secondary : Color.orange)
                 }
                 if !accessibility.isTrusted {
-                    Text("Grant Accessibility so \(settings.speakHotkey.words) and selection reading work in every app. After enabling Eloquent, quit from the menu bar and reopen.")
+                    Text("Eloquent needs Accessibility so \(settings.speakHotkey.words) can read the selected text in every app. Until granted, speaking falls back to the clipboard.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text("1. Open System Settings → Privacy & Security → Accessibility.\n2. Enable Eloquent.\n3. Quit Eloquent from the menu bar and reopen it.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                    Text(AccessibilityPermission.adHocRebuildNote)
                         .font(.caption)
                         .foregroundStyle(.secondary)
                     Button("Grant Accessibility…") {

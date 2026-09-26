@@ -39,7 +39,7 @@ The TTS provider chosen in Settings: `openai` or `grok`. A preset bundle: each e
 The user-configured global shortcut that reads the current selection — or the clipboard when nothing is selected — and speaks it. Default is Option+Escape (⌥⎋). Persisted in Settings. Changing it rebinds the running app. A reserved or conflicting combo keeps the last working binding.
 
 **Accessibility**:
-macOS permission required so the speak hotkey works in every app and so Eloquent can read the frontmost app's selected text. After granting, quit and reopen.
+macOS permission required so Eloquent can read the frontmost app's selected text when the speak hotkey fires. Without it, speaking falls back to the clipboard. After granting, quit and reopen. Unsigned or ad-hoc rebuilds can leave an older Eloquent entry enabled in System Settings while the running copy is untrusted; remove that entry and grant again.
 
 **Open at Login**:
 Optional Login Item via `SMAppService`. Off by default. Not registered on first launch.

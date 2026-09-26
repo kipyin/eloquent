@@ -6,6 +6,10 @@ import Combine
 final class AccessibilityPermission: ObservableObject {
     static let shared = AccessibilityPermission()
 
+    /// Shown on every untrusted grant surface: System Settings can keep an
+    /// older ad-hoc build's entry enabled while this copy stays untrusted.
+    static let adHocRebuildNote = "Rebuilt Eloquent unsigned or ad-hoc? macOS may show an older Eloquent entry as enabled while this copy stays untrusted — remove that entry, then grant again."
+
     private static let promptedKey = "didPromptAccessibility"
 
     @Published private(set) var isTrusted = false
@@ -51,11 +55,13 @@ final class AccessibilityPermission: ObservableObject {
         let hotkey = AppSettings.shared.speakHotkey
         alert.messageText = "Allow Eloquent to use \(hotkey.words)"
         alert.informativeText = """
-        Eloquent speaks the current selection — or the clipboard when nothing is selected — from any app when you press \(hotkey.displayLabel). macOS requires Accessibility permission for that global hotkey and for reading the selection.
+        macOS does not trust Eloquent yet, so \(hotkey.words) speaks only the clipboard instead of the selection. Eloquent needs Accessibility permission so the global hotkey can read the selected text in every app.
 
-        1. Click Grant Accessibility.
-        2. In System Settings → Privacy & Security → Accessibility, enable Eloquent (or Xcode if you launched from Xcode).
+        1. Click Grant Accessibility — System Settings opens at Privacy & Security → Accessibility.
+        2. Enable Eloquent (or Xcode if you launched from Xcode).
         3. Quit Eloquent from the menu bar and reopen it.
+
+        \(Self.adHocRebuildNote)
         """
         alert.alertStyle = .informational
         alert.addButton(withTitle: "Grant Accessibility")
