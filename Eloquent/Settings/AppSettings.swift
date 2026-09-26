@@ -9,23 +9,9 @@ enum Engine: String, CaseIterable, Identifiable, Sendable {
 
     var id: String { rawValue }
 
-    var menuTitle: String {
-        switch self {
-        case .openai:
-            return "OpenAI"
-        case .grok:
-            return "Grok"
-        }
-    }
+    var menuTitle: String { preset.menuTitle }
 
-    var officialEndpoint: String {
-        switch self {
-        case .openai:
-            return "https://api.openai.com/v1"
-        case .grok:
-            return "https://api.x.ai/v1"
-        }
-    }
+    var officialEndpoint: String { preset.officialEndpoint }
 
     static func normalizedEndpoint(_ endpoint: String) -> String {
         var base = endpoint.nonEmptyTrimmed ?? ""
@@ -35,22 +21,34 @@ enum Engine: String, CaseIterable, Identifiable, Sendable {
         return base
     }
 
-    var defaultVoice: String {
+    var defaultVoice: String { preset.defaultVoice }
+
+    var speechPath: String { preset.speechPath }
+
+    private var preset: Preset {
         switch self {
         case .openai:
-            return "alloy"
+            return Preset(
+                menuTitle: "OpenAI",
+                officialEndpoint: "https://api.openai.com/v1",
+                defaultVoice: "alloy",
+                speechPath: "/audio/speech"
+            )
         case .grok:
-            return "eve"
+            return Preset(
+                menuTitle: "Grok",
+                officialEndpoint: "https://api.x.ai/v1",
+                defaultVoice: "eve",
+                speechPath: "/tts"
+            )
         }
     }
 
-    var speechPath: String {
-        switch self {
-        case .openai:
-            return "/audio/speech"
-        case .grok:
-            return "/tts"
-        }
+    private struct Preset {
+        var menuTitle: String
+        var officialEndpoint: String
+        var defaultVoice: String
+        var speechPath: String
     }
 }
 
