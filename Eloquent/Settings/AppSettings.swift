@@ -60,22 +60,28 @@ enum SpeedApplyMode: String, CaseIterable, Identifiable, Sendable {
 
     var id: String { rawValue }
 
-    var menuTitle: String {
+    var menuTitle: String { preset.menuTitle }
+
+    var helpText: String { preset.helpText }
+
+    private var preset: Preset {
         switch self {
         case .nextParagraph:
-            return "Next paragraph only"
+            return Preset(
+                menuTitle: "Next paragraph only",
+                helpText: "Keep the current paragraph playing. The new speed is used on the next synthesis."
+            )
         case .respeakCurrent:
-            return "Re-speak current paragraph"
+            return Preset(
+                menuTitle: "Re-speak current paragraph",
+                helpText: "Cancel the current paragraph and synthesize it again at the new speed."
+            )
         }
     }
 
-    var helpText: String {
-        switch self {
-        case .nextParagraph:
-            return "Keep the current paragraph playing. The new speed is used on the next synthesis."
-        case .respeakCurrent:
-            return "Cancel the current paragraph and synthesize it again at the new speed."
-        }
+    private struct Preset {
+        var menuTitle: String
+        var helpText: String
     }
 }
 
