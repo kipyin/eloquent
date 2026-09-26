@@ -10,30 +10,38 @@ enum ParagraphSplitMode: String, CaseIterable, Identifiable, Sendable {
 
     var id: String { rawValue }
 
-    var menuTitle: String {
+    var menuTitle: String { preset.menuTitle }
+
+    var helpText: String { preset.helpText }
+
+    private var preset: Preset {
         switch self {
         case .blankLinesOnly:
-            return "Blank lines only"
+            return Preset(
+                menuTitle: "Blank lines only",
+                helpText: "Split only on double newlines. Single line breaks stay in the same paragraph."
+            )
         case .everyNewline:
-            return "Every newline"
+            return Preset(
+                menuTitle: "Every newline",
+                helpText: "Each newline starts a new paragraph."
+            )
         case .blankLinesThenNewlines:
-            return "Blank lines, else every newline"
+            return Preset(
+                menuTitle: "Blank lines, else every newline",
+                helpText: "Use blank lines when the text has them; otherwise split on every newline."
+            )
         case .sentences:
-            return "Sentences"
+            return Preset(
+                menuTitle: "Sentences",
+                helpText: "Split on sentence endings (. ! ? 。 ！ ？). Prev/next moves one sentence at a time."
+            )
         }
     }
 
-    var helpText: String {
-        switch self {
-        case .blankLinesOnly:
-            return "Split only on double newlines. Single line breaks stay in the same paragraph."
-        case .everyNewline:
-            return "Each newline starts a new paragraph."
-        case .blankLinesThenNewlines:
-            return "Use blank lines when the text has them; otherwise split on every newline."
-        case .sentences:
-            return "Split on sentence endings (. ! ? 。 ！ ？). Prev/next moves one sentence at a time."
-        }
+    private struct Preset {
+        var menuTitle: String
+        var helpText: String
     }
 }
 
