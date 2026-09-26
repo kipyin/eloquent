@@ -129,10 +129,11 @@ final class AppSettings: ObservableObject, SettingsProviding {
         static let speakHotkeyKeyCode = "speakHotkeyKeyCode"
         static let speakHotkeyModifiers = "speakHotkeyModifiers"
         static let speedApply = "speedApply"
+        static let apiKey = "apiKey"
+        static let apiKeyMigrationCompleted = "apiKeyMigrationCompleted"
     }
 
     private let defaults: UserDefaults
-    private let secrets: any APIKeyStoring
 
     @Published var engine: Engine {
         didSet {
@@ -146,7 +147,7 @@ final class AppSettings: ObservableObject, SettingsProviding {
     }
 
     @Published var apiKey: String {
-        didSet { secrets.saveAPIKey(apiKey) }
+        didSet { defaults.set(apiKey, forKey: Keys.apiKey) }
     }
 
     @Published var model: String {
@@ -183,9 +184,8 @@ final class AppSettings: ObservableObject, SettingsProviding {
         didSet { defaults.set(speedApply.rawValue, forKey: Keys.speedApply) }
     }
 
-    init(defaults: UserDefaults = .standard, secrets: any APIKeyStoring = KeychainStore()) {
+    init(defaults: UserDefaults = .standard, legacyStore: any LegacyAPIKeyStoring = KeychainStore()) {
         self.defaults = defaults
-        self.secrets = secrets
         engine = Self.storedEnum(
             defaults.string(forKey: Keys.engine)?.nonEmptyTrimmed,
             fallback: .openai
@@ -210,7 +210,20 @@ final class AppSettings: ObservableObject, SettingsProviding {
             defaults.string(forKey: Keys.speedApply),
             fallback: TTSDefaults.speedApply
         )
-        apiKey = secrets.loadAPIKey()
+        Self.migrateAPIKeyIfNeeded(defaults: defaults, legacyStore: legacyStore)
+        apiKey = defaults.string(forKey: Keys.apiKey)?.nonEmptyTrimmed ?? ""
+    }
+
+    // One-time move of a login-Keychain API key into user settings (ADR 0002).
+    // Skipped once the copy succeeded, or once the user saved or cleared a key.
+    // A denied or failed read writes nothing, so the next launch tries again.
+    private static func migrateAPIKeyIfNeeded(defaults: UserDefaults, legacyStore: any LegacyAPIKeyStoring) {
+        guard !defaults.bool(forKey: Keys.apiKeyMigrationCompleted) else { return }
+        guard defaults.object(forKey: Keys.apiKey) == nil else { return }
+        guard let migrated = legacyStore.loadAPIKey() else { return }
+        defaults.set(migrated, forKey: Keys.apiKey)
+        defaults.set(true, forKey: Keys.apiKeyMigrationCompleted)
+        legacyStore.deleteAPIKey()
     }
 
     func snapshot() -> SettingsSnapshot {
