@@ -45,4 +45,5 @@ macOS permission required so the speak hotkey works in every app and so Eloquent
 Optional Login Item via `SMAppService`. Off by default. Not registered on first launch.
 
 **API key**:
-Provider secret stored in Keychain (`com.kipyin.eloquent`). Never committed.
+User-entered secret for the TTS provider. One key, shared by every Engine.
+_Avoid_: Keychain item, token
