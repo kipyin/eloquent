@@ -97,14 +97,21 @@ struct TTSClient: TTSSynthesizing {
 
     private func errorMessage(from data: Data) -> String {
         if let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] {
-            if let error = object["error"] as? [String: Any], let message = error["message"] as? String, !message.isEmpty {
+            if let message = nonEmptyMessage(in: object["error"] as? [String: Any]) {
                 return message
             }
-            if let message = object["message"] as? String, !message.isEmpty {
+            if let message = nonEmptyMessage(in: object) {
                 return message
             }
         }
         return String(data: data, encoding: .utf8)?.nonEmptyTrimmed ?? "TTS request failed."
+    }
+
+    private func nonEmptyMessage(in object: [String: Any]?) -> String? {
+        guard let message = object?["message"] as? String, !message.isEmpty else {
+            return nil
+        }
+        return message
     }
 }
 
