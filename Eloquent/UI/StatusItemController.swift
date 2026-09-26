@@ -106,6 +106,13 @@ final class StatusItemController: NSObject {
 
         if !AccessibilityPermission.shared.isTrusted {
             menu.addItem(.separator())
+            let untrustedItem = NSMenuItem(
+                title: "Accessibility not granted — \(hotkey.words) can't read the selection",
+                action: nil,
+                keyEquivalent: ""
+            )
+            untrustedItem.isEnabled = false
+            menu.addItem(untrustedItem)
             let grantItem = NSMenuItem(
                 title: "Grant Accessibility…",
                 action: #selector(grantAccessibilityMenuItem),
