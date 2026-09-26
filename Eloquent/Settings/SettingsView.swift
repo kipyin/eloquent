@@ -97,7 +97,7 @@ struct SettingsView: View {
                             onSpeedCommitted()
                         }
                     }
-                    Text(speedLabel)
+                    Text(TTSDefaults.speedLabel(for: settings.speed))
                         .monospacedDigit()
                         .frame(width: 44, alignment: .trailing)
                 }
@@ -177,10 +177,6 @@ struct SettingsView: View {
         .formStyle(.grouped)
         .frame(minWidth: 520, minHeight: 520)
         .padding(.bottom, 8)
-    }
-
-    private var speedLabel: String {
-        String(format: "%.1f×", settings.speed)
     }
 
     private var openAtLoginBinding: Binding<Bool> {

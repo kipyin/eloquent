@@ -95,6 +95,10 @@ enum TTSDefaults {
         let clamped = min(max(value, minimumSpeed), maximumSpeed)
         return (clamped * 10).rounded() / 10
     }
+
+    static func speedLabel(for speed: Double) -> String {
+        String(format: "%.1f×", speed)
+    }
 }
 
 struct SettingsSnapshot: Sendable {
