@@ -80,22 +80,23 @@ struct HotkeyBinding: Hashable, Sendable {
         HotkeyBinding(keyCode: 12, modifiers: .command),
     ]
 
+    private static let modifierLabels: [(modifier: HotkeyModifiers, word: String, symbol: String)] = [
+        (.control, "Control", "⌃"),
+        (.option, "Option", "⌥"),
+        (.shift, "Shift", "⇧"),
+        (.command, "Command", "⌘"),
+    ]
+
     private var modifierWords: [String] {
-        var parts: [String] = []
-        if modifiers.contains(.control) { parts.append("Control") }
-        if modifiers.contains(.option) { parts.append("Option") }
-        if modifiers.contains(.shift) { parts.append("Shift") }
-        if modifiers.contains(.command) { parts.append("Command") }
-        return parts
+        Self.modifierLabels.compactMap { label in
+            modifiers.contains(label.modifier) ? label.word : nil
+        }
     }
 
     private var modifierSymbols: String {
-        var symbols = ""
-        if modifiers.contains(.control) { symbols += "⌃" }
-        if modifiers.contains(.option) { symbols += "⌥" }
-        if modifiers.contains(.shift) { symbols += "⇧" }
-        if modifiers.contains(.command) { symbols += "⌘" }
-        return symbols
+        Self.modifierLabels.compactMap { label in
+            modifiers.contains(label.modifier) ? label.symbol : nil
+        }.joined()
     }
 
     private var keySymbol: String {
