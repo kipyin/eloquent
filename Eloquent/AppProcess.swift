@@ -1,6 +1,8 @@
 import Foundation
 
 enum AppProcess {
+    static let bundleIdentifier = "com.kipyin.eloquent"
+
     // xcodebuild sets these when XCTest is running. XCTestCase is the fallback
     // if a runner injects the framework without those keys.
     private static let testEnvironmentKeys = [

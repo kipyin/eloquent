@@ -25,7 +25,7 @@ final class SpeechController: ObservableObject {
     private var generation = UUID()
     private var transientErrorTask: Task<Void, Never>?
     private var spokenSpeed: Double?
-    private let log = Logger(subsystem: "com.kipyin.eloquent", category: "speech")
+    private let log = Logger(subsystem: AppProcess.bundleIdentifier, category: "speech")
 
     init(
         synthesizer: any TTSSynthesizing = TTSClient(),
