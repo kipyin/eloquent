@@ -62,13 +62,7 @@ final class AudioPlayback: NSObject, AVAudioPlayerDelegate, AudioPlaying {
     }
 
     func stop() {
-        let finish = completion
-        completion = nil
-        player?.delegate = nil
-        player?.stop()
-        player = nil
-        cleanupTempFile()
-        finish?(false)
+        endPlayback(success: false, haltPlayer: true)
     }
 
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
@@ -84,11 +78,20 @@ final class AudioPlayback: NSObject, AVAudioPlayerDelegate, AudioPlaying {
     }
 
     private func finish(success: Bool) {
-        let finish = completion
+        endPlayback(success: success, haltPlayer: false)
+    }
+
+    // Clear the callback before halting so player.stop() cannot also finish.
+    private func endPlayback(success: Bool, haltPlayer: Bool) {
+        let callback = completion
         completion = nil
+        if haltPlayer {
+            player?.delegate = nil
+            player?.stop()
+        }
         player = nil
         cleanupTempFile()
-        finish?(success)
+        callback?(success)
     }
 
     private func cleanupTempFile() {
