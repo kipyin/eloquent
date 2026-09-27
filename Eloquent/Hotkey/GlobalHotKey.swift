@@ -11,7 +11,7 @@ final class GlobalHotKey {
     private(set) var isPaused = false
 
     private static var active: GlobalHotKey?
-    private static let log = Logger(subsystem: "com.kipyin.eloquent", category: "hotkey")
+    private static let log = Logger(subsystem: AppProcess.bundleIdentifier, category: "hotkey")
     private static let signature: OSType = 0x454C4F51 // 'ELOQ'
     private static let hotKeyIDValue: UInt32 = 1
 

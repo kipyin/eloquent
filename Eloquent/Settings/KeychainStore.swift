@@ -8,7 +8,7 @@ protocol LegacyAPIKeyStoring {
 }
 
 struct KeychainStore: LegacyAPIKeyStoring {
-    private static let service = "com.kipyin.eloquent"
+    private static let service = AppProcess.bundleIdentifier
     private static let account = "api-key"
 
     func loadAPIKey() -> String? {
