@@ -66,14 +66,16 @@ final class AudioPlayback: NSObject, AVAudioPlayerDelegate, AudioPlaying {
     }
 
     func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
-        DispatchQueue.main.async { [weak self] in
-            self?.finish(success: flag)
-        }
+        finishOnMain(success: flag)
     }
 
     func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
+        finishOnMain(success: false)
+    }
+
+    private func finishOnMain(success: Bool) {
         DispatchQueue.main.async { [weak self] in
-            self?.finish(success: false)
+            self?.finish(success: success)
         }
     }
 
