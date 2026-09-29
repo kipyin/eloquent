@@ -1,6 +1,5 @@
 import AppKit
 import Carbon
-import os
 
 final class GlobalHotKey {
     private var hotKeyRef: EventHotKeyRef?
@@ -11,7 +10,7 @@ final class GlobalHotKey {
     private(set) var isPaused = false
 
     private static var active: GlobalHotKey?
-    private static let log = Logger(subsystem: AppProcess.bundleIdentifier, category: "hotkey")
+    private static let log = AppProcess.logger(category: "hotkey")
     private static let signature: OSType = 0x454C4F51 // 'ELOQ'
     private static let hotKeyIDValue: UInt32 = 1
 
