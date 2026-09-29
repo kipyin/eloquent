@@ -1,7 +1,12 @@
 import Foundation
+import os
 
 enum AppProcess {
     static let bundleIdentifier = "com.kipyin.eloquent"
+
+    static func logger(category: String) -> Logger {
+        Logger(subsystem: bundleIdentifier, category: category)
+    }
 
     // xcodebuild sets these when XCTest is running. XCTestCase is the fallback
     // if a runner injects the framework without those keys.

@@ -1,6 +1,5 @@
 import Combine
 import Foundation
-import os.log
 
 @MainActor
 final class SpeechController: ObservableObject {
@@ -25,7 +24,7 @@ final class SpeechController: ObservableObject {
     private var generation = UUID()
     private var transientErrorTask: Task<Void, Never>?
     private var spokenSpeed: Double?
-    private let log = Logger(subsystem: AppProcess.bundleIdentifier, category: "speech")
+    private let log = AppProcess.logger(category: "speech")
 
     init(
         synthesizer: any TTSSynthesizing = TTSClient(),

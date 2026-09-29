@@ -1,12 +1,11 @@
 import AppKit
-import os
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private var speech: SpeechController!
     private var settingsWindow: SettingsWindowController!
     private var statusItem: StatusItemController?
     private var playbackPanel: PlaybackPanelController?
-    private static let log = Logger(subsystem: AppProcess.bundleIdentifier, category: "app")
+    private static let log = AppProcess.logger(category: "app")
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         // If XCTest is injected into this process, skip menu-bar chrome,
