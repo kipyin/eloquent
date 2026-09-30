@@ -88,10 +88,14 @@ final class GlobalHotKey {
             return OSStatus(eventNotHandledErr)
         }
 
+        Self.dispatchFire()
+        return noErr
+    }
+
+    private static func dispatchFire() {
         DispatchQueue.main.async {
             Self.active?.fire()
         }
-        return noErr
     }
 
     private func fire() {
@@ -110,9 +114,7 @@ final class GlobalHotKey {
             // field does not also type the shortcut. Fire here only when
             // RegisterEventHotKey is not installed, so Settings-key still speaks.
             if active.hotKeyRef == nil {
-                DispatchQueue.main.async {
-                    Self.active?.fire()
-                }
+                Self.dispatchFire()
             }
             return nil
         }
