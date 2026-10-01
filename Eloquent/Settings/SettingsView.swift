@@ -86,21 +86,7 @@ struct SettingsView: View {
                     SettingsTextField(title: "Model", text: $settings.model)
                 }
                 SettingsTextField(title: "Voice", text: $settings.voice)
-                HStack {
-                    Text("Speed")
-                    Slider(
-                        value: $settings.speed,
-                        in: TTSDefaults.minimumSpeed...TTSDefaults.maximumSpeed,
-                        step: 0.1
-                    ) { editing in
-                        if !editing {
-                            onSpeedCommitted()
-                        }
-                    }
-                    Text(TTSDefaults.speedLabel(for: settings.speed))
-                        .monospacedDigit()
-                        .frame(width: 44, alignment: .trailing)
-                }
+                SpeedSliderRow(speed: $settings.speed, onCommitted: onSpeedCommitted)
                 Text("Clamped to 0.7–1.5.")
                     .font(.caption)
                     .foregroundStyle(.secondary)
