@@ -46,20 +46,8 @@ struct ControlPanelView: View {
             }
             .frame(maxWidth: .infinity)
 
-            HStack {
-                Text("Speed")
-                Slider(
-                    value: $settings.speed,
-                    in: TTSDefaults.minimumSpeed...TTSDefaults.maximumSpeed,
-                    step: 0.1
-                ) { editing in
-                    if !editing {
-                        speech.applySpeedChange()
-                    }
-                }
-                Text(TTSDefaults.speedLabel(for: settings.speed))
-                    .monospacedDigit()
-                    .frame(width: 44, alignment: .trailing)
+            SpeedSliderRow(speed: $settings.speed) {
+                speech.applySpeedChange()
             }
 
             preview
@@ -122,5 +110,28 @@ struct ControlPanelView: View {
         .disabled(!enabled)
         .help(label)
         .accessibilityLabel(label)
+    }
+}
+
+struct SpeedSliderRow: View {
+    @Binding var speed: Double
+    var onCommitted: () -> Void
+
+    var body: some View {
+        HStack {
+            Text("Speed")
+            Slider(
+                value: $speed,
+                in: TTSDefaults.minimumSpeed...TTSDefaults.maximumSpeed,
+                step: 0.1
+            ) { editing in
+                if !editing {
+                    onCommitted()
+                }
+            }
+            Text(TTSDefaults.speedLabel(for: speed))
+                .monospacedDigit()
+                .frame(width: 44, alignment: .trailing)
+        }
     }
 }
