@@ -87,7 +87,7 @@ struct SettingsView: View {
                 }
                 SettingsTextField(title: "Voice", text: $settings.voice)
                 SpeedSliderRow(speed: $settings.speed, onCommitted: onSpeedCommitted)
-                Text("Clamped to 0.7–1.5.")
+                Text(TTSDefaults.speedClampCaption)
                     .font(.caption)
                     .foregroundStyle(.secondary)
             }

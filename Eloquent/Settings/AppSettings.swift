@@ -105,6 +105,10 @@ enum TTSDefaults {
     static func speedLabel(for speed: Double) -> String {
         String(format: "%.1f×", speed)
     }
+
+    static var speedClampCaption: String {
+        String(format: "Clamped to %.1f–%.1f.", minimumSpeed, maximumSpeed)
+    }
 }
 
 struct SettingsSnapshot: Sendable {
