@@ -120,6 +120,14 @@ struct SettingsSnapshot: Sendable {
     var speed: Double
     var paragraphSplit: ParagraphSplitMode
     var speedApply: SpeedApplyMode
+
+    var resolvedModel: String {
+        model.isEmpty ? TTSDefaults.model : model
+    }
+
+    var resolvedVoice: String {
+        voice.isEmpty ? engine.defaultVoice : voice
+    }
 }
 
 @MainActor

@@ -66,12 +66,11 @@ struct TTSClient: TTSSynthesizing {
     }
 
     private static func encodeBody(text: String, settings: SettingsSnapshot) throws -> Data {
-        let voice = settings.voice.isEmpty ? settings.engine.defaultVoice : settings.voice
         switch settings.engine {
         case .openai:
             let body = SpeechRequestBody(
-                model: settings.model.isEmpty ? TTSDefaults.model : settings.model,
-                voice: voice,
+                model: settings.resolvedModel,
+                voice: settings.resolvedVoice,
                 input: text,
                 speed: TTSDefaults.clampSpeed(settings.speed),
                 response_format: "mp3"
@@ -80,7 +79,7 @@ struct TTSClient: TTSSynthesizing {
         case .grok:
             let body = GrokSpeechRequestBody(
                 text: text,
-                voice_id: voice,
+                voice_id: settings.resolvedVoice,
                 language: "auto",
                 speed: TTSDefaults.clampSpeed(settings.speed)
             )
