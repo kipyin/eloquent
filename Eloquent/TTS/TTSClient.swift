@@ -72,7 +72,7 @@ struct TTSClient: TTSSynthesizing {
                 model: settings.resolvedModel,
                 voice: settings.resolvedVoice,
                 input: text,
-                speed: TTSDefaults.clampSpeed(settings.speed),
+                speed: settings.clampedSpeed,
                 response_format: "mp3"
             )
             return try JSONEncoder().encode(body)
@@ -81,7 +81,7 @@ struct TTSClient: TTSSynthesizing {
                 text: text,
                 voice_id: settings.resolvedVoice,
                 language: "auto",
-                speed: TTSDefaults.clampSpeed(settings.speed)
+                speed: settings.clampedSpeed
             )
             return try JSONEncoder().encode(body)
         }

@@ -128,6 +128,10 @@ struct SettingsSnapshot: Sendable {
     var resolvedVoice: String {
         voice.isEmpty ? engine.defaultVoice : voice
     }
+
+    var clampedSpeed: Double {
+        TTSDefaults.clampSpeed(speed)
+    }
 }
 
 @MainActor
