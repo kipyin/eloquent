@@ -3,6 +3,8 @@ import Foundation
 
 @MainActor
 final class SpeechController: ObservableObject {
+    private static let noSourceTextMessage = "No text selected and clipboard is empty."
+
     enum State: Equatable {
         case idle
         case loading
@@ -111,14 +113,14 @@ final class SpeechController: ObservableObject {
 
     func speak() {
         guard let text = selection.selectedText() ?? clipboard.string() else {
-            presentTransientError("No text selected and clipboard is empty.")
+            presentTransientError(Self.noSourceTextMessage)
             return
         }
 
         let settings = settingsProvider.snapshot()
         let parts = ParagraphSplitter.split(text, mode: settings.paragraphSplit)
         guard !parts.isEmpty else {
-            presentTransientError("No text selected and clipboard is empty.")
+            presentTransientError(Self.noSourceTextMessage)
             return
         }
 
