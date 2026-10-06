@@ -18,7 +18,7 @@ final class StatusItemController: NSObject {
         super.init()
         statusItem.autosaveName = "EloquentStatusItem"
         statusItem.isVisible = true
-        statusItem.button?.toolTip = "Eloquent"
+        statusItem.button?.toolTip = AppProcess.displayName
         configureButton()
         rebuildMenu()
 
@@ -72,7 +72,7 @@ final class StatusItemController: NSObject {
 
     private func templateSymbol(named name: String) -> NSImage? {
         let configuration = NSImage.SymbolConfiguration(pointSize: 18, weight: .semibold)
-        guard let image = NSImage(systemSymbolName: name, accessibilityDescription: "Eloquent")?
+        guard let image = NSImage(systemSymbolName: name, accessibilityDescription: AppProcess.displayName)?
             .withSymbolConfiguration(configuration)
         else {
             return nil

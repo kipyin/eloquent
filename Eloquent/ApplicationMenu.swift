@@ -32,7 +32,7 @@ enum ApplicationMenu {
     }
 
     private static func makeAppMenuItem() -> NSMenuItem {
-        let appName = "Eloquent"
+        let appName = AppProcess.displayName
         let item = NSMenuItem()
         let menu = NSMenu()
         menu.addItem(
