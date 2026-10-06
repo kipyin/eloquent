@@ -54,7 +54,7 @@ final class PlaybackPanelController: NSObject, NSWindowDelegate {
             defer: false
         )
         panel.contentViewController = hosting
-        panel.title = "Eloquent"
+        panel.title = AppProcess.displayName
         panel.titleVisibility = .hidden
         panel.titlebarAppearsTransparent = true
         panel.isFloatingPanel = true

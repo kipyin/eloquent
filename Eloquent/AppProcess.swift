@@ -2,6 +2,7 @@ import Foundation
 import os
 
 enum AppProcess {
+    static let displayName = "Eloquent"
     static let bundleIdentifier = "com.kipyin.eloquent"
 
     static func logger(category: String) -> Logger {
