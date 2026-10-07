@@ -123,7 +123,7 @@ struct SpeedSliderRow: View {
             Slider(
                 value: $speed,
                 in: TTSDefaults.minimumSpeed...TTSDefaults.maximumSpeed,
-                step: 0.1
+                step: TTSDefaults.speedStep
             ) { editing in
                 if !editing {
                     onCommitted()
