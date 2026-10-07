@@ -93,13 +93,14 @@ enum TTSDefaults {
     static let speed = 1.1
     static let minimumSpeed = 0.7
     static let maximumSpeed = 1.5
+    static let speedStep = 0.1
 
     static let paragraphSplit = ParagraphSplitMode.default
     static let speedApply = SpeedApplyMode.default
 
     static func clampSpeed(_ value: Double) -> Double {
         let clamped = min(max(value, minimumSpeed), maximumSpeed)
-        return (clamped * 10).rounded() / 10
+        return (clamped / speedStep).rounded() * speedStep
     }
 
     static func speedLabel(for speed: Double) -> String {
